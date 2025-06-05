@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import axios from 'axios';
+import axios from '../utils/axios';
 import { toast } from 'react-toastify';
 import {
   Box,
@@ -41,27 +41,22 @@ const Kategori = () => {
   const fetchKategoris = async () => {
     try {
       setLoading(true);
-      // In a real application, you would fetch this data from your API
-      // For now, we'll use mock data
       
-      // Simulate API call delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Fetch data from API
+      const response = await axios.get('/api/kategori/dropdown');
       
-      // Mock data
-      const mockData = [
-        { id: 1, nama: 'Komputer', deskripsi: 'Perangkat komputer dan laptop' },
-        { id: 2, nama: 'Periferal', deskripsi: 'Perangkat pendukung komputer' },
-        { id: 3, nama: 'Jaringan', deskripsi: 'Perangkat jaringan komputer' },
-        { id: 4, nama: 'Alat Ukur', deskripsi: 'Perangkat untuk pengukuran' },
-        { id: 5, nama: 'Media Pembelajaran', deskripsi: 'Media untuk kegiatan belajar mengajar' },
-        { id: 6, nama: 'Lainnya', deskripsi: 'Kategori lain-lain' },
-      ];
+      if (response.data.sukses) {
+        setKategoris(response.data.data);
+      } else {
+        toast.error('Gagal memuat data kategori: ' + response.data.pesan);
+        setKategoris([]);
+      }
       
-      setKategoris(mockData);
       setLoading(false);
     } catch (error) {
       console.error('Error fetching kategoris:', error);
-      toast.error('Gagal memuat data kategori');
+      toast.error('Gagal memuat data kategori: ' + (error.response?.data?.pesan || error.message));
+      setKategoris([]);
       setLoading(false);
     }
   };
@@ -85,34 +80,33 @@ const Kategori = () => {
   // Handle form submit (add/edit)
   const handleSubmit = async (values, { setSubmitting, resetForm }) => {
     try {
-      // In a real application, you would send this data to your API
-      console.log('Submitting kategori:', values);
-      
-      // Simulate API call delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
       if (currentKategori) {
         // Update existing kategori
-        const updatedKategoris = kategoris.map(k =>
-          k.id === currentKategori.id ? { ...values, id: currentKategori.id } : k
-        );
-        setKategoris(updatedKategoris);
-        toast.success('Kategori berhasil diperbarui');
+        const response = await axios.put(`/api/kategori/${currentKategori.id}`, values);
+        
+        if (response.data.sukses) {
+          toast.success('Kategori berhasil diperbarui');
+          fetchKategoris(); // Refresh data
+        } else {
+          toast.error('Gagal memperbarui kategori: ' + response.data.pesan);
+        }
       } else {
         // Add new kategori
-        const newKategori = {
-          ...values,
-          id: Math.max(0, ...kategoris.map(k => k.id)) + 1,
-        };
-        setKategoris([...kategoris, newKategori]);
-        toast.success('Kategori berhasil ditambahkan');
+        const response = await axios.post('/api/kategori', values);
+        
+        if (response.data.sukses) {
+          toast.success('Kategori berhasil ditambahkan');
+          fetchKategoris(); // Refresh data
+        } else {
+          toast.error('Gagal menambahkan kategori: ' + response.data.pesan);
+        }
       }
       
-      resetForm();
       handleCloseForm();
+      resetForm();
     } catch (error) {
       console.error('Error submitting kategori:', error);
-      toast.error('Gagal menyimpan kategori');
+      toast.error('Gagal menyimpan kategori: ' + (error.response?.data?.pesan || error.message));
     } finally {
       setSubmitting(false);
     }
@@ -129,21 +123,20 @@ const Kategori = () => {
     try {
       setDeleteLoading(true);
       
-      // In a real application, you would send this request to your API
-      console.log('Deleting kategori:', currentKategori);
+      const response = await axios.delete(`/api/kategori/${currentKategori.id}`);
       
-      // Simulate API call delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Remove from state
-      setKategoris(kategoris.filter(k => k.id !== currentKategori.id));
-      toast.success('Kategori berhasil dihapus');
+      if (response.data.sukses) {
+        toast.success('Kategori berhasil dihapus');
+        fetchKategoris(); // Refresh data
+      } else {
+        toast.error('Gagal menghapus kategori: ' + response.data.pesan);
+      }
       
       setConfirmDelete(false);
       setCurrentKategori(null);
     } catch (error) {
       console.error('Error deleting kategori:', error);
-      toast.error('Gagal menghapus kategori');
+      toast.error('Gagal menghapus kategori: ' + (error.response?.data?.pesan || error.message));
     } finally {
       setDeleteLoading(false);
     }

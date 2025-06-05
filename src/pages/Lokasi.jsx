@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import axios from 'axios';
+import axios from '../utils/axios';
 import { toast } from 'react-toastify';
 import {
   Box,
@@ -41,27 +41,22 @@ const Lokasi = () => {
   const fetchLokasis = async () => {
     try {
       setLoading(true);
-      // In a real application, you would fetch this data from your API
-      // For now, we'll use mock data
       
-      // Simulate API call delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Fetch data from API
+      const response = await axios.get('/api/lokasi/dropdown');
       
-      // Mock data
-      const mockData = [
-        { id: 1, nama: 'Lab Komputer 1', deskripsi: 'Laboratorium komputer lantai 1' },
-        { id: 2, nama: 'Lab Komputer 2', deskripsi: 'Laboratorium komputer lantai 2' },
-        { id: 3, nama: 'Lab Jaringan', deskripsi: 'Laboratorium jaringan komputer' },
-        { id: 4, nama: 'Ruang Server', deskripsi: 'Ruang server utama' },
-        { id: 5, nama: 'Ruang Guru', deskripsi: 'Ruang guru TKJ' },
-        { id: 6, nama: 'Gudang', deskripsi: 'Gudang penyimpanan peralatan' },
-      ];
+      if (response.data.sukses) {
+        setLokasis(response.data.data);
+      } else {
+        toast.error('Gagal memuat data lokasi: ' + response.data.pesan);
+        setLokasis([]);
+      }
       
-      setLokasis(mockData);
       setLoading(false);
     } catch (error) {
       console.error('Error fetching lokasis:', error);
-      toast.error('Gagal memuat data lokasi');
+      toast.error('Gagal memuat data lokasi: ' + (error.response?.data?.pesan || error.message));
+      setLokasis([]);
       setLoading(false);
     }
   };
@@ -85,34 +80,33 @@ const Lokasi = () => {
   // Handle form submit (add/edit)
   const handleSubmit = async (values, { setSubmitting, resetForm }) => {
     try {
-      // In a real application, you would send this data to your API
-      console.log('Submitting lokasi:', values);
-      
-      // Simulate API call delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
       if (currentLokasi) {
         // Update existing lokasi
-        const updatedLokasis = lokasis.map(l =>
-          l.id === currentLokasi.id ? { ...values, id: currentLokasi.id } : l
-        );
-        setLokasis(updatedLokasis);
-        toast.success('Lokasi berhasil diperbarui');
+        const response = await axios.put(`/api/lokasi/${currentLokasi.id}`, values);
+        
+        if (response.data.sukses) {
+          toast.success('Lokasi berhasil diperbarui');
+          fetchLokasis(); // Refresh data
+        } else {
+          toast.error('Gagal memperbarui lokasi: ' + response.data.pesan);
+        }
       } else {
         // Add new lokasi
-        const newLokasi = {
-          ...values,
-          id: Math.max(0, ...lokasis.map(l => l.id)) + 1,
-        };
-        setLokasis([...lokasis, newLokasi]);
-        toast.success('Lokasi berhasil ditambahkan');
+        const response = await axios.post('/api/lokasi', values);
+        
+        if (response.data.sukses) {
+          toast.success('Lokasi berhasil ditambahkan');
+          fetchLokasis(); // Refresh data
+        } else {
+          toast.error('Gagal menambahkan lokasi: ' + response.data.pesan);
+        }
       }
       
-      resetForm();
       handleCloseForm();
+      resetForm();
     } catch (error) {
       console.error('Error submitting lokasi:', error);
-      toast.error('Gagal menyimpan lokasi');
+      toast.error('Gagal menyimpan lokasi: ' + (error.response?.data?.pesan || error.message));
     } finally {
       setSubmitting(false);
     }
@@ -129,21 +123,20 @@ const Lokasi = () => {
     try {
       setDeleteLoading(true);
       
-      // In a real application, you would send this request to your API
-      console.log('Deleting lokasi:', currentLokasi);
+      const response = await axios.delete(`/api/lokasi/${currentLokasi.id}`);
       
-      // Simulate API call delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Remove from state
-      setLokasis(lokasis.filter(l => l.id !== currentLokasi.id));
-      toast.success('Lokasi berhasil dihapus');
+      if (response.data.sukses) {
+        toast.success('Lokasi berhasil dihapus');
+        fetchLokasis(); // Refresh data
+      } else {
+        toast.error('Gagal menghapus lokasi: ' + response.data.pesan);
+      }
       
       setConfirmDelete(false);
       setCurrentLokasi(null);
     } catch (error) {
       console.error('Error deleting lokasi:', error);
-      toast.error('Gagal menghapus lokasi');
+      toast.error('Gagal menghapus lokasi: ' + (error.response?.data?.pesan || error.message));
     } finally {
       setDeleteLoading(false);
     }

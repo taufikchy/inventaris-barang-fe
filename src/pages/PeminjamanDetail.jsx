@@ -1,5 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
+import axios from '../utils/axios';
 import { toast } from 'react-toastify';
 import { Formik, Form, Field, FieldArray } from 'formik';
 import * as Yup from 'yup';
@@ -41,6 +42,8 @@ import {
 } from '@mui/icons-material';
 import PageHeader from '../components/PageHeader';
 import ConfirmDialog from '../components/ConfirmDialog';
+import ApprovalDialog from '../components/ApprovalDialog';
+import PrintBorrowingLetter from '../components/PrintBorrowingLetter';
 
 // Validation schema for peminjaman form
 const PeminjamanSchema = Yup.object().shape({
@@ -77,6 +80,13 @@ const PeminjamanDetail = () => {
   const [returnLoading, setReturnLoading] = useState(false);
   const [barangDialogOpen, setBarangDialogOpen] = useState(false);
   const [selectedBarangIndex, setSelectedBarangIndex] = useState(null);
+  const [approvalDialogOpen, setApprovalDialogOpen] = useState(false);
+  const [approvalLoading, setApprovalLoading] = useState(false);
+  const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
+  const [uploadLoading, setUploadLoading] = useState(false);
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [fileError, setFileError] = useState('');
+  const printRef = useRef();
 
   // Fetch peminjaman data
   const fetchPeminjaman = async () => {
@@ -87,7 +97,7 @@ const PeminjamanDetail = () => {
         peminjam: '',
         tanggal_pinjam: new Date().toISOString().split('T')[0],
         tanggal_kembali: null,
-        status: 'Dipinjam',
+        status: 'menunggu_persetujuan',
         keterangan: '',
         detail_peminjaman: [],
       });
@@ -97,48 +107,22 @@ const PeminjamanDetail = () => {
 
     try {
       setLoading(true);
-      // In a real application, you would fetch this data from your API
-      // For now, we'll use mock data
       
-      // Simulate API call delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Fetch data from API
+      const response = await axios.get(`/api/peminjaman/${id}`);
       
-      // Mock data
-      const mockData = {
-        id: parseInt(id),
-        kode: `PJM-00${id}`,
-        peminjam: id === '1' ? 'Budi Santoso' : 'Ani Wijaya',
-        tanggal_pinjam: id === '1' ? '2023-05-10' : '2023-06-20',
-        tanggal_kembali: id === '1' ? '2023-05-15' : '2023-06-25',
-        status: id === '3' ? 'Dipinjam' : 'Dikembalikan',
-        keterangan: id === '1' ? 'Peminjaman untuk praktikum jaringan' : 'Peminjaman untuk workshop robotika',
-        detail_peminjaman: [
-          {
-            id: 1,
-            id_barang: 1,
-            nama_barang: 'Komputer Desktop Dell',
-            kode_barang: 'PC-001',
-            jumlah: 2,
-            kondisi_saat_pinjam: 'Baik',
-            kondisi_saat_kembali: id === '3' ? null : 'Baik',
-          },
-          {
-            id: 2,
-            id_barang: 3,
-            nama_barang: 'Router Cisco',
-            kode_barang: 'NW-001',
-            jumlah: 1,
-            kondisi_saat_pinjam: 'Baik',
-            kondisi_saat_kembali: id === '3' ? null : 'Baik',
-          },
-        ],
-      };
+      if (response.data.sukses) {
+        setPeminjaman(response.data.data);
+      } else {
+        toast.error('Gagal memuat data peminjaman: ' + response.data.pesan);
+        navigate('/peminjaman');
+      }
       
-      setPeminjaman(mockData);
       setLoading(false);
     } catch (error) {
       console.error('Error fetching peminjaman:', error);
-      toast.error('Gagal memuat data peminjaman');
+      toast.error('Gagal memuat data peminjaman: ' + (error.response?.data?.pesan || error.message));
+      navigate('/peminjaman');
       setLoading(false);
     }
   };
@@ -146,60 +130,19 @@ const PeminjamanDetail = () => {
   // Fetch barang data
   const fetchBarangs = async () => {
     try {
-      // In a real application, you would fetch this data from your API
-      // For now, we'll use mock data
+      // Fetch data from API
+      const response = await axios.get('/api/barang/dropdown?tersedia=true');
       
-      // Simulate API call delay
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
-      // Mock data
-      const mockData = [
-        {
-          id: 1,
-          kode: 'PC-001',
-          nama: 'Komputer Desktop Dell',
-          jumlah: 10,
-          jumlah_tersedia: 8,
-          kondisi: 'Baik',
-        },
-        {
-          id: 2,
-          kode: 'PC-002',
-          nama: 'Laptop Lenovo ThinkPad',
-          jumlah: 5,
-          jumlah_tersedia: 5,
-          kondisi: 'Baik',
-        },
-        {
-          id: 3,
-          kode: 'NW-001',
-          nama: 'Router Cisco',
-          jumlah: 3,
-          jumlah_tersedia: 2,
-          kondisi: 'Baik',
-        },
-        {
-          id: 4,
-          kode: 'NW-002',
-          nama: 'Switch Cisco',
-          jumlah: 5,
-          jumlah_tersedia: 5,
-          kondisi: 'Baik',
-        },
-        {
-          id: 5,
-          kode: 'PR-001',
-          nama: 'Printer Epson',
-          jumlah: 2,
-          jumlah_tersedia: 1,
-          kondisi: 'Rusak Ringan',
-        },
-      ];
-      
-      setBarangs(mockData);
+      if (response.data.sukses) {
+        setBarangs(response.data.data);
+      } else {
+        toast.error('Gagal memuat data barang: ' + response.data.pesan);
+        setBarangs([]);
+      }
     } catch (error) {
       console.error('Error fetching barangs:', error);
-      toast.error('Gagal memuat data barang');
+      toast.error('Gagal memuat data barang: ' + (error.response?.data?.pesan || error.message));
+      setBarangs([]);
     }
   };
 
@@ -213,28 +156,36 @@ const PeminjamanDetail = () => {
     try {
       setSaving(true);
       
-      // In a real application, you would send this data to your API
-      console.log('Saving peminjaman:', values);
+      let response;
       
-      // Simulate API call delay
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
-      toast.success(isNewPeminjaman ? 'Peminjaman berhasil ditambahkan' : 'Peminjaman berhasil diperbarui');
-      
-      // Redirect to peminjaman list after successful save
       if (isNewPeminjaman) {
-        navigate('/peminjaman');
+        // Create new peminjaman
+        response = await axios.post('/api/peminjaman', values);
       } else {
-        // Update local state and exit edit mode
-        setPeminjaman({
-          ...peminjaman,
-          ...values,
-        });
-        navigate(`/peminjaman/${id}`);
+        // Update existing peminjaman
+        response = await axios.put(`/api/peminjaman/${id}`, values);
+      }
+      
+      if (response.data.sukses) {
+        toast.success(isNewPeminjaman ? 'Peminjaman berhasil ditambahkan' : 'Peminjaman berhasil diperbarui');
+        
+        // Redirect to peminjaman list after successful save
+        if (isNewPeminjaman) {
+          navigate('/peminjaman');
+        } else {
+          // Update local state and exit edit mode
+          setPeminjaman({
+            ...peminjaman,
+            ...values,
+          });
+          navigate(`/peminjaman/${id}`);
+        }
+      } else {
+        toast.error((isNewPeminjaman ? 'Gagal menambahkan peminjaman: ' : 'Gagal memperbarui peminjaman: ') + response.data.pesan);
       }
     } catch (error) {
       console.error('Error saving peminjaman:', error);
-      toast.error(isNewPeminjaman ? 'Gagal menambahkan peminjaman' : 'Gagal memperbarui peminjaman');
+      toast.error((isNewPeminjaman ? 'Gagal menambahkan peminjaman: ' : 'Gagal memperbarui peminjaman: ') + (error.response?.data?.pesan || error.message));
     } finally {
       setSaving(false);
       setSubmitting(false);
@@ -246,17 +197,19 @@ const PeminjamanDetail = () => {
     try {
       setDeleteLoading(true);
       
-      // In a real application, you would send this request to your API
-      console.log('Deleting peminjaman:', peminjaman);
+      // Send delete request to API
+      const response = await axios.delete(`/api/peminjaman/${id}`);
       
-      // Simulate API call delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      toast.success('Peminjaman berhasil dihapus');
-      navigate('/peminjaman');
+      if (response.data.sukses) {
+        toast.success('Peminjaman berhasil dihapus');
+        navigate('/peminjaman');
+      } else {
+        toast.error('Gagal menghapus peminjaman: ' + response.data.pesan);
+        setConfirmDelete(false);
+      }
     } catch (error) {
       console.error('Error deleting peminjaman:', error);
-      toast.error('Gagal menghapus peminjaman');
+      toast.error('Gagal menghapus peminjaman: ' + (error.response?.data?.pesan || error.message));
       setConfirmDelete(false);
     } finally {
       setDeleteLoading(false);
@@ -267,30 +220,20 @@ const PeminjamanDetail = () => {
   const handleReturn = async () => {
     try {
       setReturnLoading(true);
-      
-      // In a real application, you would send this request to your API
-      console.log('Returning peminjaman:', peminjaman);
-      
-      // Simulate API call delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Update local state
-      setPeminjaman({
-        ...peminjaman,
-        status: 'Dikembalikan',
-        tanggal_kembali: new Date().toISOString().split('T')[0],
-        detail_peminjaman: peminjaman.detail_peminjaman.map(item => ({
-          ...item,
-          kondisi_saat_kembali: 'Baik',
-        })),
+      const response = await axios.put(`/api/peminjaman/${id}/kembalikan`, {
+        kondisi_barang: 'baik', // Default kondisi
+        catatan: 'Barang dikembalikan'
       });
-      
-      toast.success('Peminjaman berhasil dikembalikan');
-      setConfirmReturn(false);
+      if (response.data.sukses) {
+        toast.success('Barang berhasil dikembalikan!');
+        fetchPeminjaman();
+        setConfirmReturn(false);
+      } else {
+        toast.error('Gagal mengembalikan barang: ' + response.data.pesan);
+      }
     } catch (error) {
-      console.error('Error returning peminjaman:', error);
-      toast.error('Gagal mengembalikan peminjaman');
-      setConfirmReturn(false);
+      console.error('Error returning items:', error);
+      toast.error('Gagal mengembalikan barang: ' + (error.response?.data?.pesan || error.message));
     } finally {
       setReturnLoading(false);
     }
@@ -314,6 +257,76 @@ const PeminjamanDetail = () => {
         return 'error';
       default:
         return 'default';
+    }
+  };
+
+  // Get status label
+  const getStatusLabel = (status) => {
+    switch (status) {
+      case 'menunggu_persetujuan':
+        return 'Menunggu Persetujuan';
+      case 'disetujui':
+        return 'Disetujui';
+      case 'ditolak':
+        return 'Ditolak';
+      case 'dipinjam':
+        return 'Dipinjam';
+      case 'dikembalikan':
+        return 'Dikembalikan';
+      case 'terlambat':
+        return 'Terlambat';
+      default:
+        return status;
+    }
+  };
+
+  // Handle approval
+  const handleApproval = async (approvalData) => {
+    try {
+      setApprovalLoading(true);
+      const response = await axios.put(`/api/peminjaman/${id}/persetujuan`, approvalData);
+      if (response.data.sukses) {
+        toast.success('Persetujuan berhasil diproses!');
+        fetchPeminjaman();
+        setApprovalDialogOpen(false);
+      } else {
+        toast.error('Gagal memproses persetujuan: ' + response.data.pesan);
+      }
+    } catch (error) {
+      console.error('Error processing approval:', error);
+      toast.error('Gagal memproses persetujuan: ' + (error.response?.data?.pesan || error.message));
+    } finally {
+      setApprovalLoading(false);
+    }
+  };
+
+  // Handle upload surat
+  const handleUploadSurat = async (file) => {
+    try {
+      setUploadLoading(true);
+      const formData = new FormData();
+      formData.append('surat_peminjaman', file);
+      
+      const response = await axios.post(`/api/peminjaman/${id}/upload-surat`, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      });
+      
+      if (response.data.sukses) {
+        toast.success('Surat peminjaman berhasil diunggah!');
+        fetchPeminjaman();
+        setUploadDialogOpen(false);
+        setSelectedFile(null);
+        setFileError('');
+      } else {
+        toast.error('Gagal mengunggah surat: ' + response.data.pesan);
+      }
+    } catch (error) {
+      console.error('Error uploading file:', error);
+      toast.error('Gagal mengunggah surat: ' + (error.response?.data?.pesan || error.message));
+    } finally {
+      setUploadLoading(false);
     }
   };
 
@@ -381,7 +394,7 @@ const PeminjamanDetail = () => {
         title={isNewPeminjaman ? 'Tambah Peminjaman Baru' : 'Detail Peminjaman'}
         backButton
         onBackClick={() => navigate('/peminjaman')}
-        actionButton={!isNewPeminjaman && !isEditMode && peminjaman.status === 'Dipinjam' ? {
+        actionButton={!isNewPeminjaman && !isEditMode && peminjaman.status === 'disetujui' ? {
           icon: <CheckCircleIcon />,
           text: 'Kembalikan',
           onClick: () => setConfirmReturn(true),
@@ -714,35 +727,35 @@ const PeminjamanDetail = () => {
         </Formik>
       ) : (
         <Paper sx={{ p: 3, mb: 3 }}>
-          <Grid container spacing={3}>
-            <Grid item xs={12} md={6}>
-              <Card variant="outlined" sx={{ height: '100%' }}>
-                <CardContent>
-                  <Typography variant="h6" gutterBottom>
-                    Informasi Peminjaman
-                  </Typography>
-                  <Divider sx={{ mb: 2 }} />
-                  
-                  <Grid container spacing={2}>
-                    <Grid item xs={12} sm={6}>
-                      <Typography variant="body2" color="text.secondary">
-                        Kode Peminjaman
-                      </Typography>
-                      <Typography variant="body1" gutterBottom>
-                        {peminjaman.kode}
-                      </Typography>
-                    </Grid>
-                    <Grid item xs={12} sm={6}>
-                      <Typography variant="body2" color="text.secondary">
-                        Status
-                      </Typography>
-                      <Chip
-                        label={peminjaman.status}
-                        size="small"
-                        color={getStatusColor(peminjaman.status)}
-                        sx={{ mt: 0.5 }}
-                      />
-                    </Grid>
+        <Grid container spacing={3}>
+          <Grid item xs={12} md={6}>
+            <Card variant="outlined" sx={{ height: '100%' }}>
+              <CardContent>
+                <Typography variant="h6" gutterBottom>
+                  Informasi Peminjaman
+                </Typography>
+                <Divider sx={{ mb: 2 }} />
+                
+                <Grid container spacing={2}>
+                  <Grid item xs={12} sm={6}>
+                    <Typography variant="body2" color="text.secondary">
+                      Kode Peminjaman
+                    </Typography>
+                    <Typography variant="body1" gutterBottom>
+                      {peminjaman.kode}
+                    </Typography>
+                  </Grid>
+                  <Grid item xs={12} sm={6}>
+                    <Typography variant="body2" color="text.secondary">
+                      Status
+                    </Typography>
+                    <Chip
+                      label={getStatusLabel(peminjaman.status)}
+                      size="small"
+                      color={getStatusColor(peminjaman.status)}
+                      sx={{ mt: 0.5 }}
+                    />
+                  </Grid>
                     <Grid item xs={12}>
                       <Typography variant="body2" color="text.secondary">
                         Peminjam
@@ -864,6 +877,94 @@ const PeminjamanDetail = () => {
         onCancel={() => setConfirmReturn(false)}
         loading={returnLoading}
       />
+
+      {/* Approval Dialog */}
+      <ApprovalDialog
+        open={approvalDialogOpen}
+        onClose={() => setApprovalDialogOpen(false)}
+        onApprove={handleApproval}
+        loading={approvalLoading}
+        peminjamanId={peminjaman?.id}
+      />
+
+      {/* Upload Dialog */}
+      <Dialog open={uploadDialogOpen} onClose={() => !uploadLoading && setUploadDialogOpen(false)} maxWidth="sm" fullWidth>
+        <DialogTitle>Unggah Surat Peminjaman</DialogTitle>
+        <DialogContent>
+          <Box sx={{ mt: 2 }}>
+            <Typography variant="body2" gutterBottom>
+              Unggah surat peminjaman yang sudah ditandatangani oleh Kepala Lab.
+            </Typography>
+            <Box sx={{ mt: 2 }}>
+              <input
+                accept="image/jpeg,image/jpg,image/png,application/pdf"
+                style={{ display: 'none' }}
+                id="raised-button-file"
+                type="file"
+                onChange={(e) => {
+                  const file = e.target.files[0];
+                  if (file) {
+                    // Check file type
+                    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'application/pdf'];
+                    if (!allowedTypes.includes(file.type)) {
+                      setFileError('Format file tidak didukung. Gunakan JPG, PNG, atau PDF.');
+                      setSelectedFile(null);
+                      return;
+                    }
+
+                    // Check file size (max 5MB)
+                    if (file.size > 5 * 1024 * 1024) {
+                      setFileError('Ukuran file terlalu besar. Maksimal 5MB.');
+                      setSelectedFile(null);
+                      return;
+                    }
+
+                    setSelectedFile(file);
+                    setFileError('');
+                  }
+                }}
+              />
+              <label htmlFor="raised-button-file">
+                <Button variant="contained" component="span">
+                  Pilih File
+                </Button>
+              </label>
+              {selectedFile && (
+                <Typography variant="body2" sx={{ mt: 1 }}>
+                  File terpilih: {selectedFile.name}
+                </Typography>
+              )}
+              {fileError && (
+                <Typography variant="body2" color="error" sx={{ mt: 1 }}>
+                  {fileError}
+                </Typography>
+              )}
+              <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 1 }}>
+                Format yang didukung: JPG, PNG, PDF. Ukuran maksimal: 5MB
+              </Typography>
+            </Box>
+          </Box>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setUploadDialogOpen(false)} disabled={uploadLoading}>
+            Batal
+          </Button>
+          <Button
+            variant="contained"
+            color="primary"
+            disabled={!selectedFile || uploadLoading}
+            onClick={() => handleUploadSurat(selectedFile)}
+            startIcon={uploadLoading && <CircularProgress size={20} />}
+          >
+            Unggah
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Print Component (hidden) */}
+      <Box sx={{ display: 'none' }}>
+        <PrintBorrowingLetter ref={printRef} peminjaman={peminjaman} />
+      </Box>
     </>
   );
 };
