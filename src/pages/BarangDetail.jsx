@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
+import axios from '../utils/axios';
 import { toast } from 'react-toastify';
 import { Formik, Form, Field } from 'formik';
 import * as Yup from 'yup';
@@ -93,35 +94,22 @@ const BarangDetail = () => {
 
     try {
       setLoading(true);
-      // In a real application, you would fetch this data from your API
-      // For now, we'll use mock data
       
-      // Simulate API call delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Fetch data from API
+      const response = await axios.get(`/api/barang/${id}`);
       
-      // Mock data
-      const mockData = {
-        id: parseInt(id),
-        kode: `PC-00${id}`,
-        nama: id === '1' ? 'Komputer Desktop Dell' : 'Laptop Lenovo ThinkPad',
-        deskripsi: id === '1' ? 'Komputer desktop Dell OptiPlex 7090' : 'Laptop Lenovo ThinkPad X1 Carbon',
-        jumlah: id === '1' ? 10 : 5,
-        kondisi: 'Baik',
-        tanggal_perolehan: id === '1' ? '2022-01-15' : '2022-02-20',
-        harga_perolehan: id === '1' ? 12000000 : 15000000,
-        id_kategori: 1,
-        kategori: 'Komputer',
-        id_lokasi: id === '1' ? 1 : 2,
-        lokasi: id === '1' ? 'Lab Komputer 1' : 'Lab Komputer 2',
-        status: 'Tersedia',
-        gambar: 'https://picsum.photos/400/300',
-      };
+      if (response.data.sukses) {
+        setBarang(response.data.data);
+      } else {
+        toast.error('Gagal memuat data barang: ' + response.data.pesan);
+        navigate('/barang');
+      }
       
-      setBarang(mockData);
       setLoading(false);
     } catch (error) {
       console.error('Error fetching barang:', error);
-      toast.error('Gagal memuat data barang');
+      toast.error('Gagal memuat data barang: ' + (error.response?.data?.pesan || error.message));
+      navigate('/barang');
       setLoading(false);
     }
   };
@@ -129,37 +117,26 @@ const BarangDetail = () => {
   // Fetch kategori and lokasi data
   const fetchKategoriAndLokasi = async () => {
     try {
-      // In a real application, you would fetch this data from your API
-      // For now, we'll use mock data
+      // Fetch kategori data
+      const kategoriResponse = await axios.get('/api/kategori/dropdown');
+      if (kategoriResponse.data.sukses) {
+        setKategoris(kategoriResponse.data.data);
+      } else {
+        toast.error('Gagal memuat data kategori: ' + kategoriResponse.data.pesan);
+        setKategoris([]);
+      }
       
-      // Simulate API call delay
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
-      // Mock kategori data
-      const mockKategoris = [
-        { id: 1, nama: 'Komputer' },
-        { id: 2, nama: 'Periferal' },
-        { id: 3, nama: 'Jaringan' },
-        { id: 4, nama: 'Alat Ukur' },
-        { id: 5, nama: 'Media Pembelajaran' },
-        { id: 6, nama: 'Lainnya' },
-      ];
-      
-      // Mock lokasi data
-      const mockLokasis = [
-        { id: 1, nama: 'Lab Komputer 1' },
-        { id: 2, nama: 'Lab Komputer 2' },
-        { id: 3, nama: 'Lab Jaringan' },
-        { id: 4, nama: 'Ruang Server' },
-        { id: 5, nama: 'Ruang Guru' },
-        { id: 6, nama: 'Gudang' },
-      ];
-      
-      setKategoris(mockKategoris);
-      setLokasis(mockLokasis);
+      // Fetch lokasi data
+      const lokasiResponse = await axios.get('/api/lokasi/dropdown');
+      if (lokasiResponse.data.sukses) {
+        setLokasis(lokasiResponse.data.data);
+      } else {
+        toast.error('Gagal memuat data lokasi: ' + lokasiResponse.data.pesan);
+        setLokasis([]);
+      }
     } catch (error) {
       console.error('Error fetching kategori and lokasi:', error);
-      toast.error('Gagal memuat data kategori dan lokasi');
+      toast.error('Gagal memuat data kategori dan lokasi: ' + (error.response?.data?.pesan || error.message));
     }
   };
 
@@ -191,34 +168,55 @@ const BarangDetail = () => {
     try {
       setSaving(true);
       
-      // In a real application, you would send this data to your API
-      console.log('Saving barang:', values);
+      // Create FormData object for file upload
+      const formData = new FormData();
       
-      // Simulate API call delay
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      // Add all form values to FormData
+      Object.keys(values).forEach(key => {
+        formData.append(key, values[key]);
+      });
       
-      // Handle image upload if there's a new image
+      // Add image file if exists
       if (imageFile) {
-        console.log('Uploading image:', imageFile);
-        // In a real application, you would upload the image to your server
+        formData.append('gambar', imageFile);
       }
       
-      toast.success(isNewBarang ? 'Barang berhasil ditambahkan' : 'Barang berhasil diperbarui');
+      let response;
       
-      // Redirect to barang list after successful save
       if (isNewBarang) {
-        navigate('/barang');
-      } else {
-        // Update local state and exit edit mode
-        setBarang({
-          ...values,
-          gambar: imagePreview || barang.gambar,
+        // Create new barang
+        response = await axios.post('/api/barang', formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data'
+          }
         });
-        navigate(`/barang/${id}`, { replace: true });
+      } else {
+        // Update existing barang
+        response = await axios.put(`/api/barang/${id}`, formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data'
+          }
+        });
+      }
+      
+      if (response.data.sukses) {
+        toast.success(isNewBarang ? 'Barang berhasil ditambahkan' : 'Barang berhasil diperbarui');
+        
+        // Redirect to barang list after successful save
+        if (isNewBarang) {
+          navigate('/barang');
+        } else {
+          // Update local state and exit edit mode
+          fetchBarang(); // Refresh data
+          navigate(`/barang/${id}`, { replace: true });
+        }
+      } else {
+        toast.error(response.data.pesan || (isNewBarang ? 'Gagal menambahkan barang' : 'Gagal memperbarui barang'));
       }
     } catch (error) {
       console.error('Error saving barang:', error);
-      toast.error(isNewBarang ? 'Gagal menambahkan barang' : 'Gagal memperbarui barang');
+      toast.error(isNewBarang ? 'Gagal menambahkan barang: ' : 'Gagal memperbarui barang: ' + 
+        (error.response?.data?.pesan || error.message));
     } finally {
       setSaving(false);
       setSubmitting(false);
@@ -230,17 +228,18 @@ const BarangDetail = () => {
     try {
       setDeleteLoading(true);
       
-      // In a real application, you would send this request to your API
-      console.log('Deleting barang:', barang);
+      const response = await axios.delete(`/api/barang/${id}`);
       
-      // Simulate API call delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      toast.success('Barang berhasil dihapus');
-      navigate('/barang');
+      if (response.data.sukses) {
+        toast.success('Barang berhasil dihapus');
+        navigate('/barang');
+      } else {
+        toast.error('Gagal menghapus barang: ' + response.data.pesan);
+        setConfirmDelete(false);
+      }
     } catch (error) {
       console.error('Error deleting barang:', error);
-      toast.error('Gagal menghapus barang');
+      toast.error('Gagal menghapus barang: ' + (error.response?.data?.pesan || error.message));
       setConfirmDelete(false);
     } finally {
       setDeleteLoading(false);

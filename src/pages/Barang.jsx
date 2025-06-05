@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import axios from '../utils/axios';
 import { toast } from 'react-toastify';
 import {
   Box,
@@ -49,123 +49,47 @@ const Barang = () => {
   const fetchBarangs = async () => {
     try {
       setLoading(true);
-      // In a real application, you would fetch this data from your API
-      // For now, we'll use mock data
       
-      // Simulate API call delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Build query parameters based on filters
+      const params = new URLSearchParams();
+      if (filters.kategori) params.append('kategori', filters.kategori);
+      if (filters.lokasi) params.append('lokasi', filters.lokasi);
+      if (filters.status) params.append('status', filters.status);
+      if (filters.kondisi) params.append('kondisi', filters.kondisi);
       
-      // Mock data
-      const mockData = [
-        {
-          id: 1,
-          kode: 'PC-001',
-          nama: 'Komputer Desktop Dell',
-          deskripsi: 'Komputer desktop Dell OptiPlex 7090',
-          jumlah: 10,
-          kondisi: 'Baik',
-          tanggal_perolehan: '2022-01-15',
-          harga_perolehan: 12000000,
-          id_kategori: 1,
-          kategori: 'Komputer',
-          id_lokasi: 1,
-          lokasi: 'Lab Komputer 1',
-          status: 'Tersedia',
-          gambar: 'https://picsum.photos/200',
-        },
-        {
-          id: 2,
-          kode: 'PC-002',
-          nama: 'Laptop Lenovo ThinkPad',
-          deskripsi: 'Laptop Lenovo ThinkPad X1 Carbon',
-          jumlah: 5,
-          kondisi: 'Baik',
-          tanggal_perolehan: '2022-02-20',
-          harga_perolehan: 15000000,
-          id_kategori: 1,
-          kategori: 'Komputer',
-          id_lokasi: 2,
-          lokasi: 'Lab Komputer 2',
-          status: 'Tersedia',
-          gambar: 'https://picsum.photos/200',
-        },
-        {
-          id: 3,
-          kode: 'NW-001',
-          nama: 'Router Cisco',
-          deskripsi: 'Router Cisco 2900 Series',
-          jumlah: 3,
-          kondisi: 'Baik',
-          tanggal_perolehan: '2022-03-10',
-          harga_perolehan: 8000000,
-          id_kategori: 3,
-          kategori: 'Jaringan',
-          id_lokasi: 3,
-          lokasi: 'Lab Jaringan',
-          status: 'Tersedia',
-          gambar: 'https://picsum.photos/200',
-        },
-        {
-          id: 4,
-          kode: 'NW-002',
-          nama: 'Switch Cisco',
-          deskripsi: 'Switch Cisco Catalyst 2960',
-          jumlah: 5,
-          kondisi: 'Baik',
-          tanggal_perolehan: '2022-03-15',
-          harga_perolehan: 5000000,
-          id_kategori: 3,
-          kategori: 'Jaringan',
-          id_lokasi: 3,
-          lokasi: 'Lab Jaringan',
-          status: 'Tersedia',
-          gambar: 'https://picsum.photos/200',
-        },
-        {
-          id: 5,
-          kode: 'PR-001',
-          nama: 'Printer Epson',
-          deskripsi: 'Printer Epson L3150',
-          jumlah: 2,
-          kondisi: 'Rusak Ringan',
-          tanggal_perolehan: '2022-04-05',
-          harga_perolehan: 2500000,
-          id_kategori: 2,
-          kategori: 'Periferal',
-          id_lokasi: 1,
-          lokasi: 'Lab Komputer 1',
-          status: 'Perbaikan',
-          gambar: 'https://picsum.photos/200',
-        },
-      ];
+      // Fetch data from API
+      const response = await axios.get(`/api/barang?${params.toString()}`);
       
-      // Mock kategori data
-      const mockKategoris = [
-        { id: 1, nama: 'Komputer' },
-        { id: 2, nama: 'Periferal' },
-        { id: 3, nama: 'Jaringan' },
-        { id: 4, nama: 'Alat Ukur' },
-        { id: 5, nama: 'Media Pembelajaran' },
-        { id: 6, nama: 'Lainnya' },
-      ];
+      if (response.data.sukses) {
+        setBarangs(response.data.data);
+      } else {
+        toast.error('Gagal memuat data barang: ' + response.data.pesan);
+        setBarangs([]);
+      }
       
-      // Mock lokasi data
-      const mockLokasis = [
-        { id: 1, nama: 'Lab Komputer 1' },
-        { id: 2, nama: 'Lab Komputer 2' },
-        { id: 3, nama: 'Lab Jaringan' },
-        { id: 4, nama: 'Ruang Server' },
-        { id: 5, nama: 'Ruang Guru' },
-        { id: 6, nama: 'Gudang' },
-      ];
+      // Fetch kategori and lokasi data for dropdowns
+      const kategoriResponse = await axios.get('/api/kategori/dropdown');
+      if (kategoriResponse.data.sukses) {
+        setKategoris(kategoriResponse.data.data);
+      } else {
+        toast.error('Gagal memuat data kategori: ' + kategoriResponse.data.pesan);
+        setKategoris([]);
+      }
       
-      setBarangs(mockData);
-      setKategoris(mockKategoris);
-      setLokasis(mockLokasis);
+      // Fetch lokasi data
+      const lokasiResponse = await axios.get('/api/lokasi/dropdown');
+      if (lokasiResponse.data.sukses) {
+        setLokasis(lokasiResponse.data.data);
+      } else {
+        toast.error('Gagal memuat data lokasi: ' + lokasiResponse.data.pesan);
+        setLokasis([]);
+      }
+      
       setLoading(false);
     } catch (error) {
       console.error('Error fetching barangs:', error);
-      toast.error('Gagal memuat data barang');
+      toast.error('Gagal memuat data barang: ' + (error.response?.data?.pesan || error.message));
+      setBarangs([]);
       setLoading(false);
     }
   };
@@ -185,21 +109,20 @@ const Barang = () => {
     try {
       setDeleteLoading(true);
       
-      // In a real application, you would send this request to your API
-      console.log('Deleting barang:', currentBarang);
+      const response = await axios.delete(`/api/barang/${currentBarang.id}`);
       
-      // Simulate API call delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Remove from state
-      setBarangs(barangs.filter(b => b.id !== currentBarang.id));
-      toast.success('Barang berhasil dihapus');
+      if (response.data.sukses) {
+        toast.success('Barang berhasil dihapus');
+        fetchBarangs(); // Refresh data
+      } else {
+        toast.error('Gagal menghapus barang: ' + response.data.pesan);
+      }
       
       setConfirmDelete(false);
       setCurrentBarang(null);
     } catch (error) {
       console.error('Error deleting barang:', error);
-      toast.error('Gagal menghapus barang');
+      toast.error('Gagal menghapus barang: ' + (error.response?.data?.pesan || error.message));
     } finally {
       setDeleteLoading(false);
     }
@@ -277,11 +200,13 @@ const Barang = () => {
       id: 'kategori',
       label: 'Kategori',
       sortable: true,
+      format: (value) => value?.nama || value || '-',
     },
     {
       id: 'lokasi',
       label: 'Lokasi',
       sortable: true,
+      format: (value) => value?.nama || value || '-',
     },
     {
       id: 'jumlah',

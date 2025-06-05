@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import axios from '../utils/axios';
 import { toast } from 'react-toastify';
+import { useAuth } from '../contexts/AuthContext';
 import {
   Box,
   Button,
@@ -27,6 +29,7 @@ import ConfirmDialog from '../components/ConfirmDialog';
 
 const Peminjaman = () => {
   const navigate = useNavigate();
+  const { isAdmin, isKepalaLab, isToolman, isAdminOrToolman } = useAuth();
   const [loading, setLoading] = useState(true);
   const [peminjamans, setPeminjamans] = useState([]);
   const [confirmDelete, setConfirmDelete] = useState(false);
@@ -43,71 +46,28 @@ const Peminjaman = () => {
   const fetchPeminjamans = async () => {
     try {
       setLoading(true);
-      // In a real application, you would fetch this data from your API
-      // For now, we'll use mock data
       
-      // Simulate API call delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Build query parameters based on filters
+      const params = new URLSearchParams();
+      if (filters.status) params.append('status', filters.status);
+      if (filters.tanggal_mulai) params.append('tanggal_mulai', filters.tanggal_mulai);
+      if (filters.tanggal_selesai) params.append('tanggal_selesai', filters.tanggal_selesai);
       
-      // Mock data
-      const mockData = [
-        {
-          id: 1,
-          kode: 'PJM-001',
-          peminjam: 'Budi Santoso',
-          tanggal_pinjam: '2023-05-10',
-          tanggal_kembali: '2023-05-15',
-          status: 'Dikembalikan',
-          keterangan: 'Peminjaman untuk praktikum jaringan',
-          jumlah_barang: 3,
-        },
-        {
-          id: 2,
-          kode: 'PJM-002',
-          peminjam: 'Ani Wijaya',
-          tanggal_pinjam: '2023-06-20',
-          tanggal_kembali: '2023-06-25',
-          status: 'Dikembalikan',
-          keterangan: 'Peminjaman untuk workshop robotika',
-          jumlah_barang: 2,
-        },
-        {
-          id: 3,
-          kode: 'PJM-003',
-          peminjam: 'Citra Dewi',
-          tanggal_pinjam: '2023-07-05',
-          tanggal_kembali: null,
-          status: 'Dipinjam',
-          keterangan: 'Peminjaman untuk penelitian',
-          jumlah_barang: 1,
-        },
-        {
-          id: 4,
-          kode: 'PJM-004',
-          peminjam: 'Deni Hermawan',
-          tanggal_pinjam: '2023-07-10',
-          tanggal_kembali: null,
-          status: 'Dipinjam',
-          keterangan: 'Peminjaman untuk kegiatan OSIS',
-          jumlah_barang: 5,
-        },
-        {
-          id: 5,
-          kode: 'PJM-005',
-          peminjam: 'Eka Putri',
-          tanggal_pinjam: '2023-07-15',
-          tanggal_kembali: '2023-07-20',
-          status: 'Terlambat',
-          keterangan: 'Peminjaman untuk lomba programming',
-          jumlah_barang: 2,
-        },
-      ];
+      // Fetch data from API
+      const response = await axios.get(`/api/peminjaman?${params.toString()}`);
       
-      setPeminjamans(mockData);
+      if (response.data.sukses) {
+        setPeminjamans(response.data.data);
+      } else {
+        toast.error('Gagal memuat data peminjaman: ' + response.data.pesan);
+        setPeminjamans([]);
+      }
+      
       setLoading(false);
     } catch (error) {
       console.error('Error fetching peminjamans:', error);
-      toast.error('Gagal memuat data peminjaman');
+      toast.error('Gagal memuat data peminjaman: ' + (error.response?.data?.pesan || error.message));
+      setPeminjamans([]);
       setLoading(false);
     }
   };
@@ -127,21 +87,22 @@ const Peminjaman = () => {
     try {
       setDeleteLoading(true);
       
-      // In a real application, you would send this request to your API
-      console.log('Deleting peminjaman:', currentPeminjaman);
+      // Send delete request to API
+      const response = await axios.delete(`/api/peminjaman/${currentPeminjaman.id}`);
       
-      // Simulate API call delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Remove from state
-      setPeminjamans(peminjamans.filter(p => p.id !== currentPeminjaman.id));
-      toast.success('Peminjaman berhasil dihapus');
+      if (response.data.sukses) {
+        // Remove from state
+        setPeminjamans(peminjamans.filter(p => p.id !== currentPeminjaman.id));
+        toast.success('Peminjaman berhasil dihapus');
+      } else {
+        toast.error('Gagal menghapus peminjaman: ' + response.data.pesan);
+      }
       
       setConfirmDelete(false);
       setCurrentPeminjaman(null);
     } catch (error) {
       console.error('Error deleting peminjaman:', error);
-      toast.error('Gagal menghapus peminjaman');
+      toast.error('Gagal menghapus peminjaman: ' + (error.response?.data?.pesan || error.message));
     } finally {
       setDeleteLoading(false);
     }
@@ -187,14 +148,40 @@ const Peminjaman = () => {
   // Get status chip color
   const getStatusColor = (status) => {
     switch (status) {
-      case 'Dipinjam':
+      case 'menunggu_persetujuan':
+        return 'warning';
+      case 'disetujui':
         return 'primary';
-      case 'Dikembalikan':
+      case 'ditolak':
+        return 'error';
+      case 'dipinjam':
+        return 'info';
+      case 'dikembalikan':
         return 'success';
-      case 'Terlambat':
+      case 'terlambat':
         return 'error';
       default:
         return 'default';
+    }
+  };
+
+  // Get status label
+  const getStatusLabel = (status) => {
+    switch (status) {
+      case 'menunggu_persetujuan':
+        return 'Menunggu Persetujuan';
+      case 'disetujui':
+        return 'Disetujui';
+      case 'ditolak':
+        return 'Ditolak';
+      case 'dipinjam':
+        return 'Dipinjam';
+      case 'dikembalikan':
+        return 'Dikembalikan';
+      case 'terlambat':
+        return 'Terlambat';
+      default:
+        return status;
     }
   };
 
@@ -226,7 +213,7 @@ const Peminjaman = () => {
       sortable: true,
       format: (value) => (
         <Chip
-          label={value}
+          label={getStatusLabel(value)}
           size="small"
           color={getStatusColor(value)}
         />
@@ -242,16 +229,24 @@ const Peminjaman = () => {
           <VisibilityIcon fontSize="small" />
         </IconButton>
       </Tooltip>
-      <Tooltip title="Edit">
-        <IconButton onClick={() => navigate(`/peminjaman/${row.id}/edit`)} size="small">
-          <EditIcon fontSize="small" />
-        </IconButton>
-      </Tooltip>
-      <Tooltip title="Hapus">
-        <IconButton onClick={() => handleDeleteConfirm(row)} size="small" color="error">
-          <DeleteIcon fontSize="small" />
-        </IconButton>
-      </Tooltip>
+      
+      {/* Edit button - only for Admin and Toolman, and only for peminjaman with status menunggu_persetujuan */}
+      {isAdminOrToolman() && row.status === 'menunggu_persetujuan' && (
+        <Tooltip title="Edit">
+          <IconButton onClick={() => navigate(`/peminjaman/${row.id}/edit`)} size="small">
+            <EditIcon fontSize="small" />
+          </IconButton>
+        </Tooltip>
+      )}
+      
+      {/* Delete button - only for Kepala Lab */}
+      {isKepalaLab() && (
+        <Tooltip title="Hapus">
+          <IconButton onClick={() => handleDeleteConfirm(row)} size="small" color="error">
+            <DeleteIcon fontSize="small" />
+          </IconButton>
+        </Tooltip>
+      )}
     </Box>
   );
 
@@ -262,6 +257,7 @@ const Peminjaman = () => {
         actionText="Tambah Peminjaman"
         actionIcon={<AddIcon />}
         onActionClick={() => navigate('/peminjaman/new')}
+        showAction={isAdminOrToolman()}
       />
 
       {/* Filters */}
@@ -282,9 +278,12 @@ const Peminjaman = () => {
                 size="small"
               >
                 <MenuItem value="">Semua Status</MenuItem>
-                <MenuItem value="Dipinjam">Dipinjam</MenuItem>
-                <MenuItem value="Dikembalikan">Dikembalikan</MenuItem>
-                <MenuItem value="Terlambat">Terlambat</MenuItem>
+                <MenuItem value="menunggu_persetujuan">Menunggu Persetujuan</MenuItem>
+                <MenuItem value="disetujui">Disetujui</MenuItem>
+                <MenuItem value="ditolak">Ditolak</MenuItem>
+                <MenuItem value="dipinjam">Dipinjam</MenuItem>
+                <MenuItem value="dikembalikan">Dikembalikan</MenuItem>
+                <MenuItem value="terlambat">Terlambat</MenuItem>
               </TextField>
             </Grid>
             <Grid item xs={12} sm={6} md={4}>

@@ -1,6 +1,7 @@
-import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import axios from "../utils/axios";
+import { toast } from "react-toastify";
 import {
   Grid,
   Card,
@@ -50,70 +51,62 @@ const Dashboard = () => {
     const fetchDashboardData = async () => {
       try {
         setLoading(true);
-        // In a real application, you would fetch this data from your API
-        // For now, we'll use mock data
         
-        // Simulate API call delay
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        // Fetch data from the API
+        const response = await axios.get('/api/dashboard/stats');
         
-        // Mock data
-        setStats({
-          totalBarang: 156,
-          totalKategori: 8,
-          totalPeminjaman: 24,
-          barangRusak: 5,
-        });
-        
-        setRecentPeminjaman([
-          {
-            id: 1,
-            nama_peminjam: 'Budi Santoso',
-            tanggal_pinjam: '2023-07-15',
-            tanggal_kembali_harapan: '2023-07-20',
-            status: 'dipinjam',
-          },
-          {
-            id: 2,
-            nama_peminjam: 'Ani Wijaya',
-            tanggal_pinjam: '2023-07-14',
-            tanggal_kembali_harapan: '2023-07-21',
-            status: 'dipinjam',
-          },
-          {
-            id: 3,
-            nama_peminjam: 'Deni Kurniawan',
-            tanggal_pinjam: '2023-07-10',
-            tanggal_kembali_harapan: '2023-07-17',
-            status: 'dikembalikan',
-          },
-          {
-            id: 4,
-            nama_peminjam: 'Siti Rahayu',
-            tanggal_pinjam: '2023-07-08',
-            tanggal_kembali_harapan: '2023-07-15',
-            status: 'dikembalikan',
-          },
-        ]);
-        
-        setBarangPerKategori([
-          { nama: 'Komputer', jumlah: 45 },
-          { nama: 'Periferal', jumlah: 30 },
-          { nama: 'Jaringan', jumlah: 25 },
-          { nama: 'Alat Ukur', jumlah: 20 },
-          { nama: 'Media Pembelajaran', jumlah: 15 },
-          { nama: 'Lainnya', jumlah: 21 },
-        ]);
-        
-        setKondisiBarang([
-          { kondisi: 'Baik', jumlah: 130 },
-          { kondisi: 'Rusak Ringan', jumlah: 21 },
-          { kondisi: 'Rusak Berat', jumlah: 5 },
-        ]);
+        if (response.data.sukses) {
+          const { stats, recentPeminjaman, barangPerKategori, kondisiBarang } = response.data.data;
+          
+          setStats({
+            totalBarang: stats.totalBarang,
+            totalKategori: stats.totalKategori,
+            totalPeminjaman: stats.totalPeminjaman,
+            barangRusak: stats.barangRusak,
+          });
+          
+          // Format peminjaman data
+          const formattedPeminjaman = recentPeminjaman.map(item => ({
+            id: item.id,
+            nama_peminjam: item.nama_peminjam || (item.pengguna ? item.pengguna.nama : 'Tidak ada nama'),
+            tanggal_pinjam: item.tanggal_pinjam,
+            tanggal_kembali_harapan: item.tanggal_kembali_harapan,
+            status: item.status,
+          }));
+          
+          setRecentPeminjaman(formattedPeminjaman);
+          setBarangPerKategori(barangPerKategori);
+          setKondisiBarang(kondisiBarang);
+        } else {
+          toast.error('Gagal memuat data dashboard');
+          // Fallback to empty data
+          setStats({
+            totalBarang: 0,
+            totalKategori: 0,
+            totalPeminjaman: 0,
+            barangRusak: 0,
+          });
+          setRecentPeminjaman([]);
+          setBarangPerKategori([]);
+          setKondisiBarang([]);
+        }
         
         setLoading(false);
       } catch (error) {
         console.error('Error fetching dashboard data:', error);
+        toast.error('Terjadi kesalahan saat memuat data dashboard');
         setLoading(false);
+        
+        // Fallback to empty data
+        setStats({
+          totalBarang: 0,
+          totalKategori: 0,
+          totalPeminjaman: 0,
+          barangRusak: 0,
+        });
+        setRecentPeminjaman([]);
+        setBarangPerKategori([]);
+        setKondisiBarang([]);
       }
     };
 

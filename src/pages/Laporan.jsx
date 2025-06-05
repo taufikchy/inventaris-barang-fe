@@ -387,8 +387,8 @@ const Laporan = () => {
   const inventoryColumns = [
     { id: 'kode', label: 'Kode', sortable: true },
     { id: 'nama', label: 'Nama Barang', sortable: true },
-    { id: 'kategori', label: 'Kategori', sortable: true },
-    { id: 'lokasi', label: 'Lokasi', sortable: true },
+    { id: 'kategori', label: 'Kategori', sortable: true, format: (value) => value?.nama || value || '-' },
+    { id: 'lokasi', label: 'Lokasi', sortable: true, format: (value) => value?.nama || value || '-' },
     { id: 'kondisi', label: 'Kondisi', sortable: true },
     { id: 'tanggal_perolehan', label: 'Tanggal Perolehan', sortable: true },
     { id: 'harga', label: 'Harga (Rp)', sortable: true, format: (value) => value.toLocaleString('id-ID') },
@@ -408,8 +408,8 @@ const Laporan = () => {
   const conditionColumns = [
     { id: 'kode', label: 'Kode', sortable: true },
     { id: 'nama', label: 'Nama Barang', sortable: true },
-    { id: 'kategori', label: 'Kategori', sortable: true },
-    { id: 'lokasi', label: 'Lokasi', sortable: true },
+    { id: 'kategori', label: 'Kategori', sortable: true, format: (value) => value?.nama || value || '-' },
+    { id: 'lokasi', label: 'Lokasi', sortable: true, format: (value) => value?.nama || value || '-' },
     { id: 'kondisi', label: 'Kondisi', sortable: true },
     { id: 'keterangan', label: 'Keterangan', sortable: true },
   ];
