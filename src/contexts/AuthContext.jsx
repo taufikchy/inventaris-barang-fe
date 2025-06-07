@@ -214,6 +214,19 @@ export const AuthProvider = ({ children }) => {
     return user?.peran === 'admin' || user?.peran === 'kepala_lab';
   };
 
+  // Permission functions for CRUD operations
+  const canCRUD = () => {
+    return user?.peran !== 'sarana'; // All roles except 'sarana' can perform CRUD
+  };
+
+  const canDeleteBarang = () => {
+    return user?.peran === 'kepala_lab'; // Only 'kepala_lab' can delete barang
+  };
+
+  const canDeleteLokasiKategori = () => {
+    return user?.peran === 'kepala_lab'; // Only 'kepala_lab' can delete lokasi/kategori
+  };
+
   const value = {
     user,
     token,
@@ -226,6 +239,9 @@ export const AuthProvider = ({ children }) => {
     isSarana,
     isAdminOrToolman,
     isAdminOrKepalaLab,
+    canCRUD,
+    canDeleteBarang,
+    canDeleteLokasiKategori,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import axios from '../utils/axios';
 import { toast } from 'react-toastify';
+import { useAuth } from '../contexts/AuthContext';
 import { Formik, Form, Field } from 'formik';
 import * as Yup from 'yup';
 import {
@@ -57,6 +58,7 @@ const BarangDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
+  const { canCRUD, canDeleteBarang } = useAuth();
   const isNewBarang = id === 'new';
   const isEditMode = location.state?.edit || isNewBarang;
   
@@ -203,13 +205,7 @@ const BarangDetail = () => {
         toast.success(isNewBarang ? 'Barang berhasil ditambahkan' : 'Barang berhasil diperbarui');
         
         // Redirect to barang list after successful save
-        if (isNewBarang) {
-          navigate('/barang');
-        } else {
-          // Update local state and exit edit mode
-          fetchBarang(); // Refresh data
-          navigate(`/barang/${id}`, { replace: true });
-        }
+        navigate('/barang');
       } else {
         toast.error(response.data.pesan || (isNewBarang ? 'Gagal menambahkan barang' : 'Gagal memperbarui barang'));
       }
@@ -248,6 +244,9 @@ const BarangDetail = () => {
 
   // Format currency
   const formatCurrency = (amount) => {
+    if (!amount || isNaN(amount)) {
+      return 'Rp 0';
+    }
     return new Intl.NumberFormat('id-ID', {
       style: 'currency',
       currency: 'IDR',
@@ -257,8 +256,15 @@ const BarangDetail = () => {
 
   // Format date
   const formatDate = (dateString) => {
+    if (!dateString) {
+      return '-';
+    }
     const options = { year: 'numeric', month: 'long', day: 'numeric' };
-    return new Date(dateString).toLocaleDateString('id-ID', options);
+    const date = new Date(dateString);
+    if (isNaN(date.getTime())) {
+      return '-';
+    }
+    return date.toLocaleDateString('id-ID', options);
   };
 
   // Get status chip color
@@ -299,13 +305,23 @@ const BarangDetail = () => {
     );
   }
 
+  if (!barang && !isNewBarang) {
+    return (
+      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '50vh' }}>
+        <Typography variant="h6" color="text.secondary">
+          Data barang tidak ditemukan
+        </Typography>
+      </Box>
+    );
+  }
+
   return (
     <>
       <PageHeader
         title={isNewBarang ? 'Tambah Barang Baru' : 'Detail Barang'}
         backButton
         onBackClick={() => navigate('/barang')}
-        actionButton={!isNewBarang && !isEditMode ? {
+        actionButton={!isNewBarang && !isEditMode && canCRUD() ? {
           icon: <EditIcon />,
           text: 'Edit',
           onClick: () => navigate(`/barang/${id}`, { state: { edit: true } }),
@@ -315,16 +331,16 @@ const BarangDetail = () => {
       {isEditMode ? (
         <Formik
           initialValues={{
-            kode: barang.kode,
-            nama: barang.nama,
-            deskripsi: barang.deskripsi || '',
-            jumlah: barang.jumlah,
-            kondisi: barang.kondisi,
-            tanggal_perolehan: barang.tanggal_perolehan,
-            harga_perolehan: barang.harga_perolehan,
-            id_kategori: barang.id_kategori,
-            id_lokasi: barang.id_lokasi,
-            status: barang.status,
+            kode: barang?.kode || '',
+            nama: barang?.nama || '',
+            deskripsi: barang?.deskripsi || '',
+            jumlah: barang?.jumlah || 0,
+            kondisi: barang?.kondisi || 'Baik',
+            tanggal_perolehan: barang?.tanggal_perolehan || new Date().toISOString().split('T')[0],
+            harga_perolehan: barang?.harga_perolehan || 0,
+            id_kategori: barang?.id_kategori || '',
+            id_lokasi: barang?.id_lokasi || '',
+            status: barang?.status || 'Tersedia',
           }}
           validationSchema={BarangSchema}
           onSubmit={handleSubmit}
@@ -538,7 +554,7 @@ const BarangDetail = () => {
                     Batal
                   </Button>
                   <Box>
-                    {!isNewBarang && (
+                    {!isNewBarang && canDeleteBarang() && (
                       <Button
                         variant="outlined"
                         color="error"
@@ -586,35 +602,35 @@ const BarangDetail = () => {
                       <CardMedia
                         component="img"
                         height="250"
-                        image={barang.gambar || 'https://via.placeholder.com/400x300?text=No+Image'}
-                        alt={barang.nama}
+                        image={barang?.gambar || 'https://via.placeholder.com/400x300?text=No+Image'}
+                        alt={barang?.nama || 'Barang'}
                         sx={{ objectFit: 'contain', bgcolor: 'grey.100', p: 2 }}
                       />
                     </Card>
                   </Grid>
                   <Grid item xs={12} md={8}>
                     <Typography variant="h5" gutterBottom>
-                      {barang.nama}
+                      {barang?.nama || 'Nama Barang'}
                     </Typography>
                     <Typography variant="subtitle1" color="text.secondary" gutterBottom>
-                      Kode: {barang.kode}
+                      Kode: {barang?.kode || '-'}
                     </Typography>
                     
                     <Box sx={{ display: 'flex', gap: 1, mb: 2 }}>
                       <Chip
-                        label={barang.status}
+                        label={barang?.status || 'Tersedia'}
                         size="small"
-                        color={getStatusColor(barang.status)}
+                        color={getStatusColor(barang?.status || 'Tersedia')}
                       />
                       <Chip
-                        label={barang.kondisi}
+                        label={barang?.kondisi || 'Baik'}
                         size="small"
-                        color={getKondisiColor(barang.kondisi)}
+                        color={getKondisiColor(barang?.kondisi || 'Baik')}
                       />
                     </Box>
                     
                     <Typography variant="body1" paragraph>
-                      {barang.deskripsi || 'Tidak ada deskripsi'}
+                      {barang?.deskripsi || 'Tidak ada deskripsi'}
                     </Typography>
                     
                     <Divider sx={{ my: 2 }} />
@@ -625,7 +641,7 @@ const BarangDetail = () => {
                           Kategori
                         </Typography>
                         <Typography variant="body1" gutterBottom>
-                          {barang.kategori}
+                          {barang?.kategori || '-'}
                         </Typography>
                       </Grid>
                       <Grid item xs={12} sm={6}>
@@ -633,7 +649,7 @@ const BarangDetail = () => {
                           Lokasi
                         </Typography>
                         <Typography variant="body1" gutterBottom>
-                          {barang.lokasi}
+                          {barang?.lokasi || '-'}
                         </Typography>
                       </Grid>
                       <Grid item xs={12} sm={6}>
@@ -641,7 +657,7 @@ const BarangDetail = () => {
                           Jumlah
                         </Typography>
                         <Typography variant="body1" gutterBottom>
-                          {barang.jumlah} unit
+                          {barang?.jumlah || 0} unit
                         </Typography>
                       </Grid>
                       <Grid item xs={12} sm={6}>
@@ -649,7 +665,7 @@ const BarangDetail = () => {
                           Tanggal Perolehan
                         </Typography>
                         <Typography variant="body1" gutterBottom>
-                          {formatDate(barang.tanggal_perolehan)}
+                          {barang?.tanggal_perolehan ? formatDate(barang.tanggal_perolehan) : '-'}
                         </Typography>
                       </Grid>
                       <Grid item xs={12} sm={6}>
@@ -657,7 +673,7 @@ const BarangDetail = () => {
                           Harga Perolehan
                         </Typography>
                         <Typography variant="body1" gutterBottom>
-                          {formatCurrency(barang.harga_perolehan)}
+                          {barang?.harga_perolehan ? formatCurrency(barang.harga_perolehan) : '-'}
                         </Typography>
                       </Grid>
                     </Grid>

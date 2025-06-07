@@ -170,16 +170,7 @@ const PeminjamanDetail = () => {
         toast.success(isNewPeminjaman ? 'Peminjaman berhasil ditambahkan' : 'Peminjaman berhasil diperbarui');
         
         // Redirect to peminjaman list after successful save
-        if (isNewPeminjaman) {
-          navigate('/peminjaman');
-        } else {
-          // Update local state and exit edit mode
-          setPeminjaman({
-            ...peminjaman,
-            ...values,
-          });
-          navigate(`/peminjaman/${id}`);
-        }
+        navigate('/peminjaman');
       } else {
         toast.error((isNewPeminjaman ? 'Gagal menambahkan peminjaman: ' : 'Gagal memperbarui peminjaman: ') + response.data.pesan);
       }

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from '../utils/axios';
 import { toast } from 'react-toastify';
+import { useAuth } from '../contexts/AuthContext';
 import {
   Box,
   Button,
@@ -30,6 +31,7 @@ import ConfirmDialog from '../components/ConfirmDialog';
 
 const Barang = () => {
   const navigate = useNavigate();
+  const { canCRUD, canDeleteBarang } = useAuth();
   const [loading, setLoading] = useState(true);
   const [barangs, setBarangs] = useState([]);
   const [kategoris, setKategoris] = useState([]);
@@ -248,16 +250,20 @@ const Barang = () => {
           <VisibilityIcon fontSize="small" />
         </IconButton>
       </Tooltip>
-      <Tooltip title="Edit">
-        <IconButton onClick={() => navigate(`/barang/${row.id}`, { state: { edit: true } })} size="small">
-          <EditIcon fontSize="small" />
-        </IconButton>
-      </Tooltip>
-      <Tooltip title="Hapus">
-        <IconButton onClick={() => handleDeleteConfirm(row)} size="small" color="error">
-          <DeleteIcon fontSize="small" />
-        </IconButton>
-      </Tooltip>
+      {canCRUD() && (
+        <Tooltip title="Edit">
+          <IconButton onClick={() => navigate(`/barang/${row.id}`, { state: { edit: true } })} size="small">
+            <EditIcon fontSize="small" />
+          </IconButton>
+        </Tooltip>
+      )}
+      {canDeleteBarang() && (
+        <Tooltip title="Hapus">
+          <IconButton onClick={() => handleDeleteConfirm(row)} size="small" color="error">
+            <DeleteIcon fontSize="small" />
+          </IconButton>
+        </Tooltip>
+      )}
     </Box>
   );
 
@@ -265,9 +271,9 @@ const Barang = () => {
     <>
       <PageHeader
         title="Barang Inventaris"
-        actionText="Tambah Barang"
-        actionIcon={<AddIcon />}
-        onActionClick={() => navigate('/barang/new')}
+        actionText={canCRUD() ? "Tambah Barang" : undefined}
+        actionIcon={canCRUD() ? <AddIcon /> : undefined}
+        onActionClick={canCRUD() ? () => navigate('/barang/new') : undefined}
       />
 
       {/* Filters */}
