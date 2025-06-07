@@ -168,11 +168,10 @@ const Dashboard = () => {
     responsive: true,
     plugins: {
       legend: {
-        position: 'top',
+        display: false,
       },
       title: {
-        display: true,
-        text: 'Distribusi Barang per Ruangan',
+        display: false,
       },
     },
   };

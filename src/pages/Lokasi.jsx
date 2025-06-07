@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import axios from '../utils/axios';
 import { toast } from 'react-toastify';
+import { useAuth } from '../contexts/AuthContext';
 import {
   Box,
   Button,
@@ -30,6 +31,7 @@ const LokasiSchema = Yup.object().shape({
 });
 
 const Lokasi = () => {
+  const { canCRUD, canDeleteLokasiKategori } = useAuth();
   const [loading, setLoading] = useState(true);
   const [lokasis, setLokasis] = useState([]);
   const [openForm, setOpenForm] = useState(false);
@@ -152,16 +154,20 @@ const Lokasi = () => {
   // Table actions
   const actions = (row) => (
     <Box>
-      <Tooltip title="Edit">
-        <IconButton onClick={() => handleOpenForm(row)} size="small">
-          <EditIcon fontSize="small" />
-        </IconButton>
-      </Tooltip>
-      <Tooltip title="Hapus">
-        <IconButton onClick={() => handleDeleteConfirm(row)} size="small" color="error">
-          <DeleteIcon fontSize="small" />
-        </IconButton>
-      </Tooltip>
+      {canCRUD() && (
+        <Tooltip title="Edit">
+          <IconButton onClick={() => handleOpenForm(row)} size="small">
+            <EditIcon fontSize="small" />
+          </IconButton>
+        </Tooltip>
+      )}
+      {canDeleteLokasiKategori() && (
+        <Tooltip title="Hapus">
+          <IconButton onClick={() => handleDeleteConfirm(row)} size="small" color="error">
+            <DeleteIcon fontSize="small" />
+          </IconButton>
+        </Tooltip>
+      )}
     </Box>
   );
 
@@ -169,9 +175,9 @@ const Lokasi = () => {
     <>
       <PageHeader
         title="Lokasi Barang"
-        actionText="Tambah Lokasi"
-        actionIcon={<AddIcon />}
-        onActionClick={() => handleOpenForm()}
+        actionText={canCRUD() ? "Tambah Lokasi" : undefined}
+        actionIcon={canCRUD() ? <AddIcon /> : undefined}
+        onActionClick={canCRUD() ? () => handleOpenForm() : undefined}
       />
 
       <DataTable
