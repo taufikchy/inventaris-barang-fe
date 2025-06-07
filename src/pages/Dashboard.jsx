@@ -25,6 +25,10 @@ import {
   SwapHoriz as SwapHorizIcon,
   Warning as WarningIcon,
   ArrowForward as ArrowForwardIcon,
+  Receipt as ReceiptIcon,
+  CheckCircle as CheckCircleIcon,
+  Build as BuildIcon,
+  Dangerous as DangerousIcon,
 } from '@mui/icons-material';
 import { Chart as ChartJS, ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement, Title } from 'chart.js';
 import { Pie, Bar } from 'react-chartjs-2';
@@ -42,10 +46,16 @@ const Dashboard = () => {
     totalKategori: 0,
     totalPeminjaman: 0,
     barangRusak: 0,
+    barangBaik: 0,
+    barangRusakRingan: 0,
+    barangRusakBerat: 0,
+    totalTransaksiHariIni: 0
   });
   const [recentPeminjaman, setRecentPeminjaman] = useState([]);
-  const [barangPerKategori, setBarangPerKategori] = useState([]);
-  const [kondisiBarang, setKondisiBarang] = useState([]);
+  const [recentTransaksi, setRecentTransaksi] = useState([]);
+  const [transaksiPerJenis, setTransaksiPerJenis] = useState([]);
+  const [distribusiPerKondisi, setDistribusiPerKondisi] = useState([]);
+  const [barangPerLokasi, setBarangPerLokasi] = useState([]);
 
   useEffect(() => {
     const fetchDashboardData = async () => {
@@ -56,13 +66,17 @@ const Dashboard = () => {
         const response = await axios.get('/api/dashboard/stats');
         
         if (response.data.sukses) {
-          const { stats, recentPeminjaman, barangPerKategori, kondisiBarang } = response.data.data;
+          const { stats, recentPeminjaman, distribusiPerKondisi, barangPerLokasi } = response.data.data;
           
           setStats({
             totalBarang: stats.totalBarang,
             totalKategori: stats.totalKategori,
             totalPeminjaman: stats.totalPeminjaman,
             barangRusak: stats.barangRusak,
+            barangBaik: stats.barangBaik || 0,
+            barangRusakRingan: stats.barangRusakRingan || 0,
+            barangRusakBerat: stats.barangRusakBerat || 0,
+            totalTransaksiHariIni: stats.totalTransaksiHariIni || 0
           });
           
           // Format peminjaman data
@@ -75,8 +89,12 @@ const Dashboard = () => {
           }));
           
           setRecentPeminjaman(formattedPeminjaman);
-          setBarangPerKategori(barangPerKategori);
-          setKondisiBarang(kondisiBarang);
+          
+          // Set recent transactions and transaction stats
+          setRecentTransaksi(response.data.data.recentTransaksi || []);
+          setTransaksiPerJenis(response.data.data.transaksiPerJenis || []);
+          setDistribusiPerKondisi(distribusiPerKondisi);
+          setBarangPerLokasi(barangPerLokasi);
         } else {
           toast.error('Gagal memuat data dashboard');
           // Fallback to empty data
@@ -85,10 +103,13 @@ const Dashboard = () => {
             totalKategori: 0,
             totalPeminjaman: 0,
             barangRusak: 0,
+            barangBaik: 0,
+            barangRusakRingan: 0,
+            barangRusakBerat: 0,
           });
           setRecentPeminjaman([]);
-          setBarangPerKategori([]);
-          setKondisiBarang([]);
+          setDistribusiPerKondisi([]);
+          setBarangPerLokasi([]);
         }
         
         setLoading(false);
@@ -103,10 +124,13 @@ const Dashboard = () => {
           totalKategori: 0,
           totalPeminjaman: 0,
           barangRusak: 0,
+          barangBaik: 0,
+          barangRusakRingan: 0,
+          barangRusakBerat: 0,
         });
         setRecentPeminjaman([]);
-        setBarangPerKategori([]);
-        setKondisiBarang([]);
+        setDistribusiPerKondisi([]);
+        setBarangPerLokasi([]);
       }
     };
 
@@ -115,24 +139,27 @@ const Dashboard = () => {
 
   // Prepare chart data
   const pieChartData = {
-    labels: kondisiBarang.map(item => item.kondisi),
+    labels: distribusiPerKondisi.map(item => item.nama),
     datasets: [
       {
-        data: kondisiBarang.map(item => item.jumlah),
+        data: distribusiPerKondisi.map(item => item.jumlah),
         backgroundColor: ['#22c55e', '#f59e0b', '#ef4444'],
-        borderColor: ['#ffffff', '#ffffff', '#ffffff'],
-        borderWidth: 1,
+        borderColor: '#ffffff',
+        borderWidth: 2,
       },
     ],
   };
 
   const barChartData = {
-    labels: barangPerKategori.map(item => item.nama),
+    labels: barangPerLokasi.map(item => item.nama),
     datasets: [
       {
         label: 'Jumlah Barang',
-        data: barangPerKategori.map(item => item.jumlah),
-        backgroundColor: '#3b82f6',
+        data: barangPerLokasi.map(item => item.jumlah),
+        backgroundColor: [
+          '#3b82f6', '#22c55e', '#f59e0b', '#ef4444', '#8b5cf6', 
+          '#06b6d4', '#f97316', '#84cc16', '#ec4899', '#6366f1'
+        ],
       },
     ],
   };
@@ -145,7 +172,7 @@ const Dashboard = () => {
       },
       title: {
         display: true,
-        text: 'Barang per Kategori',
+        text: 'Distribusi Barang per Ruangan',
       },
     },
   };
@@ -175,8 +202,8 @@ const Dashboard = () => {
       <PageHeader title="Dashboard" />
 
       {/* Info Cards */}
-      <Grid container spacing={3} sx={{ mb: 4 }}>
-        <Grid item xs={12} sm={6} md={3}>
+      <Grid container spacing={2} sx={{ mb: 4 }}>
+        <Grid item xs={12} sm={6} md={2.4}>
           {loading ? (
             <Skeleton variant="rounded" height={120} />
           ) : (
@@ -188,19 +215,43 @@ const Dashboard = () => {
             />
           )}
         </Grid>
-        <Grid item xs={12} sm={6} md={3}>
+        <Grid item xs={12} sm={6} md={2.4}>
           {loading ? (
             <Skeleton variant="rounded" height={120} />
           ) : (
             <InfoCard
-              title="Total Kategori"
-              value={stats.totalKategori}
-              icon={<CategoryIcon />}
+              title="Barang Baik"
+              value={stats.barangBaik}
+              icon={<CheckCircleIcon />}
               color="success"
             />
           )}
         </Grid>
-        <Grid item xs={12} sm={6} md={3}>
+        <Grid item xs={12} sm={6} md={2.4}>
+          {loading ? (
+            <Skeleton variant="rounded" height={120} />
+          ) : (
+            <InfoCard
+              title="Rusak Ringan"
+              value={stats.barangRusakRingan}
+              icon={<BuildIcon />}
+              color="warning"
+            />
+          )}
+        </Grid>
+        <Grid item xs={12} sm={6} md={2.4}>
+          {loading ? (
+            <Skeleton variant="rounded" height={120} />
+          ) : (
+            <InfoCard
+              title="Rusak Berat"
+              value={stats.barangRusakBerat}
+              icon={<DangerousIcon />}
+              color="error"
+            />
+          )}
+        </Grid>
+        <Grid item xs={12} sm={6} md={2.4}>
           {loading ? (
             <Skeleton variant="rounded" height={120} />
           ) : (
@@ -208,19 +259,7 @@ const Dashboard = () => {
               title="Peminjaman Aktif"
               value={stats.totalPeminjaman}
               icon={<SwapHorizIcon />}
-              color="warning"
-            />
-          )}
-        </Grid>
-        <Grid item xs={12} sm={6} md={3}>
-          {loading ? (
-            <Skeleton variant="rounded" height={120} />
-          ) : (
-            <InfoCard
-              title="Barang Rusak"
-              value={stats.barangRusak}
-              icon={<WarningIcon />}
-              color="error"
+              color="info"
             />
           )}
         </Grid>
@@ -228,12 +267,12 @@ const Dashboard = () => {
 
       {/* Charts and Tables */}
       <Grid container spacing={3}>
-        {/* Barang per Kategori Chart */}
+        {/* Distribusi Barang per Ruangan Chart */}
         <Grid item xs={12} md={8}>
           <Card sx={{ height: '100%' }}>
             <CardContent>
               <Typography variant="h6" gutterBottom>
-                Distribusi Barang per Kategori
+                Distribusi Barang per Ruangan
               </Typography>
               {loading ? (
                 <Skeleton variant="rectangular" height={300} />
@@ -246,12 +285,12 @@ const Dashboard = () => {
           </Card>
         </Grid>
 
-        {/* Kondisi Barang Chart */}
+        {/* Distribusi Barang per Kondisi Chart */}
         <Grid item xs={12} md={4}>
           <Card sx={{ height: '100%' }}>
             <CardContent>
               <Typography variant="h6" gutterBottom>
-                Kondisi Barang
+                Distribusi Barang per Kondisi
               </Typography>
               {loading ? (
                 <Skeleton variant="rectangular" height={300} />
@@ -265,7 +304,7 @@ const Dashboard = () => {
         </Grid>
 
         {/* Recent Peminjaman Table */}
-        <Grid item xs={12}>
+        <Grid item xs={12} md={6}>
           <Card>
             <CardContent>
               <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
@@ -282,12 +321,11 @@ const Dashboard = () => {
                 <Skeleton variant="rectangular" height={200} />
               ) : (
                 <TableContainer component={Paper} sx={{ boxShadow: 'none' }}>
-                  <Table>
+                  <Table size="small">
                     <TableHead>
                       <TableRow>
                         <TableCell>Peminjam</TableCell>
                         <TableCell>Tanggal Pinjam</TableCell>
-                        <TableCell>Tanggal Kembali</TableCell>
                         <TableCell>Status</TableCell>
                         <TableCell align="right">Aksi</TableCell>
                       </TableRow>
@@ -297,7 +335,6 @@ const Dashboard = () => {
                         <TableRow key={row.id}>
                           <TableCell>{row.nama_peminjam}</TableCell>
                           <TableCell>{formatDate(row.tanggal_pinjam)}</TableCell>
-                          <TableCell>{formatDate(row.tanggal_kembali_harapan)}</TableCell>
                           <TableCell>
                             <Chip
                               label={row.status === 'dipinjam' ? 'Dipinjam' : 'Dikembalikan'}
@@ -315,6 +352,74 @@ const Dashboard = () => {
                           </TableCell>
                         </TableRow>
                       ))}
+                    </TableBody>
+                  </Table>
+                </TableContainer>
+              )}
+            </CardContent>
+          </Card>
+        </Grid>
+        
+        {/* Recent Transactions Table */}
+        <Grid item xs={12} md={6}>
+          <Card>
+            <CardContent>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+                <Typography variant="h6">Transaksi Terbaru</Typography>
+                <Button
+                  size="small"
+                  endIcon={<ArrowForwardIcon />}
+                  onClick={() => navigate('/transaksi')}
+                >
+                  Lihat Semua
+                </Button>
+              </Box>
+              {loading ? (
+                <Skeleton variant="rectangular" height={200} />
+              ) : (
+                <TableContainer component={Paper} sx={{ boxShadow: 'none' }}>
+                  <Table size="small">
+                    <TableHead>
+                      <TableRow>
+                        <TableCell>Barang</TableCell>
+                        <TableCell>Jenis</TableCell>
+                        <TableCell>Jumlah</TableCell>
+                        <TableCell>Tanggal</TableCell>
+                      </TableRow>
+                    </TableHead>
+                    <TableBody>
+                      {recentTransaksi.length === 0 ? (
+                        <TableRow>
+                          <TableCell colSpan={4} align="center">
+                            <Typography variant="body2" color="text.secondary">
+                              Tidak ada data transaksi
+                            </Typography>
+                          </TableCell>
+                        </TableRow>
+                      ) : (
+                        recentTransaksi.map((transaksi) => (
+                          <TableRow key={transaksi.id}>
+                            <TableCell>
+                              <Typography variant="body2" noWrap>
+                                {transaksi.barang?.nama || 'N/A'}
+                              </Typography>
+                            </TableCell>
+                            <TableCell>
+                              <Chip
+                                label={transaksi.jenis_transaksi === 'masuk' ? 'Masuk' :
+                                       transaksi.jenis_transaksi === 'keluar' ? 'Keluar' :
+                                       transaksi.jenis_transaksi === 'rusak' ? 'Rusak' : 'Hilang'}
+                                color={transaksi.jenis_transaksi === 'masuk' ? 'success' :
+                                       transaksi.jenis_transaksi === 'keluar' ? 'primary' :
+                                       transaksi.jenis_transaksi === 'rusak' ? 'warning' : 'error'}
+                                size="small"
+                              />
+                            </TableCell>
+                            <TableCell>{transaksi.jumlah}</TableCell>
+                            <TableCell>{formatDate(transaksi.tanggal_transaksi)}</TableCell>
+                          </TableRow>
+                        ))
+                      )}
                     </TableBody>
                   </Table>
                 </TableContainer>

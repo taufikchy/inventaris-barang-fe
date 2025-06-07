@@ -4,7 +4,7 @@ import { Box, Toolbar, Container } from '@mui/material';
 import Header from '../components/Header';
 import Sidebar from '../components/Sidebar';
 
-const drawerWidth = 240;
+const drawerWidth = 5;
 
 const MainLayout = () => {
   const [open, setOpen] = useState(true);
@@ -17,13 +17,13 @@ const MainLayout = () => {
         component="main"
         sx={{
           flexGrow: 1,
-          p: 3,
-          width: { md: `calc(100% - ${open ? drawerWidth : 0}px)` },
+          p: 2,
           ml: { md: open ? `${drawerWidth}px` : 0 },
+          mr: 2,
           transition: (theme) =>
-            theme.transitions.create(['margin', 'width'], {
-              easing: theme.transitions.easing.sharp,
-              duration: theme.transitions.duration.leavingScreen,
+            theme.transitions.create(['margin'], {
+              easing: theme.transitions.easing.easeInOut,
+              duration: theme.transitions.duration.standard,
             }),
         }}
       >
