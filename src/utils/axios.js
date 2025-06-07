@@ -2,7 +2,9 @@ import axios from 'axios';
 
 // Buat instance axios dengan baseURL yang benar
 const instance = axios.create({
-  baseURL: '/' // Akan diproxy ke http://localhost:5000 oleh Vite
+  baseURL: '/', // Akan diproxy ke http://localhost:5000 oleh Vite
+  withCredentials: true,
+  timeout: 10000
 });
 
 // Fungsi untuk mengatur token autentikasi

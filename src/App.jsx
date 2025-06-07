@@ -18,6 +18,7 @@ import Kategori from './pages/Kategori';
 import Lokasi from './pages/Lokasi';
 import Peminjaman from './pages/Peminjaman';
 import DetailPeminjaman from './pages/DetailPeminjaman';
+import Transaksi from './pages/Transaksi';
 import Pengguna from './pages/Pengguna';
 import Laporan from './pages/Laporan';
 import NotFound from './pages/NotFound';
@@ -131,6 +132,7 @@ function App() {
               <Route path="/lokasi" element={<Lokasi />} />
               <Route path="/peminjaman" element={<Peminjaman />} />
               <Route path="/peminjaman/:id" element={<DetailPeminjaman />} />
+              <Route path="/transaksi" element={<Transaksi />} />
               <Route path="/laporan" element={<Laporan />} />
               
               {/* Admin Only Routes */}

@@ -33,6 +33,7 @@ import {
   Inventory as InventoryIcon,
   SwapHoriz as SwapHorizIcon,
   Assessment as AssessmentIcon,
+  Receipt as ReceiptIcon,
 } from '@mui/icons-material';
 import dayjs from 'dayjs';
 import PageHeader from '../components/PageHeader';
@@ -67,11 +68,13 @@ const Laporan = () => {
   const [lokasiFilter, setLokasiFilter] = useState('');
   const [kondisiFilter, setKondisiFilter] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
+  const [jenisTransaksiFilter, setJenisTransaksiFilter] = useState('');
   
   // Data states
   const [inventoryData, setInventoryData] = useState([]);
   const [loanData, setLoanData] = useState([]);
   const [conditionData, setConditionData] = useState([]);
+  const [transactionData, setTransactionData] = useState([]);
   
   // Mock data for categories and locations
   const categories = [
@@ -92,6 +95,7 @@ const Laporan = () => {
   
   const conditions = ['Baik', 'Rusak Ringan', 'Rusak Berat'];
   const statuses = ['Dipinjam', 'Tersedia', 'Dalam Perbaikan'];
+  const transactionTypes = ['masuk', 'keluar', 'rusak', 'hilang'];
 
   // Handle tab change
   const handleTabChange = (event, newValue) => {
@@ -344,6 +348,94 @@ const Laporan = () => {
     }
   };
 
+  // Fetch transaction report data
+  const fetchTransactionData = async () => {
+    try {
+      setLoading(true);
+      // In a real application, you would fetch this data from your API
+      // For now, we'll use mock data
+      
+      // Simulate API call delay
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      // Mock data
+      const mockData = [
+        { 
+          id: 1, 
+          kode: 'TRX001', 
+          barang: 'Laptop Dell XPS 13', 
+          jenis_transaksi: 'masuk',
+          jumlah: 5,
+          tanggal_transaksi: '2023-05-01',
+          harga_satuan: 15000000,
+          total_harga: 75000000,
+          supplier: 'PT. Tech Solutions',
+          keterangan: 'Pembelian laptop baru'
+        },
+        { 
+          id: 2, 
+          kode: 'TRX002', 
+          barang: 'Mouse Wireless', 
+          jenis_transaksi: 'keluar',
+          jumlah: 2,
+          tanggal_transaksi: '2023-05-05',
+          harga_satuan: 150000,
+          total_harga: 300000,
+          supplier: '-',
+          keterangan: 'Distribusi ke lab'
+        },
+        { 
+          id: 3, 
+          kode: 'TRX003', 
+          barang: 'Keyboard Mechanical', 
+          jenis_transaksi: 'rusak',
+          jumlah: 1,
+          tanggal_transaksi: '2023-05-10',
+          harga_satuan: 850000,
+          total_harga: 850000,
+          supplier: '-',
+          keterangan: 'Kerusakan akibat tumpahan air'
+        },
+        { 
+          id: 4, 
+          kode: 'TRX004', 
+          barang: 'Monitor LG 24"', 
+          jenis_transaksi: 'hilang',
+          jumlah: 1,
+          tanggal_transaksi: '2023-05-15',
+          harga_satuan: 2500000,
+          total_harga: 2500000,
+          supplier: '-',
+          keterangan: 'Hilang dari ruang penyimpanan'
+        },
+        { 
+          id: 5, 
+          kode: 'TRX005', 
+          barang: 'Proyektor Epson', 
+          jenis_transaksi: 'masuk',
+          jumlah: 3,
+          tanggal_transaksi: '2023-05-20',
+          harga_satuan: 7500000,
+          total_harga: 22500000,
+          supplier: 'CV. Media Edukasi',
+          keterangan: 'Pengadaan proyektor untuk lab'
+        },
+      ];
+      
+      setTransactionData(mockData);
+      setLoading(false);
+    } catch (error) {
+      console.error('Error fetching transaction data:', error);
+      toast.error('Gagal memuat data transaksi');
+      setLoading(false);
+    }
+  };
+
+  // Load initial data
+  useEffect(() => {
+    fetchInventoryData();
+  }, []);
+
   // Load data when tab changes
   useEffect(() => {
     if (activeTab === 0) {
@@ -352,6 +444,8 @@ const Laporan = () => {
       fetchLoanData();
     } else if (activeTab === 2) {
       fetchConditionData();
+    } else if (activeTab === 3) {
+      fetchTransactionData();
     }
   }, [activeTab]);
 
@@ -383,6 +477,14 @@ const Laporan = () => {
     return kategoriMatch && lokasiMatch && kondisiMatch;
   });
 
+  const filteredTransactionData = transactionData.filter(item => {
+    const itemDate = dayjs(item.tanggal_transaksi);
+    const dateInRange = itemDate.isBetween(startDate, endDate, 'day', '[]');
+    const jenisMatch = !jenisTransaksiFilter || item.jenis_transaksi === jenisTransaksiFilter;
+    
+    return dateInRange && jenisMatch;
+  });
+
   // Table columns definition
   const inventoryColumns = [
     { id: 'kode', label: 'Kode', sortable: true },
@@ -411,6 +513,30 @@ const Laporan = () => {
     { id: 'kategori', label: 'Kategori', sortable: true, format: (value) => value?.nama || value || '-' },
     { id: 'lokasi', label: 'Lokasi', sortable: true, format: (value) => value?.nama || value || '-' },
     { id: 'kondisi', label: 'Kondisi', sortable: true },
+    { id: 'keterangan', label: 'Keterangan', sortable: true },
+  ];
+
+  const transactionColumns = [
+    { id: 'kode', label: 'Kode', sortable: true },
+    { id: 'barang', label: 'Nama Barang', sortable: true },
+    { id: 'jenis_transaksi', label: 'Jenis', sortable: true, format: (value) => {
+      const labels = {
+        'masuk': 'Masuk',
+        'keluar': 'Keluar', 
+        'rusak': 'Rusak',
+        'hilang': 'Hilang'
+      };
+      return labels[value] || value;
+    }},
+    { id: 'jumlah', label: 'Jumlah', sortable: true },
+    { id: 'tanggal_transaksi', label: 'Tanggal', sortable: true },
+    { id: 'harga_satuan', label: 'Harga Satuan', sortable: true, format: (value) => 
+      new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR' }).format(value)
+    },
+    { id: 'total_harga', label: 'Total Harga', sortable: true, format: (value) => 
+      new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR' }).format(value)
+    },
+    { id: 'supplier', label: 'Supplier', sortable: true },
     { id: 'keterangan', label: 'Keterangan', sortable: true },
   ];
 
@@ -531,7 +657,26 @@ const Laporan = () => {
                 </Select>
               </FormControl>
             </Grid>
-            <Grid item xs={12} md={6} lg={6}>
+            <Grid item xs={12} md={6} lg={3}>
+              <FormControl fullWidth size="small">
+                <InputLabel>Jenis Transaksi</InputLabel>
+                <Select
+                  value={jenisTransaksiFilter}
+                  label="Jenis Transaksi"
+                  onChange={(e) => setJenisTransaksiFilter(e.target.value)}
+                >
+                  <MenuItem value="">Semua</MenuItem>
+                  {transactionTypes.map((type) => (
+                    <MenuItem key={type} value={type}>
+                      {type === 'masuk' ? 'Masuk' :
+                       type === 'keluar' ? 'Keluar' :
+                       type === 'rusak' ? 'Rusak' : 'Hilang'}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </Grid>
+            <Grid item xs={12} md={6} lg={3}>
               <Button 
                 variant="outlined" 
                 startIcon={<FilterListIcon />}
@@ -542,6 +687,7 @@ const Laporan = () => {
                   setLokasiFilter('');
                   setKondisiFilter('');
                   setStatusFilter('');
+                  setJenisTransaksiFilter('');
                 }}
               >
                 Reset Filter
@@ -574,6 +720,13 @@ const Laporan = () => {
             label="Laporan Kondisi" 
             id="report-tab-2" 
             aria-controls="report-tabpanel-2" 
+          />
+          <Tab 
+            icon={<ReceiptIcon />} 
+            iconPosition="start" 
+            label="Laporan Transaksi" 
+            id="report-tab-3" 
+            aria-controls="report-tabpanel-3" 
           />
         </Tabs>
       </Box>
@@ -612,6 +765,18 @@ const Laporan = () => {
           refreshable
           onRefresh={fetchConditionData}
           emptyMessage="Tidak ada data kondisi barang"
+        />
+      </TabPanel>
+
+      <TabPanel value={activeTab} index={3}>
+        <DataTable
+          title="Laporan Transaksi Barang"
+          columns={transactionColumns}
+          rows={filteredTransactionData}
+          loading={loading}
+          refreshable
+          onRefresh={fetchTransactionData}
+          emptyMessage="Tidak ada data transaksi"
         />
       </TabPanel>
     </>

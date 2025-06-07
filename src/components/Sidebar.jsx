@@ -21,6 +21,7 @@ import {
   Category as CategoryIcon,
   LocationOn as LocationIcon,
   SwapHoriz as SwapHorizIcon,
+  Receipt as ReceiptIcon,
   Assessment as AssessmentIcon,
   People as PeopleIcon,
   ChevronLeft as ChevronLeftIcon,
@@ -65,6 +66,11 @@ const Sidebar = ({ open, setOpen }) => {
       text: 'Peminjaman',
       icon: <SwapHorizIcon />,
       path: '/peminjaman',
+    },
+    {
+      text: 'Transaksi',
+      icon: <ReceiptIcon />,
+      path: '/transaksi',
     },
     {
       text: 'Laporan',
@@ -142,15 +148,17 @@ const Sidebar = ({ open, setOpen }) => {
         {isAdmin() && (
           <>
             <Divider sx={{ my: 2 }} />
-            <ListItem sx={{ pb: 0 }}>
-              <Typography
-                variant="body2"
-                color="textSecondary"
-                sx={{ fontWeight: 500, pl: 2 }}
-              >
-                ADMIN
-              </Typography>
-            </ListItem>
+            <Typography
+              variant="overline"
+              sx={{
+                px: 2,
+                color: 'text.secondary',
+                fontWeight: 600,
+                fontSize: '0.75rem',
+              }}
+            >
+              ADMIN
+            </Typography>
             {adminMenuItems.map((item) => (
               <ListItem key={item.text} disablePadding>
                 <ListItemButton
