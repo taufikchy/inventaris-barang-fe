@@ -124,76 +124,27 @@ const Laporan = () => {
   const fetchInventoryData = async () => {
     try {
       setLoading(true);
-      // In a real application, you would fetch this data from your API
-      // For now, we'll use mock data
+      const token = localStorage.getItem('token');
+      const response = await axios.get('/api/laporan/inventaris', {
+        params: {
+          kategori: kategoriFilter,
+          lokasi: lokasiFilter,
+          kondisi: kondisiFilter,
+          tanggal_mulai: startDate ? startDate.format('YYYY-MM-DD') : undefined,
+          tanggal_akhir: endDate ? endDate.format('YYYY-MM-DD') : undefined
+        },
+        headers: { Authorization: `Bearer ${token}` }
+      });
       
-      // Simulate API call delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Mock data
-      const mockData = [
-        { 
-          id: 1, 
-          kode: 'BRG001', 
-          nama: 'Laptop Dell XPS 13', 
-          kategori: 'Komputer', 
-          lokasi: 'Lab Komputer 1',
-          kondisi: 'Baik',
-          tanggal_perolehan: '2022-01-15',
-          harga: 15000000,
-          status: 'Tersedia'
-        },
-        { 
-          id: 2, 
-          kode: 'BRG002', 
-          nama: 'Proyektor Epson', 
-          kategori: 'Media Pembelajaran', 
-          lokasi: 'Lab Komputer 2',
-          kondisi: 'Baik',
-          tanggal_perolehan: '2021-11-20',
-          harga: 7500000,
-          status: 'Dipinjam'
-        },
-        { 
-          id: 3, 
-          kode: 'BRG003', 
-          nama: 'Router Cisco', 
-          kategori: 'Jaringan', 
-          lokasi: 'Ruang Server',
-          kondisi: 'Baik',
-          tanggal_perolehan: '2022-03-10',
-          harga: 2000000,
-          status: 'Tersedia'
-        },
-        { 
-          id: 4, 
-          kode: 'BRG004', 
-          nama: 'Keyboard Mechanical', 
-          kategori: 'Periferal', 
-          lokasi: 'Lab Komputer 1',
-          kondisi: 'Rusak Ringan',
-          tanggal_perolehan: '2022-02-05',
-          harga: 850000,
-          status: 'Dalam Perbaikan'
-        },
-        { 
-          id: 5, 
-          kode: 'BRG005', 
-          nama: 'Monitor LG 24"', 
-          kategori: 'Komputer', 
-          lokasi: 'Lab Komputer 2',
-          kondisi: 'Baik',
-          tanggal_perolehan: '2022-01-25',
-          harga: 2500000,
-          status: 'Tersedia'
-        },
-      ];
-      
-      setInventoryData(mockData);
+      if (response.data.sukses) {
+        setInventoryData(response.data.data.inventaris);
+      } else {
+        toast.error(response.data.pesan || 'Gagal memuat data inventaris');
+      }
       setLoading(false);
     } catch (error) {
       console.error('Error fetching inventory data:', error);
-      toast.error('Gagal memuat data inventaris');
+      toast.error(error.response?.data?.pesan || 'Gagal memuat data inventaris');
       setLoading(false);
     }
   };
@@ -202,71 +153,25 @@ const Laporan = () => {
   const fetchLoanData = async () => {
     try {
       setLoading(true);
-      // In a real application, you would fetch this data from your API
-      // For now, we'll use mock data
+      const token = localStorage.getItem('token');
+      const response = await axios.get('/api/laporan/peminjaman', {
+        params: {
+          status: statusFilter,
+          tanggal_mulai: startDate ? startDate.format('YYYY-MM-DD') : undefined,
+          tanggal_akhir: endDate ? endDate.format('YYYY-MM-DD') : undefined
+        },
+        headers: { Authorization: `Bearer ${token}` }
+      });
       
-      // Simulate API call delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Mock data
-      const mockData = [
-        { 
-          id: 1, 
-          kode: 'PJM001', 
-          peminjam: 'Budi Santoso', 
-          tanggal_pinjam: '2023-05-01', 
-          tanggal_kembali: '2023-05-08',
-          status: 'Dikembalikan',
-          jumlah_barang: 2,
-          keterangan: 'Untuk kegiatan workshop'
-        },
-        { 
-          id: 2, 
-          kode: 'PJM002', 
-          peminjam: 'Ani Wijaya', 
-          tanggal_pinjam: '2023-05-10', 
-          tanggal_kembali: '2023-05-15',
-          status: 'Dikembalikan',
-          jumlah_barang: 1,
-          keterangan: 'Untuk presentasi'
-        },
-        { 
-          id: 3, 
-          kode: 'PJM003', 
-          peminjam: 'Citra Dewi', 
-          tanggal_pinjam: '2023-05-20', 
-          tanggal_kembali: null,
-          status: 'Dipinjam',
-          jumlah_barang: 3,
-          keterangan: 'Untuk praktikum'
-        },
-        { 
-          id: 4, 
-          kode: 'PJM004', 
-          peminjam: 'Deni Pratama', 
-          tanggal_pinjam: '2023-05-25', 
-          tanggal_kembali: null,
-          status: 'Dipinjam',
-          jumlah_barang: 2,
-          keterangan: 'Untuk kegiatan lomba'
-        },
-        { 
-          id: 5, 
-          kode: 'PJM005', 
-          peminjam: 'Eka Putri', 
-          tanggal_pinjam: '2023-05-15', 
-          tanggal_kembali: '2023-05-22',
-          status: 'Dikembalikan',
-          jumlah_barang: 1,
-          keterangan: 'Untuk rapat'
-        },
-      ];
-      
-      setLoanData(mockData);
+      if (response.data.sukses) {
+        setLoanData(response.data.data.peminjaman);
+      } else {
+        toast.error(response.data.pesan || 'Gagal memuat data peminjaman');
+      }
       setLoading(false);
     } catch (error) {
       console.error('Error fetching loan data:', error);
-      toast.error('Gagal memuat data peminjaman');
+      toast.error(error.response?.data?.pesan || 'Gagal memuat data peminjaman');
       setLoading(false);
     }
   };
@@ -275,75 +180,25 @@ const Laporan = () => {
   const fetchConditionData = async () => {
     try {
       setLoading(true);
-      // In a real application, you would fetch this data from your API
-      // For now, we'll use mock data
+      const token = localStorage.getItem('token');
+      const response = await axios.get('/api/laporan/kondisi', {
+        params: {
+          kategori: kategoriFilter,
+          lokasi: lokasiFilter,
+          kondisi: kondisiFilter
+        },
+        headers: { Authorization: `Bearer ${token}` }
+      });
       
-      // Simulate API call delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Mock data
-      const mockData = [
-        { 
-          id: 1, 
-          kode: 'BRG001', 
-          nama: 'Laptop Dell XPS 13', 
-          kategori: 'Komputer', 
-          lokasi: 'Lab Komputer 1',
-          kondisi: 'Baik',
-          keterangan: 'Kondisi optimal'
-        },
-        { 
-          id: 2, 
-          kode: 'BRG002', 
-          nama: 'Proyektor Epson', 
-          kategori: 'Media Pembelajaran', 
-          lokasi: 'Lab Komputer 2',
-          kondisi: 'Baik',
-          keterangan: 'Kondisi optimal'
-        },
-        { 
-          id: 3, 
-          kode: 'BRG003', 
-          nama: 'Router Cisco', 
-          kategori: 'Jaringan', 
-          lokasi: 'Ruang Server',
-          kondisi: 'Baik',
-          keterangan: 'Kondisi optimal'
-        },
-        { 
-          id: 4, 
-          kode: 'BRG004', 
-          nama: 'Keyboard Mechanical', 
-          kategori: 'Periferal', 
-          lokasi: 'Lab Komputer 1',
-          kondisi: 'Rusak Ringan',
-          keterangan: 'Beberapa tombol macet'
-        },
-        { 
-          id: 5, 
-          kode: 'BRG005', 
-          nama: 'Monitor LG 24"', 
-          kategori: 'Komputer', 
-          lokasi: 'Lab Komputer 2',
-          kondisi: 'Baik',
-          keterangan: 'Kondisi optimal'
-        },
-        { 
-          id: 6, 
-          kode: 'BRG006', 
-          nama: 'Printer HP LaserJet', 
-          kategori: 'Periferal', 
-          lokasi: 'Ruang Guru',
-          kondisi: 'Rusak Berat',
-          keterangan: 'Tidak bisa menyala'
-        },
-      ];
-      
-      setConditionData(mockData);
+      if (response.data.sukses) {
+        setConditionData(response.data.data.barang);
+      } else {
+        toast.error(response.data.pesan || 'Gagal memuat data kondisi barang');
+      }
       setLoading(false);
     } catch (error) {
       console.error('Error fetching condition data:', error);
-      toast.error('Gagal memuat data kondisi barang');
+      toast.error(error.response?.data?.pesan || 'Gagal memuat data kondisi barang');
       setLoading(false);
     }
   };

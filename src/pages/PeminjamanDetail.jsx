@@ -156,14 +156,23 @@ const PeminjamanDetail = () => {
     try {
       setSaving(true);
       
+      // Pastikan jumlah adalah integer
+      const formattedValues = {
+        ...values,
+        detail_peminjaman: values.detail_peminjaman.map(item => ({
+          ...item,
+          jumlah: parseInt(item.jumlah, 10)
+        }))
+      };
+      
       let response;
       
       if (isNewPeminjaman) {
         // Create new peminjaman
-        response = await axios.post('/api/peminjaman', values);
+        response = await axios.post('/api/peminjaman', formattedValues);
       } else {
         // Update existing peminjaman
-        response = await axios.put(`/api/peminjaman/${id}`, values);
+        response = await axios.put(`/api/peminjaman/${id}`, formattedValues);
       }
       
       if (response.data.sukses) {
@@ -641,7 +650,7 @@ const PeminjamanDetail = () => {
                           ),
                       })}
                       onSubmit={(values) => {
-                        addOrUpdateBarang({ values, setFieldValue }, values.barang, values.jumlah);
+                        addOrUpdateBarang({ values: values, setFieldValue: dialogSetFieldValue }, values.barang, values.jumlah);
                       }}
                     >
                       {({ errors: dialogErrors, touched: dialogTouched, values: dialogValues, handleChange: dialogHandleChange, setFieldValue: dialogSetFieldValue, isSubmitting: dialogIsSubmitting }) => (

@@ -106,33 +106,31 @@ const Transaksi = () => {
     try {
       setLoading(true);
       const token = localStorage.getItem('token');
-      const params = {
-        page,
-        limit,
-        ...filters,
-        tanggal_mulai: filters.tanggal_mulai ? dayjs(filters.tanggal_mulai).format('YYYY-MM-DD') : '',
-        tanggal_akhir: filters.tanggal_akhir ? dayjs(filters.tanggal_akhir).format('YYYY-MM-DD') : ''
-      };
-      
-      // Remove empty filters
-      Object.keys(params).forEach(key => {
-        if (params[key] === '' || params[key] === null) {
-          delete params[key];
-        }
-      });
-      
       const response = await axios.get('/api/transaksi', {
-        headers: { Authorization: `Bearer ${token}` },
-        params
+        params: {
+          page,
+          limit: rowsPerPage,
+          jenis_transaksi: filters.jenis_transaksi,
+          tanggal_mulai: filters.tanggal_mulai ? filters.tanggal_mulai.format('YYYY-MM-DD') : undefined,
+          tanggal_akhir: filters.tanggal_akhir ? filters.tanggal_akhir.format('YYYY-MM-DD') : undefined,
+          id_barang: filters.id_barang,
+          status: filters.status,
+          search: filters.search
+        },
+        headers: { Authorization: `Bearer ${token}` }
       });
       
-      setTransaksi(response.data.data);
-      setTotalPages(response.data.pagination.totalPages);
-      setTotalItems(response.data.pagination.total);
+      if (response.data.success) {
+        setTransaksi(response.data.data);
+        setTotalRows(response.data.pagination.total);
+      } else {
+        console.error('Error fetching transactions:', response.data.message);
+        showAlert(response.data.message, 'error');
+      }
+      setLoading(false);
     } catch (error) {
       console.error('Error fetching transactions:', error);
-      showAlert('Gagal mengambil data transaksi', 'error');
-    } finally {
+      showAlert(error.response?.data?.message || 'Gagal memuat data transaksi', 'error');
       setLoading(false);
     }
   };
