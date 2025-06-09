@@ -46,28 +46,34 @@ const Peminjaman = () => {
   const fetchPeminjamans = async () => {
     try {
       setLoading(true);
+      const token = localStorage.getItem('token');
+      const response = await axios.get('/api/peminjaman', {
+        params: {
+          status: filters.status,
+          tanggal_mulai: filters.tanggal_mulai ? filters.tanggal_mulai.format('YYYY-MM-DD') : undefined,
+          tanggal_akhir: filters.tanggal_akhir ? filters.tanggal_akhir.format('YYYY-MM-DD') : undefined,
+          halaman: page,
+          batas: rowsPerPage
+        },
+        headers: { Authorization: `Bearer ${token}` }
+      });
       
-      // Build query parameters based on filters
-      const params = new URLSearchParams();
-      if (filters.status) params.append('status', filters.status);
-      if (filters.tanggal_mulai) params.append('tanggal_mulai', filters.tanggal_mulai);
-      if (filters.tanggal_selesai) params.append('tanggal_selesai', filters.tanggal_selesai);
-      
-      // Fetch data from API
-      const response = await axios.get(`/api/peminjaman?${params.toString()}`);
-      
+      // Pastikan struktur data sesuai dengan respons dari backend
       if (response.data.sukses) {
         setPeminjamans(response.data.data);
+        setTotalRows(response.data.pagination.total);
       } else {
-        toast.error('Gagal memuat data peminjaman: ' + response.data.pesan);
-        setPeminjamans([]);
+        console.error('Error fetching peminjamans:', response.data.pesan);
+        setAlert({ show: true, message: response.data.pesan, severity: 'error' });
       }
-      
       setLoading(false);
     } catch (error) {
       console.error('Error fetching peminjamans:', error);
-      toast.error('Gagal memuat data peminjaman: ' + (error.response?.data?.pesan || error.message));
-      setPeminjamans([]);
+      setAlert({ 
+        show: true, 
+        message: error.response?.data?.pesan || 'Gagal memuat data peminjaman', 
+        severity: 'error' 
+      });
       setLoading(false);
     }
   };

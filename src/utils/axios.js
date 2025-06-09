@@ -29,13 +29,9 @@ instance.interceptors.request.use(
   (config) => {
     // Selalu ambil token terbaru dari localStorage untuk setiap request
     const currentToken = localStorage.getItem('token');
-    console.log(`Request to ${config.url}: Token ${currentToken ? 'exists' : 'not found'}`);
     
     if (currentToken) {
       config.headers.Authorization = `Bearer ${currentToken}`;
-      console.log(`Setting Authorization header for ${config.url}`);
-    } else {
-      console.log(`No token available for ${config.url}`);
     }
     return config;
   },
