@@ -41,6 +41,10 @@ const Peminjaman = () => {
     tanggal_selesai: '',
   });
   const [showFilters, setShowFilters] = useState(false);
+  const [page, setPage] = useState(1);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
+  const [totalRows, setTotalRows] = useState(0);
+  const [alert, setAlert] = useState({ show: false, message: '', severity: 'success' });
 
   // Fetch peminjaman data
   const fetchPeminjamans = async () => {
@@ -50,8 +54,8 @@ const Peminjaman = () => {
       const response = await axios.get('/api/peminjaman', {
         params: {
           status: filters.status,
-          tanggal_mulai: filters.tanggal_mulai ? filters.tanggal_mulai.format('YYYY-MM-DD') : undefined,
-          tanggal_akhir: filters.tanggal_akhir ? filters.tanggal_akhir.format('YYYY-MM-DD') : undefined,
+          tanggal_mulai: filters.tanggal_mulai ? filters.tanggal_mulai : undefined,
+          tanggal_akhir: filters.tanggal_selesai ? filters.tanggal_selesai : undefined,
           halaman: page,
           batas: rowsPerPage
         },
@@ -80,7 +84,7 @@ const Peminjaman = () => {
 
   useEffect(() => {
     fetchPeminjamans();
-  }, []);
+  }, [page, rowsPerPage, filters]);
 
   // Handle delete confirmation
   const handleDeleteConfirm = (peminjaman) => {
@@ -340,6 +344,14 @@ const Peminjaman = () => {
         onRefresh={fetchPeminjamans}
         searchable
         emptyMessage="Belum ada data peminjaman"
+        page={page - 1} // Konversi page dari 1-based (API) ke 0-based (MUI)
+        rowsPerPage={rowsPerPage}
+        count={totalRows}
+        onPageChange={(event, newPage) => setPage(newPage + 1)} // Konversi kembali dari 0-based ke 1-based
+        onRowsPerPageChange={(event) => {
+          setRowsPerPage(parseInt(event.target.value, 10));
+          setPage(1); // Reset ke halaman pertama
+        }}
       />
 
       {/* Confirm Delete Dialog */}

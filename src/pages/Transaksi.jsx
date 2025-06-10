@@ -109,7 +109,7 @@ const Transaksi = () => {
       const response = await axios.get('/api/transaksi', {
         params: {
           page,
-          limit: rowsPerPage,
+          limit: limit,
           jenis_transaksi: filters.jenis_transaksi,
           tanggal_mulai: filters.tanggal_mulai ? filters.tanggal_mulai.format('YYYY-MM-DD') : undefined,
           tanggal_akhir: filters.tanggal_akhir ? filters.tanggal_akhir.format('YYYY-MM-DD') : undefined,
@@ -122,7 +122,9 @@ const Transaksi = () => {
       
       if (response.data.success) {
         setTransaksi(response.data.data);
-        setTotalRows(response.data.pagination.total);
+        // Make sure we're only using setTotalItems and setTotalPages, not setTotalRows
+        setTotalItems(response.data.pagination.total);
+        setTotalPages(Math.ceil(response.data.pagination.total / limit));
       } else {
         console.error('Error fetching transactions:', response.data.message);
         showAlert(response.data.message, 'error');
@@ -370,7 +372,7 @@ const Transaksi = () => {
                   label="Tanggal Mulai"
                   value={filters.tanggal_mulai}
                   onChange={(value) => handleFilterChange('tanggal_mulai', value)}
-                  renderInput={(params) => <TextField {...params} fullWidth />}
+                  slotProps={{ textField: { fullWidth: true } }}
                 />
               </Grid>
               <Grid item xs={12} sm={6} md={3}>
@@ -378,7 +380,7 @@ const Transaksi = () => {
                   label="Tanggal Akhir"
                   value={filters.tanggal_akhir}
                   onChange={(value) => handleFilterChange('tanggal_akhir', value)}
-                  renderInput={(params) => <TextField {...params} fullWidth />}
+                  slotProps={{ textField: { fullWidth: true } }}
                 />
               </Grid>
               <Grid item xs={12} sm={6} md={4}>

@@ -649,8 +649,8 @@ const PeminjamanDetail = () => {
                             }
                           ),
                       })}
-                      onSubmit={(values) => {
-                        addOrUpdateBarang({ values: values, setFieldValue: dialogSetFieldValue }, values.barang, values.jumlah);
+                      onSubmit={(values, { setFieldValue }) => {
+                        addOrUpdateBarang({ values: values, setFieldValue: setFieldValue }, values.barang, values.jumlah);
                       }}
                     >
                       {({ errors: dialogErrors, touched: dialogTouched, values: dialogValues, handleChange: dialogHandleChange, setFieldValue: dialogSetFieldValue, isSubmitting: dialogIsSubmitting }) => (
