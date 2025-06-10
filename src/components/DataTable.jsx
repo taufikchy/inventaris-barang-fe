@@ -66,12 +66,21 @@ const DataTable = ({
   defaultRowsPerPage = 10,
   actions,
   emptyMessage = 'Tidak ada data',
+  // Server-side pagination props
+  page,
+  rowsPerPage: externalRowsPerPage,
+  count,
+  onPageChange,
+  onRowsPerPageChange,
 }) => {
   const [order, setOrder] = useState(initialOrder);
   const [orderBy, setOrderBy] = useState(initialOrderBy);
-  const [page, setPage] = useState(0);
-  const [rowsPerPage, setRowsPerPage] = useState(defaultRowsPerPage);
+  const [internalPage, setInternalPage] = useState(0);
+  const [internalRowsPerPage, setInternalRowsPerPage] = useState(defaultRowsPerPage);
   const [searchQuery, setSearchQuery] = useState('');
+
+  // Determine if using server-side pagination
+  const isServerSidePagination = onPageChange !== undefined && onRowsPerPageChange !== undefined;
 
   const handleRequestSort = (property) => {
     const isAsc = orderBy === property && order === 'asc';
@@ -80,38 +89,59 @@ const DataTable = ({
   };
 
   const handleChangePage = (event, newPage) => {
-    setPage(newPage);
+    if (isServerSidePagination) {
+      onPageChange(event, newPage);
+    } else {
+      setInternalPage(newPage);
+    }
   };
 
   const handleChangeRowsPerPage = (event) => {
-    setRowsPerPage(parseInt(event.target.value, 10));
-    setPage(0);
+    const newRowsPerPage = parseInt(event.target.value, 10);
+    if (isServerSidePagination) {
+      onRowsPerPageChange(event);
+    } else {
+      setInternalRowsPerPage(newRowsPerPage);
+      setInternalPage(0);
+    }
   };
 
   const handleSearchChange = (event) => {
     setSearchQuery(event.target.value);
-    setPage(0);
+    if (!isServerSidePagination) {
+      setInternalPage(0);
+    }
   };
 
-  // Filter rows based on search query
-  const filteredRows = rows.filter((row) => {
-    if (!searchQuery) return true;
-    
-    // Search in all string and number fields
-    return Object.keys(row).some((key) => {
-      const value = row[key];
-      if (typeof value === 'string') {
-        return value.toLowerCase().includes(searchQuery.toLowerCase());
-      }
-      if (typeof value === 'number') {
-        return value.toString().includes(searchQuery);
-      }
-      return false;
-    });
-  });
+  // Filter rows based on search query (only for client-side filtering)
+  const filteredRows = searchable && !isServerSidePagination
+    ? rows.filter((row) => {
+        if (!searchQuery) return true;
+        
+        return Object.keys(row).some((key) => {
+          const value = row[key];
+          if (typeof value === 'string') {
+            return value.toLowerCase().includes(searchQuery.toLowerCase());
+          }
+          if (typeof value === 'number') {
+            return value.toString().includes(searchQuery);
+          }
+          return false;
+        });
+      })
+    : rows;
 
   // Calculate empty rows to maintain consistent page height
-  const emptyRows = page > 0 ? Math.max(0, (1 + page) * rowsPerPage - filteredRows.length) : 0;
+  const currentPage = isServerSidePagination ? page : internalPage;
+  const currentRowsPerPage = isServerSidePagination ? externalRowsPerPage : internalRowsPerPage;
+  const totalCount = isServerSidePagination ? count : filteredRows.length;
+  const emptyRows = currentPage > 0 ? Math.max(0, (1 + currentPage) * currentRowsPerPage - totalCount) : 0;
+
+  // Get displayed rows
+  const displayedRows = isServerSidePagination
+    ? filteredRows // For server-side, we assume rows are already paginated
+    : stableSort(filteredRows, getComparator(order, orderBy))
+        .slice(currentPage * currentRowsPerPage, currentPage * currentRowsPerPage + currentRowsPerPage);
 
   return (
     <Box sx={{ width: '100%' }}>
@@ -218,25 +248,23 @@ const DataTable = ({
                   </TableCell>
                 </TableRow>
               ) : filteredRows.length > 0 ? (
-                stableSort(filteredRows, getComparator(order, orderBy))
-                  .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-                  .map((row, index) => {
-                    return (
-                      <TableRow hover tabIndex={-1} key={row.id || index}>
-                        {columns.map((column) => {
-                          const value = row[column.id];
-                          return (
-                            <TableCell key={column.id} align={column.align || 'left'}>
-                              {column.format ? column.format(value, row) : value}
-                            </TableCell>
-                          );
-                        })}
-                        {actions && (
-                          <TableCell align="right">{actions(row)}</TableCell>
-                        )}
-                      </TableRow>
-                    );
-                  })
+                displayedRows.map((row, index) => {
+                  return (
+                    <TableRow hover tabIndex={-1} key={row.id || index}>
+                      {columns.map((column) => {
+                        const value = row[column.id];
+                        return (
+                          <TableCell key={column.id} align={column.align || 'left'}>
+                            {column.format ? column.format(value, row) : value}
+                          </TableCell>
+                        );
+                      })}
+                      {actions && (
+                        <TableCell align="right">{actions(row)}</TableCell>
+                      )}
+                    </TableRow>
+                  );
+                })
               ) : (
                 <TableRow>
                   <TableCell colSpan={columns.length + (actions ? 1 : 0)} align="center" sx={{ py: 3 }}>
@@ -256,9 +284,9 @@ const DataTable = ({
         <TablePagination
           rowsPerPageOptions={rowsPerPageOptions}
           component="div"
-          count={filteredRows.length}
-          rowsPerPage={rowsPerPage}
-          page={page}
+          count={totalCount}
+          rowsPerPage={currentRowsPerPage}
+          page={currentPage}
           onPageChange={handleChangePage}
           onRowsPerPageChange={handleChangeRowsPerPage}
           labelRowsPerPage="Baris per halaman:"
