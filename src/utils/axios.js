@@ -32,6 +32,9 @@ instance.interceptors.request.use(
     
     if (currentToken) {
       config.headers.Authorization = `Bearer ${currentToken}`;
+      console.log('Request with token:', config.url, currentToken.substring(0, 15) + '...');
+    } else {
+      console.log('Request without token:', config.url);
     }
     return config;
   },
