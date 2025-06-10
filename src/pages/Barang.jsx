@@ -73,7 +73,12 @@ const Barang = () => {
       const response = await axios.get(`/api/barang?${params.toString()}`);
       
       if (response.data.sukses) {
-        setBarangs(response.data.data);
+        // Tambahkan satuan default jika tidak ada
+        const barangsWithSatuan = response.data.data.map(barang => ({
+          ...barang,
+          satuan: barang.satuan || 'unit' // Default satuan jika tidak ada dari backend
+        }));
+        setBarangs(barangsWithSatuan);
       } else {
         toast.error('Gagal memuat data barang: ' + response.data.pesan);
         setBarangs([]);
@@ -206,6 +211,12 @@ const Barang = () => {
 
   // Table columns definition
   const columns = [
+    { 
+      id: 'no', 
+      label: 'No', 
+      sortable: false,
+      format: (value, row, index) => index + 1 // Menampilkan nomor urut
+    },
     { id: 'kode_grup', label: 'Kode Grup', sortable: true },
     { id: 'nama', label: 'Nama Barang', sortable: true },
     {
@@ -221,10 +232,17 @@ const Barang = () => {
       format: (value) => value?.nama || value || '-',
     },
     {
+      id: 'tanggal_perolehan',
+      label: 'Tanggal Pengadaan Barang',
+      sortable: true,
+      format: (value) => formatDate(value),
+    },
+    {
       id: 'jumlah',
-      label: 'Jumlah Unit',
+      label: 'Jumlah',
       sortable: true,
       align: 'right',
+      format: (value, row) => `${value} ${row.satuan || 'unit'}` // Menampilkan jumlah dengan satuan
     },
   ];
 

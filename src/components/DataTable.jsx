@@ -255,7 +255,7 @@ const DataTable = ({
                         const value = row[column.id];
                         return (
                           <TableCell key={column.id} align={column.align || 'left'}>
-                            {column.format ? column.format(value, row) : value}
+                            {column.format ? column.format(value, row, index) : value}
                           </TableCell>
                         );
                       })}

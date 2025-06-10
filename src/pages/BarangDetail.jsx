@@ -53,11 +53,9 @@ const BarangSchema = Yup.object().shape({
     .required('Jumlah barang wajib diisi')
     .min(0, 'Jumlah tidak boleh negatif')
     .integer('Jumlah harus berupa bilangan bulat'),
+  satuan: Yup.string().required('Satuan barang wajib diisi'),
   kondisi: Yup.string().required('Kondisi barang wajib diisi'),
-  tanggal_perolehan: Yup.date().required('Tanggal perolehan wajib diisi'),
-  harga_perolehan: Yup.number()
-    .required('Harga perolehan wajib diisi')
-    .min(0, 'Harga tidak boleh negatif'),
+  tanggal_perolehan: Yup.date().required('Tanggal pengadaan barang wajib diisi'),
   id_kategori: Yup.number().required('Kategori wajib dipilih'),
   id_lokasi: Yup.number().required('Lokasi wajib dipilih'),
   status: Yup.string().required('Status barang wajib diisi'),
@@ -101,9 +99,9 @@ const BarangDetail = () => {
         nama: '',
         deskripsi: '',
         jumlah: 0,
+        satuan: 'unit',
         kondisi: 'Baik',
         tanggal_perolehan: new Date().toISOString().split('T')[0],
-        harga_perolehan: 0,
         id_kategori: '',
         id_lokasi: '',
         status: 'Tersedia',
@@ -193,6 +191,7 @@ const BarangDetail = () => {
           // Skip kode for new items as it will be auto-generated
           return;
         }
+        // Pastikan field satuan dikirim ke backend
         formData.append(key, values[key]);
       });
       
@@ -363,9 +362,9 @@ const BarangDetail = () => {
             nama: barang?.nama || '',
             deskripsi: barang?.deskripsi || '',
             jumlah: barang?.jumlah || 0,
+            satuan: barang?.satuan || 'unit',
             kondisi: barang?.kondisi || 'Baik',
             tanggal_perolehan: barang?.tanggal_perolehan || new Date().toISOString().split('T')[0],
-            harga_perolehan: barang?.harga_perolehan || 0,
             id_kategori: barang?.id_kategori || '',
             id_lokasi: barang?.id_lokasi || '',
             status: barang?.status || 'Tersedia',
@@ -492,7 +491,7 @@ const BarangDetail = () => {
                           ))}
                         </Field>
                       </Grid>
-                      <Grid item xs={12} sm={6}>
+                      <Grid item xs={12} sm={3}>
                         <Field
                           as={TextField}
                           name="jumlah"
@@ -504,6 +503,24 @@ const BarangDetail = () => {
                           error={touched.jumlah && Boolean(errors.jumlah)}
                           helperText={touched.jumlah && errors.jumlah}
                         />
+                      </Grid>
+                      <Grid item xs={12} sm={3}>
+                        <Field
+                          as={TextField}
+                          select
+                          name="satuan"
+                          label="Satuan"
+                          fullWidth
+                          required
+                          value={values.satuan}
+                          onChange={handleChange}
+                          error={touched.satuan && Boolean(errors.satuan)}
+                          helperText={touched.satuan && errors.satuan}
+                        >
+                          <MenuItem value="unit">Unit</MenuItem>
+                          <MenuItem value="set">Set</MenuItem>
+                          <MenuItem value="buah">Buah</MenuItem>
+                        </Field>
                       </Grid>
                       <Grid item xs={12} sm={6}>
                         <Field
@@ -546,29 +563,13 @@ const BarangDetail = () => {
                         <Field
                           as={TextField}
                           name="tanggal_perolehan"
-                          label="Tanggal Perolehan"
+                          label="Tanggal Pengadaan Barang"
                           type="date"
                           fullWidth
                           required
                           InputLabelProps={{ shrink: true }}
                           error={touched.tanggal_perolehan && Boolean(errors.tanggal_perolehan)}
                           helperText={touched.tanggal_perolehan && errors.tanggal_perolehan}
-                        />
-                      </Grid>
-                      <Grid item xs={12} sm={6}>
-                        <Field
-                          as={TextField}
-                          name="harga_perolehan"
-                          label="Harga Perolehan"
-                          type="number"
-                          fullWidth
-                          required
-                          InputProps={{
-                            startAdornment: <InputAdornment position="start">Rp</InputAdornment>,
-                            inputProps: { min: 0 }
-                          }}
-                          error={touched.harga_perolehan && Boolean(errors.harga_perolehan)}
-                          helperText={touched.harga_perolehan && errors.harga_perolehan}
                         />
                       </Grid>
                     </Grid>
