@@ -4,6 +4,7 @@ import axios from '../utils/axios';
 import { toast } from 'react-toastify';
 import { Formik, Form, Field, FieldArray } from 'formik';
 import * as Yup from 'yup';
+import { useAuth } from '../contexts/AuthContext';
 import {
   Box,
   Button,
@@ -48,8 +49,10 @@ import PrintBorrowingLetter from '../components/PrintBorrowingLetter';
 // Validation schema for peminjaman form
 const PeminjamanSchema = Yup.object().shape({
   peminjam: Yup.string().required('Nama peminjam wajib diisi'),
+  kontak: Yup.string().required('Kontak peminjam wajib diisi'),
+  kelas: Yup.string().required('Kelas peminjam wajib diisi'),
   tanggal_pinjam: Yup.date().required('Tanggal pinjam wajib diisi'),
-  tanggal_kembali: Yup.date().nullable(),
+  tanggal_kembali_harapan: Yup.date().required('Tanggal kembali harapan wajib diisi'),
   keterangan: Yup.string(),
   status: Yup.string().required('Status peminjaman wajib diisi'),
   detail_peminjaman: Yup.array().of(
@@ -67,6 +70,7 @@ const PeminjamanDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
+  const { user } = useAuth(); // Mendapatkan informasi pengguna yang login
   const isNewPeminjaman = id === 'new';
   const isEditMode = location.pathname.includes('/edit') || isNewPeminjaman;
   
@@ -74,6 +78,10 @@ const PeminjamanDetail = () => {
   const [saving, setSaving] = useState(false);
   const [peminjaman, setPeminjaman] = useState(null);
   const [barangs, setBarangs] = useState([]);
+  const [kategoris, setKategoris] = useState([]);
+  const [lokasis, setLokasis] = useState([]);
+  const [filterKategori, setFilterKategori] = useState('');
+  const [filterLokasi, setFilterLokasi] = useState('');
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [confirmReturn, setConfirmReturn] = useState(false);
@@ -91,13 +99,22 @@ const PeminjamanDetail = () => {
   // Fetch peminjaman data
   const fetchPeminjaman = async () => {
     if (isNewPeminjaman) {
+      // Check if user is logged in
+      if (!user) {
+        toast.error('Anda harus login untuk membuat peminjaman baru');
+        navigate('/login');
+        return;
+      }
+      
       // Initialize new peminjaman
       setPeminjaman({
         kode: 'PJM-' + Math.floor(Math.random() * 1000).toString().padStart(3, '0'),
         peminjam: '',
+        kontak: '',
+        kelas: '',
         tanggal_pinjam: new Date().toISOString().split('T')[0],
-        tanggal_kembali: null,
-        status: 'menunggu_persetujuan',
+        tanggal_kembali_harapan: new Date().toISOString().split('T')[0],
+        status: 'menunggu_persetujuan', // Mengubah dari 'Dipinjam' menjadi 'menunggu_persetujuan' sesuai dengan model backend
         keterangan: '',
         detail_peminjaman: [],
       });
@@ -130,8 +147,14 @@ const PeminjamanDetail = () => {
   // Fetch barang data
   const fetchBarangs = async () => {
     try {
+      // Build query parameters based on filters
+      const params = new URLSearchParams();
+      params.append('tersedia', 'true');
+      if (filterKategori) params.append('kategori', filterKategori);
+      if (filterLokasi) params.append('lokasi', filterLokasi);
+      
       // Fetch data from API
-      const response = await axios.get('/api/barang/dropdown?tersedia=true');
+      const response = await axios.get(`/api/barang/dropdown?${params.toString()}`);
       
       if (response.data.sukses) {
         setBarangs(response.data.data);
@@ -146,24 +169,91 @@ const PeminjamanDetail = () => {
     }
   };
 
+  // Fetch kategori data
+  const fetchKategoris = async () => {
+    try {
+      const response = await axios.get('/api/kategori/dropdown');
+      if (response.data.sukses) {
+        setKategoris(response.data.data);
+      } else {
+        toast.error('Gagal memuat data kategori: ' + response.data.pesan);
+        setKategoris([]);
+      }
+    } catch (error) {
+      console.error('Error fetching kategoris:', error);
+      toast.error('Gagal memuat data kategori: ' + (error.response?.data?.pesan || error.message));
+      setKategoris([]);
+    }
+  };
+
+  // Fetch lokasi data
+  const fetchLokasis = async () => {
+    try {
+      const response = await axios.get('/api/lokasi/dropdown');
+      if (response.data.sukses) {
+        setLokasis(response.data.data);
+      } else {
+        toast.error('Gagal memuat data lokasi: ' + response.data.pesan);
+        setLokasis([]);
+      }
+    } catch (error) {
+      console.error('Error fetching lokasis:', error);
+      toast.error('Gagal memuat data lokasi: ' + (error.response?.data?.pesan || error.message));
+      setLokasis([]);
+    }
+  };
   useEffect(() => {
+    // Check if user is logged in
+    if (isNewPeminjaman && !user) {
+      toast.error('Anda harus login untuk membuat peminjaman baru');
+      navigate('/login');
+      return;
+    }
+    
     fetchPeminjaman();
     fetchBarangs();
+    fetchKategoris();
+    fetchLokasis();
   }, [id]);
+
+  // Handle filter change
+  const handleFilterChange = (event) => {
+    const { name, value } = event.target;
+    if (name === 'kategori') {
+      setFilterKategori(value);
+    } else if (name === 'lokasi') {
+      setFilterLokasi(value);
+    }
+  };
+
+  // Effect untuk memanggil fetchBarangs ketika filter berubah
+  useEffect(() => {
+    fetchBarangs();
+  }, [filterKategori, filterLokasi]);
 
   // Handle form submission
   const handleSubmit = async (values, { setSubmitting }) => {
     try {
       setSaving(true);
       
-      // Pastikan jumlah adalah integer
+      // Format data sesuai dengan yang diharapkan oleh backend
       const formattedValues = {
-        ...values,
+        nama_peminjam: values.peminjam,
+        kontak_peminjam: values.kontak || '',
+        kelas_peminjam: values.kelas || '',
+        tanggal_pinjam: values.tanggal_pinjam,
+        tanggal_kembali_harapan: values.tanggal_kembali_harapan,
+        catatan: values.keterangan || '',
+        status: values.status,
+        id_pengguna: user?.id, // Menambahkan id_pengguna dari user yang login
         detail_peminjaman: values.detail_peminjaman.map(item => ({
-          ...item,
-          jumlah: parseInt(item.jumlah, 10)
+          id_barang: item.id_barang,
+          jumlah: parseInt(item.jumlah, 10),
+          kondisi_saat_pinjam: item.kondisi_saat_pinjam || 'baik'
         }))
       };
+      
+      console.log('Sending data to backend:', formattedValues);
       
       let response;
       
@@ -185,6 +275,7 @@ const PeminjamanDetail = () => {
       }
     } catch (error) {
       console.error('Error saving peminjaman:', error);
+      console.error('Error response:', error.response?.data);
       toast.error((isNewPeminjaman ? 'Gagal menambahkan peminjaman: ' : 'Gagal memperbarui peminjaman: ') + (error.response?.data?.pesan || error.message));
     } finally {
       setSaving(false);
@@ -366,7 +457,9 @@ const PeminjamanDetail = () => {
         jumlah: parseInt(jumlah),
         kondisi_saat_pinjam: barang.kondisi,
       };
-      setFieldValue('detail_peminjaman', [...values.detail_peminjaman, newBarang]);
+      // Pastikan values.detail_peminjaman adalah array sebelum menggunakan spread operator
+      const currentDetailPeminjaman = Array.isArray(values.detail_peminjaman) ? values.detail_peminjaman : [];
+      setFieldValue('detail_peminjaman', [...currentDetailPeminjaman, newBarang]);
     }
     
     closeBarangDialog();
@@ -406,8 +499,10 @@ const PeminjamanDetail = () => {
         <Formik
           initialValues={{
             peminjam: peminjaman.peminjam,
+            kontak: peminjaman.kontak || '',
+            kelas: peminjaman.kelas || '',
             tanggal_pinjam: peminjaman.tanggal_pinjam,
-            tanggal_kembali: peminjaman.tanggal_kembali || '',
+            tanggal_kembali_harapan: peminjaman.tanggal_kembali_harapan || '',
             status: peminjaman.status,
             keterangan: peminjaman.keterangan || '',
             detail_peminjaman: peminjaman.detail_peminjaman || [],
@@ -448,6 +543,32 @@ const PeminjamanDetail = () => {
                   <Grid item xs={12} sm={6}>
                     <Field
                       as={TextField}
+                      name="kontak"
+                      label="Kontak Peminjam"
+                      fullWidth
+                      required
+                      size="small"
+                      margin="normal"
+                      error={touched.kontak && Boolean(errors.kontak)}
+                      helperText={touched.kontak && errors.kontak}
+                    />
+                  </Grid>
+                  <Grid item xs={12} sm={6}>
+                    <Field
+                      as={TextField}
+                      name="kelas"
+                      label="Kelas Peminjam"
+                      fullWidth
+                      required
+                      size="small"
+                      margin="normal"
+                      error={touched.kelas && Boolean(errors.kelas)}
+                      helperText={touched.kelas && errors.kelas}
+                    />
+                  </Grid>
+                  <Grid item xs={12} sm={6}>
+                    <Field
+                      as={TextField}
                       name="tanggal_pinjam"
                       label="Tanggal Pinjam"
                       type="date"
@@ -463,15 +584,16 @@ const PeminjamanDetail = () => {
                   <Grid item xs={12} sm={6}>
                     <Field
                       as={TextField}
-                      name="tanggal_kembali"
-                      label="Tanggal Kembali"
+                      name="tanggal_kembali_harapan"
+                      label="Tanggal Kembali Harapan"
                       type="date"
                       fullWidth
+                      required
                       size="small"
                       margin="normal"
                       InputLabelProps={{ shrink: true }}
-                      error={touched.tanggal_kembali && Boolean(errors.tanggal_kembali)}
-                      helperText={touched.tanggal_kembali && errors.tanggal_kembali}
+                      error={touched.tanggal_kembali_harapan && Boolean(errors.tanggal_kembali_harapan)}
+                      helperText={touched.tanggal_kembali_harapan && errors.tanggal_kembali_harapan}
                     />
                   </Grid>
                   <Grid item xs={12} sm={6}>
@@ -489,9 +611,12 @@ const PeminjamanDetail = () => {
                       error={touched.status && Boolean(errors.status)}
                       helperText={touched.status && errors.status}
                     >
-                      <MenuItem value="Dipinjam">Dipinjam</MenuItem>
-                      <MenuItem value="Dikembalikan">Dikembalikan</MenuItem>
-                      <MenuItem value="Terlambat">Terlambat</MenuItem>
+                      <MenuItem value="menunggu_persetujuan">Menunggu Persetujuan</MenuItem>
+                      <MenuItem value="disetujui">Disetujui</MenuItem>
+                      <MenuItem value="ditolak">Ditolak</MenuItem>
+                      <MenuItem value="dipinjam">Dipinjam</MenuItem>
+                      <MenuItem value="dikembalikan">Dikembalikan</MenuItem>
+                      <MenuItem value="terlambat">Terlambat</MenuItem>
                     </Field>
                   </Grid>
                   <Grid item xs={12}>
@@ -528,53 +653,55 @@ const PeminjamanDetail = () => {
 
                 <FieldArray name="detail_peminjaman">
                   {() => (
-                    <TableContainer component={Paper} variant="outlined">
-                      <Table size="small">
-                        <TableHead>
-                          <TableRow>
-                            <TableCell>Kode</TableCell>
-                            <TableCell>Nama Barang</TableCell>
-                            <TableCell align="right">Jumlah</TableCell>
-                            <TableCell>Kondisi</TableCell>
-                            <TableCell align="center">Aksi</TableCell>
-                          </TableRow>
-                        </TableHead>
-                        <TableBody>
-                          {values.detail_peminjaman.length > 0 ? (
-                            values.detail_peminjaman.map((item, index) => (
-                              <TableRow key={index}>
-                                <TableCell>{item.kode_barang}</TableCell>
-                                <TableCell>{item.nama_barang}</TableCell>
-                                <TableCell align="right">{item.jumlah}</TableCell>
-                                <TableCell>{item.kondisi_saat_pinjam}</TableCell>
-                                <TableCell align="center">
-                                  <IconButton
-                                    size="small"
-                                    onClick={() => openBarangDialog(index)}
-                                    color="primary"
-                                  >
-                                    <EditIcon fontSize="small" />
-                                  </IconButton>
-                                  <IconButton
-                                    size="small"
-                                    onClick={() => removeBarang({ values, setFieldValue }, index)}
-                                    color="error"
-                                  >
-                                    <RemoveIcon fontSize="small" />
-                                  </IconButton>
+                    <>
+                      <TableContainer component={Paper} variant="outlined">
+                        <Table size="small">
+                          <TableHead>
+                            <TableRow>
+                              <TableCell>Kode</TableCell>
+                              <TableCell>Nama Barang</TableCell>
+                              <TableCell align="right">Jumlah</TableCell>
+                              <TableCell>Kondisi</TableCell>
+                              <TableCell align="center">Aksi</TableCell>
+                            </TableRow>
+                          </TableHead>
+                          <TableBody>
+                            {values.detail_peminjaman.length > 0 ? (
+                              values.detail_peminjaman.map((item, index) => (
+                                <TableRow key={index}>
+                                  <TableCell>{item.kode_barang}</TableCell>
+                                  <TableCell>{item.nama_barang}</TableCell>
+                                  <TableCell align="right">{item.jumlah}</TableCell>
+                                  <TableCell>{item.kondisi_saat_pinjam}</TableCell>
+                                  <TableCell align="center">
+                                    <IconButton
+                                      size="small"
+                                      onClick={() => openBarangDialog(index)}
+                                      color="primary"
+                                    >
+                                      <EditIcon fontSize="small" />
+                                    </IconButton>
+                                    <IconButton
+                                      size="small"
+                                      onClick={() => removeBarang({ values, setFieldValue }, index)}
+                                      color="error"
+                                    >
+                                      <RemoveIcon fontSize="small" />
+                                    </IconButton>
+                                  </TableCell>
+                                </TableRow>
+                              ))
+                            ) : (
+                              <TableRow>
+                                <TableCell colSpan={5} align="center">
+                                  Belum ada barang yang dipilih
                                 </TableCell>
                               </TableRow>
-                            ))
-                          ) : (
-                            <TableRow>
-                              <TableCell colSpan={5} align="center">
-                                Belum ada barang yang dipilih
-                              </TableCell>
-                            </TableRow>
-                          )}
-                        </TableBody>
-                      </Table>
-                    </TableContainer>
+                            )}
+                          </TableBody>
+                        </Table>
+                      </TableContainer>
+                    </>
                   )}
                 </FieldArray>
                 {errors.detail_peminjaman && typeof errors.detail_peminjaman === 'string' && (
@@ -624,6 +751,51 @@ const PeminjamanDetail = () => {
                 </DialogTitle>
                 <DialogContent>
                   <Box sx={{ pt: 1 }}>
+                    {/* Filter Barang */}
+                    <Box sx={{ mb: 2 }}>
+                      <Typography variant="subtitle2" gutterBottom>
+                        Filter Barang
+                      </Typography>
+                      <Grid container spacing={2}>
+                        <Grid item xs={12} sm={6}>
+                          <TextField
+                            select
+                            fullWidth
+                            label="Kategori"
+                            name="kategori"
+                            value={filterKategori}
+                            onChange={handleFilterChange}
+                            size="small"
+                          >
+                            <MenuItem value="">Semua Kategori</MenuItem>
+                            {kategoris.map((kategori) => (
+                              <MenuItem key={kategori.id} value={kategori.id}>
+                                {kategori.nama}
+                              </MenuItem>
+                            ))}
+                          </TextField>
+                        </Grid>
+                        <Grid item xs={12} sm={6}>
+                          <TextField
+                            select
+                            fullWidth
+                            label="Lokasi"
+                            name="lokasi"
+                            value={filterLokasi}
+                            onChange={handleFilterChange}
+                            size="small"
+                          >
+                            <MenuItem value="">Semua Lokasi</MenuItem>
+                            {lokasis.map((lokasi) => (
+                              <MenuItem key={lokasi.id} value={lokasi.id}>
+                                {lokasi.nama}
+                              </MenuItem>
+                            ))}
+                          </TextField>
+                        </Grid>
+                      </Grid>
+                    </Box>
+                    <Divider sx={{ mb: 2 }} />
                     <Formik
                       initialValues={{
                         barang: selectedBarangIndex !== null
@@ -649,8 +821,9 @@ const PeminjamanDetail = () => {
                             }
                           ),
                       })}
-                      onSubmit={(values, { setFieldValue }) => {
-                        addOrUpdateBarang({ values: values, setFieldValue: setFieldValue }, values.barang, values.jumlah);
+                      onSubmit={(dialogValues) => {
+                        // Menggunakan values dan setFieldValue dari form utama
+                        addOrUpdateBarang({ values, setFieldValue }, dialogValues.barang, dialogValues.jumlah);
                       }}
                     >
                       {({ errors: dialogErrors, touched: dialogTouched, values: dialogValues, handleChange: dialogHandleChange, setFieldValue: dialogSetFieldValue, isSubmitting: dialogIsSubmitting }) => (

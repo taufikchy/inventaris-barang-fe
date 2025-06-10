@@ -64,7 +64,21 @@ const Peminjaman = () => {
       
       // Pastikan struktur data sesuai dengan respons dari backend
       if (response.data.sukses) {
-        setPeminjamans(response.data.data);
+        // Proses data untuk menambahkan properti peminjam dan jumlah_barang
+        const processedData = response.data.data.map(peminjaman => {
+          // Tambahkan properti peminjam dari nama_peminjam
+          const peminjamData = {
+            ...peminjaman,
+            peminjam: peminjaman.nama_peminjam,
+            // Hitung jumlah barang dari detail_peminjaman jika ada
+            jumlah_barang: peminjaman.detail_peminjaman ? 
+              peminjaman.detail_peminjaman.reduce((total, detail) => total + detail.jumlah, 0) : 
+              0
+          };
+          return peminjamData;
+        });
+        
+        setPeminjamans(processedData);
         setTotalRows(response.data.pagination.total);
       } else {
         console.error('Error fetching peminjamans:', response.data.pesan);
