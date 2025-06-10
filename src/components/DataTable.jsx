@@ -213,19 +213,32 @@ const DataTable = ({
             size="medium"
           >
             <TableHead>
-              <TableRow>
-                {columns.map((column) => (
+              <TableRow sx={{ '& th': { backgroundColor: 'var(--primary-color)', color: 'white' } }}>
+                {columns.map((column, index) => (
                   <TableCell
                     key={column.id}
-                    align={column.align || 'left'}
+                    align={column.align || 'center'}
                     sortDirection={orderBy === column.id ? order : false}
-                    sx={{ fontWeight: 600 }}
+                    sx={{ 
+                      fontWeight: 600,
+                      backgroundColor: index % 2 === 0 ? 'var(--primary-color)' : 'var(--primary-light)',
+                      color: 'white'
+                    }}
                   >
                     {column.sortable !== false ? (
                       <TableSortLabel
                         active={orderBy === column.id}
                         direction={orderBy === column.id ? order : 'asc'}
                         onClick={() => handleRequestSort(column.id)}
+                        sx={{
+                          '& .MuiTableSortLabel-icon': {
+                            color: 'white !important',
+                          },
+                          '&.Mui-active': {
+                            color: 'white !important',
+                          },
+                          color: 'white !important'
+                        }}
                       >
                         {column.label}
                       </TableSortLabel>
@@ -234,7 +247,14 @@ const DataTable = ({
                     )}
                   </TableCell>
                 ))}
-                {actions && <TableCell align="right">Aksi</TableCell>}
+                {actions && <TableCell 
+                  align="center" 
+                  sx={{ 
+                    fontWeight: 600,
+                    backgroundColor: columns.length % 2 === 0 ? 'var(--primary-color)' : 'var(--primary-light)',
+                    color: 'white'
+                  }}
+                >Aksi</TableCell>}
               </TableRow>
             </TableHead>
             <TableBody>
@@ -250,17 +270,25 @@ const DataTable = ({
               ) : filteredRows.length > 0 ? (
                 displayedRows.map((row, index) => {
                   return (
-                    <TableRow hover tabIndex={-1} key={row.id || index}>
+                    <TableRow 
+                      hover 
+                      tabIndex={-1} 
+                      key={row.id || index}
+                      sx={{
+                        '&:nth-of-type(odd)': { backgroundColor: '#f0f0f0' },
+                        '&:hover': { backgroundColor: '#e8f5e9 !important' }
+                      }}
+                    >
                       {columns.map((column) => {
                         const value = row[column.id];
                         return (
-                          <TableCell key={column.id} align={column.align || 'left'}>
+                          <TableCell key={column.id} align={column.align || 'center'}>
                             {column.format ? column.format(value, row, index) : value}
                           </TableCell>
                         );
                       })}
                       {actions && (
-                        <TableCell align="right">{actions(row)}</TableCell>
+                        <TableCell align="center">{actions(row)}</TableCell>
                       )}
                     </TableRow>
                   );
