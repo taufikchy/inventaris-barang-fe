@@ -23,6 +23,13 @@ import {
   Typography,
   MenuItem,
   InputAdornment,
+  TableContainer,
+  Table,
+  TableHead,
+  TableBody,
+  TableRow,
+  TableCell,
+  Tooltip,
 } from '@mui/material';
 import {
   ArrowBack as ArrowBackIcon,
@@ -31,13 +38,15 @@ import {
   Cancel as CancelIcon,
   Delete as DeleteIcon,
   PhotoCamera as PhotoCameraIcon,
+  Info as InfoIcon,
+  Devices as DevicesIcon,
+  Visibility as VisibilityIcon,
 } from '@mui/icons-material';
 import PageHeader from '../components/PageHeader';
 import ConfirmDialog from '../components/ConfirmDialog';
 
 // Validation schema for barang form
 const BarangSchema = Yup.object().shape({
-  kode: Yup.string().required('Kode barang wajib diisi'),
   nama: Yup.string().required('Nama barang wajib diisi'),
   deskripsi: Yup.string(),
   jumlah: Yup.number()
@@ -69,7 +78,17 @@ const BarangDetail = () => {
   const [lokasis, setLokasis] = useState([]);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState(false);
+  // Tab state
   const [activeTab, setActiveTab] = useState(0);
+  const handleTabChange = (event, newValue) => {
+    setActiveTab(newValue);
+  };
+
+  // Tab labels
+  const tabs = [
+    { label: 'Informasi Barang', icon: <InfoIcon /> },
+    { label: 'Unit Terkait', icon: <DevicesIcon /> },
+  ];
   const [imagePreview, setImagePreview] = useState(null);
   const [imageFile, setImageFile] = useState(null);
 
@@ -147,11 +166,6 @@ const BarangDetail = () => {
     fetchKategoriAndLokasi();
   }, [id]);
 
-  // Handle tab change
-  const handleTabChange = (event, newValue) => {
-    setActiveTab(newValue);
-  };
-
   // Handle image change
   const handleImageChange = (event) => {
     const file = event.target.files[0];
@@ -166,15 +180,19 @@ const BarangDetail = () => {
   };
 
   // Handle form submission
-  const handleSubmit = async (values, { setSubmitting }) => {
+  const handleSubmit = async (values, { setSubmitting, setFieldValue }) => {
     try {
       setSaving(true);
       
       // Create FormData object for file upload
       const formData = new FormData();
       
-      // Add all form values to FormData
+      // Add all form values to FormData except 'kode' for new items
       Object.keys(values).forEach(key => {
+        if (isNewBarang && key === 'kode') {
+          // Skip kode for new items as it will be auto-generated
+          return;
+        }
         formData.append(key, values[key]);
       });
       
@@ -192,6 +210,11 @@ const BarangDetail = () => {
             'Content-Type': 'multipart/form-data'
           }
         });
+        
+        // Update the kode field with auto-generated code from response
+        if (response.data.sukses && response.data.data) {
+          setFieldValue('kode', response.data.data.kode);
+        }
       } else {
         // Update existing barang
         response = await axios.put(`/api/barang/${id}`, formData, {
@@ -202,7 +225,12 @@ const BarangDetail = () => {
       }
       
       if (response.data.sukses) {
-        toast.success(isNewBarang ? 'Barang berhasil ditambahkan' : 'Barang berhasil diperbarui');
+        // Tampilkan pesan sukses dengan informasi kode barang jika ada
+        if (isNewBarang && response.data.kode_barang) {
+          toast.success(response.data.pesan || 'Barang berhasil ditambahkan');
+        } else {
+          toast.success(isNewBarang ? 'Barang berhasil ditambahkan' : 'Barang berhasil diperbarui');
+        }
         
         // Redirect to barang list after successful save
         navigate('/barang');
@@ -392,10 +420,13 @@ const BarangDetail = () => {
                           name="kode"
                           label="Kode Barang"
                           fullWidth
-                          required
+                          placeholder="Kode akan dibuat otomatis berdasarkan nama barang"
                           error={touched.kode && Boolean(errors.kode)}
-                          helperText={touched.kode && errors.kode}
-                          disabled={!isNewBarang} // Kode can't be changed after creation
+                          helperText={touched.kode && errors.kode || "Kode akan dibuat otomatis berdasarkan 3 huruf pertama dari nama barang dan nomor urut"}
+                          disabled={true} // Kode is always auto-generated
+                          InputProps={{
+                            readOnly: true,
+                          }}
                         />
                       </Grid>
                       <Grid item xs={12} sm={6}>
@@ -590,8 +621,9 @@ const BarangDetail = () => {
               textColor="primary"
               variant="fullWidth"
             >
-              <Tab label="Informasi Barang" />
-              <Tab label="Riwayat Peminjaman" />
+              {tabs.map((tab, index) => (
+                <Tab key={index} label={tab.label} icon={tab.icon} iconPosition="start" />
+              ))}
             </Tabs>
 
             {activeTab === 0 && (
@@ -685,97 +717,90 @@ const BarangDetail = () => {
             {activeTab === 1 && (
               <Box sx={{ p: 3 }}>
                 <Typography variant="h6" gutterBottom>
-                  Riwayat Peminjaman
+                  Daftar Unit {barang.nama} ({barang.kode_grup})
                 </Typography>
-                
-                {/* Mock data for peminjaman history */}
-                {[
-                  {
-                    id: 1,
-                    peminjam: 'Budi Santoso',
-                    tanggal_pinjam: '2023-05-10',
-                    tanggal_kembali: '2023-05-15',
-                    status: 'Dikembalikan',
-                    jumlah: 2,
-                  },
-                  {
-                    id: 2,
-                    peminjam: 'Ani Wijaya',
-                    tanggal_pinjam: '2023-06-20',
-                    tanggal_kembali: '2023-06-25',
-                    status: 'Dikembalikan',
-                    jumlah: 1,
-                  },
-                ].length > 0 ? (
-                  <Box sx={{ mt: 2 }}>
-                    {[
-                      {
-                        id: 1,
-                        peminjam: 'Budi Santoso',
-                        tanggal_pinjam: '2023-05-10',
-                        tanggal_kembali: '2023-05-15',
-                        status: 'Dikembalikan',
-                        jumlah: 2,
-                      },
-                      {
-                        id: 2,
-                        peminjam: 'Ani Wijaya',
-                        tanggal_pinjam: '2023-06-20',
-                        tanggal_kembali: '2023-06-25',
-                        status: 'Dikembalikan',
-                        jumlah: 1,
-                      },
-                    ].map((pinjam) => (
-                      <Card key={pinjam.id} sx={{ mb: 2, p: 2 }}>
-                        <Grid container spacing={2}>
-                          <Grid item xs={12} sm={6}>
-                            <Typography variant="body2" color="text.secondary">
-                              Peminjam
-                            </Typography>
-                            <Typography variant="body1" gutterBottom>
-                              {pinjam.peminjam}
-                            </Typography>
-                          </Grid>
-                          <Grid item xs={12} sm={6}>
-                            <Typography variant="body2" color="text.secondary">
-                              Jumlah
-                            </Typography>
-                            <Typography variant="body1" gutterBottom>
-                              {pinjam.jumlah} unit
-                            </Typography>
-                          </Grid>
-                          <Grid item xs={12} sm={6}>
-                            <Typography variant="body2" color="text.secondary">
-                              Tanggal Pinjam
-                            </Typography>
-                            <Typography variant="body1" gutterBottom>
-                              {formatDate(pinjam.tanggal_pinjam)}
-                            </Typography>
-                          </Grid>
-                          <Grid item xs={12} sm={6}>
-                            <Typography variant="body2" color="text.secondary">
-                              Tanggal Kembali
-                            </Typography>
-                            <Typography variant="body1" gutterBottom>
-                              {formatDate(pinjam.tanggal_kembali)}
-                            </Typography>
-                          </Grid>
-                          <Grid item xs={12}>
+                <Typography variant="body2" color="text.secondary" gutterBottom>
+                  Total: {barang.total_units || 1} unit
+                </Typography>
+
+                <TableContainer component={Paper} sx={{ mt: 2 }}>
+                  <Table>
+                    <TableHead>
+                      <TableRow>
+                        <TableCell>Kode Unit</TableCell>
+                        <TableCell>Kondisi</TableCell>
+                        <TableCell>Status</TableCell>
+                        <TableCell>Lokasi</TableCell>
+                        <TableCell align="right">Aksi</TableCell>
+                      </TableRow>
+                    </TableHead>
+                    <TableBody>
+                      {/* Current unit */}
+                      <TableRow>
+                        <TableCell>{barang.kode}</TableCell>
+                        <TableCell>
+                          <Chip
+                            label={barang.kondisi}
+                            size="small"
+                            color={getKondisiColor(barang.kondisi)}
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <Chip
+                            label={barang.status}
+                            size="small"
+                            color={getStatusColor(barang.status)}
+                          />
+                        </TableCell>
+                        <TableCell>{barang.lokasi?.nama || '-'}</TableCell>
+                        <TableCell align="right">
+                          <Typography variant="body2" color="primary">
+                            Unit Saat Ini
+                          </Typography>
+                        </TableCell>
+                      </TableRow>
+
+                      {/* Related units */}
+                      {barang.related_units && barang.related_units.map((unit) => (
+                        <TableRow key={unit.id}>
+                          <TableCell>{unit.kode}</TableCell>
+                          <TableCell>
                             <Chip
-                              label={pinjam.status}
+                              label={unit.kondisi}
                               size="small"
-                              color={pinjam.status === 'Dikembalikan' ? 'success' : 'primary'}
+                              color={getKondisiColor(unit.kondisi)}
                             />
-                          </Grid>
-                        </Grid>
-                      </Card>
-                    ))}
-                  </Box>
-                ) : (
-                  <Typography variant="body1" color="text.secondary" sx={{ mt: 2 }}>
-                    Belum ada riwayat peminjaman untuk barang ini.
-                  </Typography>
-                )}
+                          </TableCell>
+                          <TableCell>
+                            <Chip
+                              label={unit.status}
+                              size="small"
+                              color={getStatusColor(unit.status)}
+                            />
+                          </TableCell>
+                          <TableCell>{unit.lokasi?.nama || '-'}</TableCell>
+                          <TableCell align="right">
+                            <Tooltip title="Lihat Detail">
+                              <IconButton onClick={() => navigate(`/barang/${unit.id}`)} size="small">
+                                <VisibilityIcon fontSize="small" />
+                              </IconButton>
+                            </Tooltip>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+
+                      {(!barang.related_units || barang.related_units.length === 0) && (
+                        <TableRow>
+                          <TableCell colSpan={5} align="center">
+                            <Typography variant="body2" color="text.secondary">
+                              Tidak ada unit terkait lainnya.
+                            </Typography>
+                          </TableCell>
+                        </TableRow>
+                      )}
+                    </TableBody>
+                  </Table>
+                </TableContainer>
               </Box>
             )}
           </Paper>
