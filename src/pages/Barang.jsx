@@ -6,24 +6,34 @@ import { useAuth } from '../contexts/AuthContext';
 import {
   Box,
   Button,
-  IconButton,
-  Tooltip,
-  Chip,
-  Grid,
   Card,
   CardContent,
-  Typography,
-  TextField,
+  Chip,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  Grid,
+  IconButton,
   MenuItem,
-  InputAdornment,
+  Paper,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  TextField,
+  Tooltip,
+  Typography,
 } from '@mui/material';
 import {
   Add as AddIcon,
-  Edit as EditIcon,
   Delete as DeleteIcon,
-  Visibility as VisibilityIcon,
-  Search as SearchIcon,
+  Edit as EditIcon,
   FilterAlt as FilterAltIcon,
+  Visibility as VisibilityIcon,
+  List as ListIcon,
 } from '@mui/icons-material';
 import PageHeader from '../components/PageHeader';
 import DataTable from '../components/DataTable';
@@ -63,7 +73,12 @@ const Barang = () => {
       const response = await axios.get(`/api/barang?${params.toString()}`);
       
       if (response.data.sukses) {
-        setBarangs(response.data.data);
+        // Tambahkan satuan default jika tidak ada
+        const barangsWithSatuan = response.data.data.map(barang => ({
+          ...barang,
+          satuan: barang.satuan || 'unit' // Default satuan jika tidak ada dari backend
+        }));
+        setBarangs(barangsWithSatuan);
       } else {
         toast.error('Gagal memuat data barang: ' + response.data.pesan);
         setBarangs([]);
@@ -196,7 +211,13 @@ const Barang = () => {
 
   // Table columns definition
   const columns = [
-    { id: 'kode', label: 'Kode', sortable: true },
+    { 
+      id: 'no', 
+      label: 'No', 
+      sortable: false,
+      format: (value, row, index) => index + 1 // Menampilkan nomor urut
+    },
+    { id: 'kode_grup', label: 'Kode Grup', sortable: true },
     { id: 'nama', label: 'Nama Barang', sortable: true },
     {
       id: 'kategori',
@@ -211,59 +232,48 @@ const Barang = () => {
       format: (value) => value?.nama || value || '-',
     },
     {
+      id: 'tanggal_perolehan',
+      label: 'Tanggal Pengadaan Barang',
+      sortable: true,
+      format: (value) => formatDate(value),
+    },
+    {
       id: 'jumlah',
       label: 'Jumlah',
       sortable: true,
       align: 'right',
-    },
-    {
-      id: 'kondisi',
-      label: 'Kondisi',
-      sortable: true,
-      format: (value) => (
-        <Chip
-          label={value}
-          size="small"
-          color={getKondisiColor(value)}
-        />
-      ),
-    },
-    {
-      id: 'status',
-      label: 'Status',
-      sortable: true,
-      format: (value) => (
-        <Chip
-          label={value}
-          size="small"
-          color={getStatusColor(value)}
-        />
-      ),
+      format: (value, row) => `${value} ${row.satuan || 'unit'}` // Menampilkan jumlah dengan satuan
     },
   ];
+
+  // State untuk dialog detail unit
+  const [unitDialogOpen, setUnitDialogOpen] = useState(false);
+  const [selectedBarang, setSelectedBarang] = useState(null);
+
+  // Handle buka dialog detail unit
+  const handleOpenUnitDialog = (barang) => {
+    setSelectedBarang(barang);
+    setUnitDialogOpen(true);
+  };
+
+  // Handle tutup dialog detail unit
+  const handleCloseUnitDialog = () => {
+    setUnitDialogOpen(false);
+    setSelectedBarang(null);
+  };
 
   // Table actions
   const actions = (row) => (
     <Box>
-      <Tooltip title="Lihat Detail">
-        <IconButton onClick={() => navigate(`/barang/${row.id}`)} size="small">
-          <VisibilityIcon fontSize="small" />
+      <Tooltip title="Daftar Unit Barang">
+        <IconButton onClick={() => {
+          // Tampilkan dialog unit untuk melihat semua unit dalam grup
+          setSelectedBarang(row);
+          setUnitDialogOpen(true);
+        }} size="small" color="primary">
+          <ListIcon fontSize="small" />
         </IconButton>
       </Tooltip>
-      {canCRUD() && (
-        <Tooltip title="Edit">
-          <IconButton onClick={() => navigate(`/barang/${row.id}`, { state: { edit: true } })} size="small">
-            <EditIcon fontSize="small" />
-          </IconButton>
-        </Tooltip>
-      )}
-      {canDeleteBarang() && (
-        <Tooltip title="Hapus">
-          <IconButton onClick={() => handleDeleteConfirm(row)} size="small" color="error">
-            <DeleteIcon fontSize="small" />
-          </IconButton>
-        </Tooltip>
-      )}
     </Box>
   );
 
@@ -377,6 +387,80 @@ const Barang = () => {
         searchable
         emptyMessage="Belum ada data barang"
       />
+
+      {/* Dialog Detail Unit */}
+      <Dialog
+        open={unitDialogOpen}
+        onClose={handleCloseUnitDialog}
+        maxWidth="md"
+        fullWidth
+      >
+        <DialogTitle>
+          Detail Unit Barang: {selectedBarang?.nama} ({selectedBarang?.kode_grup})
+        </DialogTitle>
+        <DialogContent>
+          {selectedBarang && (
+            <TableContainer component={Paper}>
+              <Table>
+                <TableHead>
+                  <TableRow>
+                    <TableCell>Kode Unit</TableCell>
+                    <TableCell>Kondisi</TableCell>
+                    <TableCell>Status</TableCell>
+                    <TableCell align="right">Aksi</TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {selectedBarang.units && selectedBarang.units.map((unit) => (
+                    <TableRow key={unit.id}>
+                      <TableCell>{unit.kode}</TableCell>
+                      <TableCell>
+                        <Chip
+                          label={unit.kondisi}
+                          size="small"
+                          color={getKondisiColor(unit.kondisi)}
+                        />
+                      </TableCell>
+                      <TableCell>
+                        <Chip
+                          label={unit.status}
+                          size="small"
+                          color={getStatusColor(unit.status)}
+                        />
+                      </TableCell>
+                      <TableCell align="right">
+                        <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
+                          <Tooltip title="Lihat Detail">
+                            <IconButton onClick={() => {
+                              handleCloseUnitDialog();
+                              navigate(`/barang/${unit.id}`);
+                            }} size="small" sx={{ mr: 1 }}>
+                              <VisibilityIcon fontSize="small" />
+                            </IconButton>
+                          </Tooltip>
+                          {canCRUD && (
+                            <Tooltip title="Edit Barang">
+                              <IconButton onClick={() => {
+                                handleCloseUnitDialog();
+                                navigate(`/barang/${unit.id}`, { state: { edit: true } });
+                              }} size="small" color="primary">
+                                <EditIcon fontSize="small" />
+                              </IconButton>
+                            </Tooltip>
+                          )}
+                        </Box>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </TableContainer>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseUnitDialog}>Tutup</Button>
+        </DialogActions>
+      </Dialog>
 
       {/* Confirm Delete Dialog */}
       <ConfirmDialog
