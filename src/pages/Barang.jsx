@@ -246,20 +246,63 @@ const Barang = () => {
     },
   ];
 
-  // State untuk dialog detail unit
+  // State for unit detail dialog
   const [unitDialogOpen, setUnitDialogOpen] = useState(false);
   const [selectedBarang, setSelectedBarang] = useState(null);
+  const [unitFilters, setUnitFilters] = useState({
+    kondisi: '',
+    status: '',
+    search: '',
+  });
 
   // Handle buka dialog detail unit
   const handleOpenUnitDialog = (barang) => {
     setSelectedBarang(barang);
     setUnitDialogOpen(true);
+    // Reset filters when opening dialog
+    setUnitFilters({
+      kondisi: '',
+      status: '',
+      search: '',
+    });
   };
 
   // Handle tutup dialog detail unit
   const handleCloseUnitDialog = () => {
     setUnitDialogOpen(false);
     setSelectedBarang(null);
+    // Reset filters when closing dialog
+    setUnitFilters({
+      kondisi: '',
+      status: '',
+      search: '',
+    });
+  };
+  
+  // Handle filter unit change
+  const handleUnitFilterChange = (event) => {
+    const { name, value } = event.target;
+    setUnitFilters({
+      ...unitFilters,
+      [name]: value,
+    });
+  };
+  
+  // Apply filters to unit data
+  const getFilteredUnits = () => {
+    if (!selectedBarang || !selectedBarang.units) return [];
+    
+    return selectedBarang.units.filter((unit) => {
+      // Filter berdasarkan kondisi dan status
+      const kondisiMatch = unitFilters.kondisi === '' || unit.kondisi === unitFilters.kondisi;
+      const statusMatch = unitFilters.status === '' || unit.status === unitFilters.status;
+      
+      // Filter berdasarkan pencarian pada kode unit
+      const searchMatch = unitFilters.search === '' || 
+        unit.kode.toLowerCase().includes(unitFilters.search.toLowerCase());
+      
+      return kondisiMatch && statusMatch && searchMatch;
+    });
   };
 
   // Table actions
@@ -400,61 +443,127 @@ const Barang = () => {
         </DialogTitle>
         <DialogContent>
           {selectedBarang && (
-            <TableContainer component={Paper}>
-              <Table>
-                <TableHead>
-                  <TableRow>
-                    <TableCell>Kode Unit</TableCell>
-                    <TableCell>Kondisi</TableCell>
-                    <TableCell>Status</TableCell>
-                    <TableCell align="right">Aksi</TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {selectedBarang.units && selectedBarang.units.map((unit) => (
-                    <TableRow key={unit.id}>
-                      <TableCell>{unit.kode}</TableCell>
-                      <TableCell>
-                        <Chip
-                          label={unit.kondisi}
-                          size="small"
-                          color={getKondisiColor(unit.kondisi)}
-                        />
-                      </TableCell>
-                      <TableCell>
-                        <Chip
-                          label={unit.status}
-                          size="small"
-                          color={getStatusColor(unit.status)}
-                        />
-                      </TableCell>
-                      <TableCell align="right">
-                        <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
-                          <Tooltip title="Lihat Detail">
-                            <IconButton onClick={() => {
-                              handleCloseUnitDialog();
-                              navigate(`/barang/${unit.id}`);
-                            }} size="small" sx={{ mr: 1 }}>
-                              <VisibilityIcon fontSize="small" />
-                            </IconButton>
-                          </Tooltip>
-                          {canCRUD && (
-                            <Tooltip title="Edit Barang">
-                              <IconButton onClick={() => {
-                                handleCloseUnitDialog();
-                                navigate(`/barang/${unit.id}`, { state: { edit: true } });
-                              }} size="small" color="primary">
-                                <EditIcon fontSize="small" />
-                              </IconButton>
-                            </Tooltip>
-                          )}
-                        </Box>
-                      </TableCell>
+            <>
+              {/* Filter untuk unit */}
+              <Box sx={{ mb: 2, mt: 1 }}>
+                <Typography variant="subtitle1" gutterBottom>
+                  Filter Unit
+                </Typography>
+                <Grid container spacing={2}>
+                  <Grid item xs={12}>
+                    <TextField
+                      fullWidth
+                      label="Cari Kode Unit"
+                      name="search"
+                      value={unitFilters.search}
+                      onChange={handleUnitFilterChange}
+                      size="small"
+                      placeholder="Masukkan kode unit untuk mencari..."
+                      sx={{ mb: 2 }}
+                    />
+                  </Grid>
+                  <Grid item xs={12} sm={6}>
+                    <TextField
+                      select
+                      fullWidth
+                      label="Kondisi"
+                      name="kondisi"
+                      value={unitFilters.kondisi}
+                      onChange={handleUnitFilterChange}
+                      size="small"
+                    >
+                      <MenuItem value="">Semua Kondisi</MenuItem>
+                      <MenuItem value="Baik">Baik</MenuItem>
+                      <MenuItem value="Rusak Ringan">Rusak Ringan</MenuItem>
+                      <MenuItem value="Rusak Berat">Rusak Berat</MenuItem>
+                    </TextField>
+                  </Grid>
+                  <Grid item xs={12} sm={6}>
+                    <TextField
+                      select
+                      fullWidth
+                      label="Status"
+                      name="status"
+                      value={unitFilters.status}
+                      onChange={handleUnitFilterChange}
+                      size="small"
+                    >
+                      <MenuItem value="">Semua Status</MenuItem>
+                      <MenuItem value="Tersedia">Tersedia</MenuItem>
+                      <MenuItem value="Dipinjam">Dipinjam</MenuItem>
+                      <MenuItem value="Perbaikan">Perbaikan</MenuItem>
+                      <MenuItem value="Rusak">Rusak</MenuItem>
+                    </TextField>
+                  </Grid>
+                </Grid>
+              </Box>
+              
+              <TableContainer component={Paper}>
+                <Table>
+                  <TableHead>
+                    <TableRow>
+                      <TableCell>No.</TableCell>
+                      <TableCell>Kode Unit</TableCell>
+                      <TableCell>Kondisi</TableCell>
+                      <TableCell>Status</TableCell>
+                      <TableCell align="right">Aksi</TableCell>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </TableContainer>
+                  </TableHead>
+                  <TableBody>
+                    {getFilteredUnits().length > 0 ? (
+                      getFilteredUnits().map((unit, index) => (
+                        <TableRow key={unit.id}>
+                          <TableCell>{index + 1}</TableCell>
+                          <TableCell>{unit.kode}</TableCell>
+                          <TableCell>
+                            <Chip
+                              label={unit.kondisi}
+                              size="small"
+                              color={getKondisiColor(unit.kondisi)}
+                            />
+                          </TableCell>
+                          <TableCell>
+                            <Chip
+                              label={unit.status}
+                              size="small"
+                              color={getStatusColor(unit.status)}
+                            />
+                          </TableCell>
+                          <TableCell align="right">
+                            <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
+                              <Tooltip title="Lihat Detail">
+                                <IconButton onClick={() => {
+                                  handleCloseUnitDialog();
+                                  navigate(`/barang/${unit.id}`);
+                                }} size="small" sx={{ mr: 1 }}>
+                                  <VisibilityIcon fontSize="small" />
+                                </IconButton>
+                              </Tooltip>
+                              {canCRUD() && (
+                                <Tooltip title="Edit Barang">
+                                  <IconButton onClick={() => {
+                                    handleCloseUnitDialog();
+                                    navigate(`/barang/${unit.id}`, { state: { edit: true } });
+                                  }} size="small" color="primary">
+                                    <EditIcon fontSize="small" />
+                                  </IconButton>
+                                </Tooltip>
+                              )}
+                            </Box>
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    ) : (
+                      <TableRow>
+                        <TableCell colSpan={5} align="center">
+                          Tidak ada unit yang sesuai dengan filter
+                        </TableCell>
+                      </TableRow>
+                    )}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+            </>
           )}
         </DialogContent>
         <DialogActions>

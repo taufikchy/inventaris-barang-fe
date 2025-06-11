@@ -2,9 +2,11 @@ import { useState, useEffect } from 'react';
 import axios from '../utils/axios';
 import { toast } from 'react-toastify';
 import { useAuth } from '../contexts/AuthContext';
+import { useNavigate } from 'react-router-dom';
 import {
   Box,
   Button,
+  CircularProgress,
   Dialog,
   DialogActions,
   DialogContent,
@@ -12,11 +14,24 @@ import {
   TextField,
   IconButton,
   Tooltip,
+  Chip,
+  Grid,
+  MenuItem,
+  Paper,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Typography,
 } from '@mui/material';
 import {
   Add as AddIcon,
   Edit as EditIcon,
   Delete as DeleteIcon,
+  Inventory as InventoryIcon,
+  Visibility as VisibilityIcon,
 } from '@mui/icons-material';
 import { Formik, Form, Field } from 'formik';
 import * as Yup from 'yup';
@@ -31,6 +46,7 @@ const LokasiSchema = Yup.object().shape({
 });
 
 const Lokasi = () => {
+  const navigate = useNavigate();
   const { canCRUD, canDeleteLokasiKategori } = useAuth();
   const [loading, setLoading] = useState(true);
   const [lokasis, setLokasis] = useState([]);
@@ -38,6 +54,16 @@ const Lokasi = () => {
   const [currentLokasi, setCurrentLokasi] = useState(null);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState(false);
+  
+  // State untuk dialog detail barang per lokasi
+  const [barangDialogOpen, setBarangDialogOpen] = useState(false);
+  const [selectedLokasi, setSelectedLokasi] = useState(null);
+  const [barangLoading, setBarangLoading] = useState(false);
+  const [barangPerLokasi, setBarangPerLokasi] = useState([]);
+  const [barangFilters, setBarangFilters] = useState({
+    kondisi: '',
+    status: '',
+  });
 
   // Fetch lokasi data
   const fetchLokasis = async () => {
@@ -144,6 +170,99 @@ const Lokasi = () => {
     }
   };
 
+  // Fetch barang berdasarkan lokasi
+  const fetchBarangByLokasi = async (lokasiId) => {
+    try {
+      setBarangLoading(true);
+      
+      // Fetch data from API
+      const response = await axios.get(`/api/barang?lokasi=${lokasiId}`);
+      
+      if (response.data.sukses) {
+        setBarangPerLokasi(response.data.data);
+      } else {
+        toast.error('Gagal memuat data barang: ' + response.data.pesan);
+        setBarangPerLokasi([]);
+      }
+      
+      setBarangLoading(false);
+    } catch (error) {
+      console.error('Error fetching barang by lokasi:', error);
+      toast.error('Gagal memuat data barang: ' + (error.response?.data?.pesan || error.message));
+      setBarangPerLokasi([]);
+      setBarangLoading(false);
+    }
+  };
+
+  // Handle buka dialog detail barang per lokasi
+  const handleOpenBarangDialog = (lokasi) => {
+    setSelectedLokasi(lokasi);
+    setBarangDialogOpen(true);
+    fetchBarangByLokasi(lokasi.id);
+  };
+
+  // Handle tutup dialog detail barang per lokasi
+  const handleCloseBarangDialog = () => {
+    setBarangDialogOpen(false);
+    setSelectedLokasi(null);
+    setBarangPerLokasi([]);
+    setBarangFilters({
+      kondisi: '',
+      status: '',
+    });
+  };
+
+  // Handle filter barang change
+  const handleBarangFilterChange = (event) => {
+    const { name, value } = event.target;
+    setBarangFilters({
+      ...barangFilters,
+      [name]: value,
+    });
+  };
+
+  // Apply filters to barang data
+  const getFilteredBarang = () => {
+    if (!barangPerLokasi) return [];
+    
+    return barangPerLokasi.filter((barang) => {
+      return (
+        (barangFilters.kondisi === '' || barang.kondisi === barangFilters.kondisi) &&
+        (barangFilters.status === '' || barang.status === barangFilters.status)
+      );
+    });
+  };
+
+  // Get status chip color
+  const getStatusColor = (status) => {
+    switch (status) {
+      case 'Tersedia':
+        return 'success';
+      case 'Dipinjam':
+        return 'primary';
+      case 'Perbaikan':
+        return 'warning';
+      case 'Rusak':
+        return 'error';
+      default:
+        return 'default';
+    }
+  };
+
+  // Get kondisi chip color
+  const getKondisiColor = (kondisi) => {
+    switch (kondisi) {
+      case 'Baik':
+        return 'success';
+      case 'Rusak Ringan':
+        return 'warning';
+      case 'Rusak Berat':
+        return 'error';
+      default:
+        return 'default';
+    }
+  };
+
   // Table columns definition
   const columns = [
     { id: 'id', label: 'ID', sortable: true },
@@ -154,6 +273,11 @@ const Lokasi = () => {
   // Table actions
   const actions = (row) => (
     <Box>
+      <Tooltip title="Lihat Barang">
+        <IconButton onClick={() => handleOpenBarangDialog(row)} size="small" color="info">
+          <InventoryIcon fontSize="small" />
+        </IconButton>
+      </Tooltip>
       {canCRUD() && (
         <Tooltip title="Edit">
           <IconButton onClick={() => handleOpenForm(row)} size="small">
@@ -252,6 +376,141 @@ const Lokasi = () => {
         onCancel={() => setConfirmDelete(false)}
         loading={deleteLoading}
       />
+
+      {/* Dialog Detail Barang per Lokasi */}
+      <Dialog
+        open={barangDialogOpen}
+        onClose={handleCloseBarangDialog}
+        maxWidth="lg"
+        fullWidth
+      >
+        <DialogTitle>
+          Detail Barang di {selectedLokasi?.nama}
+        </DialogTitle>
+        <DialogContent>
+          {barangLoading ? (
+            <Box sx={{ display: 'flex', justifyContent: 'center', p: 3 }}>
+              <CircularProgress />
+            </Box>
+          ) : (
+            <>
+              {/* Filter */}
+              <Box sx={{ mb: 3, mt: 1 }}>
+                <Grid container spacing={2}>
+                  <Grid item xs={12} sm={6} md={3}>
+                    <TextField
+                      select
+                      fullWidth
+                      label="Filter Kondisi"
+                      name="kondisi"
+                      value={barangFilters.kondisi}
+                      onChange={handleBarangFilterChange}
+                      variant="outlined"
+                      size="small"
+                    >
+                      <MenuItem value="">Semua Kondisi</MenuItem>
+                      <MenuItem value="Baik">Baik</MenuItem>
+                      <MenuItem value="Rusak Ringan">Rusak Ringan</MenuItem>
+                      <MenuItem value="Rusak Berat">Rusak Berat</MenuItem>
+                    </TextField>
+                  </Grid>
+                  <Grid item xs={12} sm={6} md={3}>
+                    <TextField
+                      select
+                      fullWidth
+                      label="Filter Status"
+                      name="status"
+                      value={barangFilters.status}
+                      onChange={handleBarangFilterChange}
+                      variant="outlined"
+                      size="small"
+                    >
+                      <MenuItem value="">Semua Status</MenuItem>
+                      <MenuItem value="Tersedia">Tersedia</MenuItem>
+                      <MenuItem value="Dipinjam">Dipinjam</MenuItem>
+                      <MenuItem value="Perbaikan">Perbaikan</MenuItem>
+                      <MenuItem value="Rusak">Rusak</MenuItem>
+                    </TextField>
+                  </Grid>
+                </Grid>
+              </Box>
+
+              {/* Table */}
+              {getFilteredBarang().length > 0 ? (
+                <TableContainer component={Paper} sx={{ mt: 2 }}>
+                  <Table size="small">
+                    <TableHead sx={{ backgroundColor: '#f5f5f5' }}>
+                      <TableRow>
+                        <TableCell>No.</TableCell>
+                        <TableCell>Kode Barang</TableCell>
+                        <TableCell>Nama Barang</TableCell>
+                        <TableCell>Kategori</TableCell>
+                        <TableCell>Kondisi</TableCell>
+                        <TableCell>Status</TableCell>
+                        <TableCell>Jumlah Unit</TableCell>
+                        <TableCell>Aksi</TableCell>
+                      </TableRow>
+                    </TableHead>
+                    <TableBody>
+                      {getFilteredBarang().map((barang, index) => (
+                        <TableRow 
+                          key={barang.id}
+                          sx={{
+                            '&:nth-of-type(even)': { backgroundColor: '#f9f9f9' },
+                            '&:hover': { backgroundColor: '#e8f4f8' },
+                          }}
+                        >
+                          <TableCell>{index + 1}</TableCell>
+                          <TableCell>{barang.kode}</TableCell>
+                          <TableCell>{barang.nama}</TableCell>
+                          <TableCell>{barang.kategori?.nama || '-'}</TableCell>
+                          <TableCell>
+                            <Chip 
+                              label={barang.kondisi} 
+                              size="small" 
+                              color={getKondisiColor(barang.kondisi)}
+                              variant="outlined"
+                            />
+                          </TableCell>
+                          <TableCell>
+                            <Chip 
+                              label={barang.status} 
+                              size="small" 
+                              color={getStatusColor(barang.status)}
+                              variant="outlined"
+                            />
+                          </TableCell>
+                          <TableCell>{barang.units?.length || 0}</TableCell>
+                          <TableCell>
+                            <Tooltip title="Lihat Detail">
+                              <IconButton 
+                                size="small" 
+                                color="primary"
+                                onClick={() => navigate(`/barang/${barang.id}`)}
+                              >
+                                <VisibilityIcon fontSize="small" />
+                              </IconButton>
+                            </Tooltip>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </TableContainer>
+              ) : (
+                <Box sx={{ p: 3, textAlign: 'center' }}>
+                  <Typography variant="body1" color="text.secondary">
+                    Tidak ada barang yang ditemukan di lokasi ini{barangFilters.kondisi || barangFilters.status ? ' dengan filter yang dipilih' : ''}.
+                  </Typography>
+                </Box>
+              )}
+            </>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseBarangDialog}>Tutup</Button>
+        </DialogActions>
+      </Dialog>
     </>
   );
 };
