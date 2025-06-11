@@ -137,6 +137,22 @@ const Dashboard = () => {
     fetchDashboardData();
   }, []);
 
+  // Fungsi untuk mengurutkan lokasi berdasarkan nomor lab
+  const sortLocations = (locations) => {
+    return [...locations].sort((a, b) => {
+      // Ekstrak angka dari nama lokasi (misalnya "Lab 1" -> 1)
+      const getLabNumber = (name) => {
+        const match = name.match(/\d+/);
+        return match ? parseInt(match[0], 10) : 0;
+      };
+      
+      const numA = getLabNumber(a.nama);
+      const numB = getLabNumber(b.nama);
+      
+      return numA - numB;
+    });
+  };
+
   // Prepare chart data
   const pieChartData = {
     labels: distribusiPerKondisi.map(item => item.nama),
@@ -150,12 +166,15 @@ const Dashboard = () => {
     ],
   };
 
+  // Urutkan lokasi untuk grafik bar
+  const sortedLocations = sortLocations(barangPerLokasi);
+
   const barChartData = {
-    labels: barangPerLokasi.map(item => item.nama),
+    labels: sortedLocations.map(item => item.nama),
     datasets: [
       {
         label: 'Jumlah Barang',
-        data: barangPerLokasi.map(item => item.jumlah),
+        data: sortedLocations.map(item => item.jumlah),
         backgroundColor: [
           '#3b82f6', '#22c55e', '#f59e0b', '#ef4444', '#8b5cf6', 
           '#06b6d4', '#f97316', '#84cc16', '#ec4899', '#6366f1'
