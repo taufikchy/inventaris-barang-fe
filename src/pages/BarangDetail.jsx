@@ -701,14 +701,7 @@ const BarangDetail = () => {
                           {barang?.tanggal_perolehan ? formatDate(barang.tanggal_perolehan) : '-'}
                         </Typography>
                       </Grid>
-                      <Grid item xs={12} sm={6}>
-                        <Typography variant="body2" color="text.secondary">
-                          Harga Perolehan
-                        </Typography>
-                        <Typography variant="body1" gutterBottom>
-                          {barang?.harga_perolehan ? formatCurrency(barang.harga_perolehan) : '-'}
-                        </Typography>
-                      </Grid>
+
                     </Grid>
                   </Grid>
                 </Grid>
@@ -753,7 +746,7 @@ const BarangDetail = () => {
                             color={getStatusColor(barang.status)}
                           />
                         </TableCell>
-                        <TableCell>{barang.lokasi ? barang.lokasi.nama : '-'}</TableCell>
+                        <TableCell>{barang.lokasi ? (typeof barang.lokasi === 'object' ? barang.lokasi.nama : barang.lokasi) : '-'}</TableCell>
                         <TableCell align="right">
                           <Typography variant="body2" color="primary">
                             Unit Saat Ini
@@ -779,7 +772,7 @@ const BarangDetail = () => {
                               color={getStatusColor(unit.status)}
                             />
                           </TableCell>
-                          <TableCell>{unit.lokasi ? unit.lokasi.nama : '-'}</TableCell>
+                          <TableCell>{unit.lokasi ? (typeof unit.lokasi === 'object' ? unit.lokasi.nama : unit.lokasi) : '-'}</TableCell>
                           <TableCell align="right">
                             <Tooltip title="Lihat Detail">
                               <IconButton onClick={() => navigate(`/barang/${unit.id}`)} size="small">
