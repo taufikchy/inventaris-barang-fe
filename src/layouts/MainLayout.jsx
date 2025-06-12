@@ -22,12 +22,11 @@ const MainLayout = () => {
           p: { xs: 1, sm: 2 },
           ml: { 
             xs: 0, 
-            md: open ? `${drawerWidth}px` : 0 
+            md: open ? `${drawerWidth - 240}px` : 0 
           },
-          mr: { xs: 1, sm: 2 },
           width: {
             xs: '100%',
-            md: open ? `calc(100% - ${drawerWidth}px)` : '100%'
+            md: open ? `calc(100% - ${drawerWidth - 240}px)` : '100%'
           },
           transition: (theme) =>
             theme.transitions.create(['margin', 'width'], {
@@ -41,7 +40,7 @@ const MainLayout = () => {
           maxWidth="xl" 
           sx={{ 
             mt: 2,
-            px: { xs: 1, sm: 2 },
+            px: { xs: 0.5, sm: 1 },
             width: '100%',
             maxWidth: '100% !important'
           }}
