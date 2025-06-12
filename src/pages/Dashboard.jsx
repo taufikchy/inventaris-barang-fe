@@ -286,7 +286,7 @@ const Dashboard = () => {
       {/* Charts and Tables */}
       <Grid container spacing={3}>
         {/* Distribusi Barang per Ruangan Chart */}
-        <Grid item xs={12} md={8}>
+        <Grid item xs={12} md={7}>
           <Card sx={{ height: '100%' }}>
             <CardContent>
               <Typography variant="h6" gutterBottom>
@@ -304,7 +304,7 @@ const Dashboard = () => {
         </Grid>
 
         {/* Distribusi Barang per Kondisi Chart */}
-        <Grid item xs={12} md={4}>
+        <Grid item xs={12} md={5}>
           <Card sx={{ height: '100%' }}>
             <CardContent>
               <Typography variant="h6" gutterBottom>
