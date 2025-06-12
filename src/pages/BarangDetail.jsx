@@ -674,7 +674,7 @@ const BarangDetail = () => {
                           Kategori
                         </Typography>
                         <Typography variant="body1" gutterBottom>
-                          {barang?.kategori || '-'}
+                          {barang?.kategori ? (typeof barang.kategori === 'object' ? barang.kategori.nama : barang.kategori) : '-'}
                         </Typography>
                       </Grid>
                       <Grid item xs={12} sm={6}>
@@ -682,7 +682,7 @@ const BarangDetail = () => {
                           Lokasi
                         </Typography>
                         <Typography variant="body1" gutterBottom>
-                          {barang?.lokasi || '-'}
+                          {barang?.lokasi ? (typeof barang.lokasi === 'object' ? barang.lokasi.nama : barang.lokasi) : '-'}
                         </Typography>
                       </Grid>
                       <Grid item xs={12} sm={6}>
@@ -753,7 +753,7 @@ const BarangDetail = () => {
                             color={getStatusColor(barang.status)}
                           />
                         </TableCell>
-                        <TableCell>{barang.lokasi?.nama || '-'}</TableCell>
+                        <TableCell>{barang.lokasi ? (typeof barang.lokasi === 'object' ? barang.lokasi.nama : barang.lokasi) : '-'}</TableCell>
                         <TableCell align="right">
                           <Typography variant="body2" color="primary">
                             Unit Saat Ini
@@ -779,7 +779,7 @@ const BarangDetail = () => {
                               color={getStatusColor(unit.status)}
                             />
                           </TableCell>
-                          <TableCell>{unit.lokasi?.nama || '-'}</TableCell>
+                          <TableCell>{unit.lokasi ? (typeof unit.lokasi === 'object' ? unit.lokasi.nama : unit.lokasi) : '-'}</TableCell>
                           <TableCell align="right">
                             <Tooltip title="Lihat Detail">
                               <IconButton onClick={() => navigate(`/barang/${unit.id}`)} size="small">

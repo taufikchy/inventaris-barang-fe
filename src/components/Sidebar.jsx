@@ -68,7 +68,7 @@ const Sidebar = ({ open, setOpen }) => {
       path: '/peminjaman',
     },
     {
-      text: 'Transaksi',
+      text: 'Histori Aktivitas',
       icon: <ReceiptIcon />,
       path: '/transaksi',
     },

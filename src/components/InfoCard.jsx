@@ -11,17 +11,40 @@ const InfoCard = ({ title, value, icon, color, subtitle }) => {
         overflow: 'hidden',
       }}
     >
-      <CardContent sx={{ flex: 1, zIndex: 1 }}>
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-          <Box>
-            <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+      <CardContent sx={{ flex: 1, zIndex: 1, p: { xs: 2, sm: 3 } }}>
+        <Box sx={{ 
+          display: 'flex', 
+          justifyContent: 'space-between', 
+          alignItems: 'flex-start',
+          flexDirection: { xs: 'column', sm: 'row' },
+          gap: { xs: 2, sm: 0 }
+        }}>
+          <Box sx={{ flex: 1 }}>
+            <Typography 
+              variant="subtitle2" 
+              color="text.secondary" 
+              gutterBottom
+              sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}
+            >
               {title}
             </Typography>
-            <Typography variant="h4" component="div" sx={{ fontWeight: 600, mb: 1 }}>
+            <Typography 
+              variant="h4" 
+              component="div" 
+              sx={{ 
+                fontWeight: 600, 
+                mb: 1,
+                fontSize: { xs: '1.5rem', sm: '2rem', md: '2.125rem' }
+              }}
+            >
               {value}
             </Typography>
             {subtitle && (
-              <Typography variant="body2" color="text.secondary">
+              <Typography 
+                variant="body2" 
+                color="text.secondary"
+                sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}
+              >
                 {subtitle}
               </Typography>
             )}
@@ -30,8 +53,9 @@ const InfoCard = ({ title, value, icon, color, subtitle }) => {
             sx={{
               bgcolor: `${color}.light`,
               color: `${color}.main`,
-              width: 48,
-              height: 48,
+              width: { xs: 40, sm: 48 },
+              height: { xs: 40, sm: 48 },
+              alignSelf: { xs: 'center', sm: 'flex-start' }
             }}
           >
             {icon}

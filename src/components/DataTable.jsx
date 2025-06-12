@@ -25,7 +25,20 @@ import {
   Refresh as RefreshIcon,
 } from '@mui/icons-material';
 
-function descendingComparator(a, b, orderBy) {
+function descendingComparator(a, b, orderBy, columns) {
+  // Special handling for 'no' column - sort by actual numeric value
+  if (orderBy === 'no') {
+    const aValue = a.no || a.originalIndex + 1;
+    const bValue = b.no || b.originalIndex + 1;
+    if (bValue < aValue) {
+      return -1;
+    }
+    if (bValue > aValue) {
+      return 1;
+    }
+    return 0;
+  }
+  
   if (b[orderBy] < a[orderBy]) {
     return -1;
   }
@@ -35,10 +48,10 @@ function descendingComparator(a, b, orderBy) {
   return 0;
 }
 
-function getComparator(order, orderBy) {
+function getComparator(order, orderBy, columns) {
   return order === 'desc'
-    ? (a, b) => descendingComparator(a, b, orderBy)
-    : (a, b) => -descendingComparator(a, b, orderBy);
+    ? (a, b) => descendingComparator(a, b, orderBy, columns)
+    : (a, b) => -descendingComparator(a, b, orderBy, columns);
 }
 
 function stableSort(array, comparator) {
@@ -113,9 +126,16 @@ const DataTable = ({
     }
   };
 
+  // Add originalIndex and 'no' field to rows for proper sorting of 'no' column
+  const rowsWithIndex = rows.map((row, index) => ({
+    ...row,
+    originalIndex: index,
+    no: index + 1 // Add 'no' field for sorting
+  }));
+
   // Filter rows based on search query (only for client-side filtering)
   const filteredRows = searchable && !isServerSidePagination
-    ? rows.filter((row) => {
+    ? rowsWithIndex.filter((row) => {
         if (!searchQuery) return true;
         
         return Object.keys(row).some((key) => {
@@ -129,7 +149,7 @@ const DataTable = ({
           return false;
         });
       })
-    : rows;
+    : rowsWithIndex;
 
   // Calculate empty rows to maintain consistent page height
   const currentPage = isServerSidePagination ? page : internalPage;
@@ -138,10 +158,27 @@ const DataTable = ({
   const emptyRows = currentPage > 0 ? Math.max(0, (1 + currentPage) * currentRowsPerPage - totalCount) : 0;
 
   // Get displayed rows
-  const displayedRows = isServerSidePagination
-    ? filteredRows // For server-side, we assume rows are already paginated
-    : stableSort(filteredRows, getComparator(order, orderBy))
-        .slice(currentPage * currentRowsPerPage, currentPage * currentRowsPerPage + currentRowsPerPage);
+  let displayedRows;
+  if (isServerSidePagination) {
+    displayedRows = filteredRows.map((row, index) => ({
+      ...row,
+      displayIndex: currentPage * currentRowsPerPage + index
+    })); // For server-side, we assume rows are already paginated
+  } else {
+    const sortedRows = stableSort(filteredRows, getComparator(order, orderBy, columns));
+    // Add sortedIndex to all sorted rows first
+    const sortedRowsWithIndex = sortedRows.map((row, index) => ({
+      ...row,
+      sortedIndex: index
+    }));
+    
+    displayedRows = sortedRowsWithIndex
+      .slice(currentPage * currentRowsPerPage, currentPage * currentRowsPerPage + currentRowsPerPage)
+      .map((row, index) => ({
+        ...row,
+        displayIndex: row.sortedIndex // Use sortedIndex instead of pagination index
+      }));
+  }
 
   return (
     <Box sx={{ width: '100%' }}>
@@ -281,9 +318,10 @@ const DataTable = ({
                     >
                       {columns.map((column) => {
                         const value = row[column.id];
+                        const displayIndexForFormat = row.displayIndex !== undefined ? row.displayIndex : index;
                         return (
                           <TableCell key={column.id} align={column.align || 'center'}>
-                            {column.format ? column.format(value, row, index) : value}
+                            {column.format ? column.format(value, row, displayIndexForFormat) : value}
                           </TableCell>
                         );
                       })}

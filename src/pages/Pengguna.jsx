@@ -216,6 +216,12 @@ const Pengguna = () => {
 
   // Table columns definition
   const columns = [
+    { 
+      id: 'no', 
+      label: 'No', 
+      sortable: true,
+      format: (value, row, displayIndex) => displayIndex + 1 // Menampilkan nomor urut berdasarkan posisi setelah sorting
+    },
     { id: 'id', label: 'ID', sortable: true },
     { id: 'nama', label: 'Nama', sortable: true },
     { id: 'username', label: 'Username', sortable: true },

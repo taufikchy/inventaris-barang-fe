@@ -30,28 +30,28 @@ import {
   Tooltip
 } from '@mui/material';
 import {
-  Add as AddIcon,
-  Edit as EditIcon,
-  Delete as DeleteIcon,
   Visibility as ViewIcon,
   FilterList as FilterIcon,
   Download as DownloadIcon,
-  TrendingUp as TrendingUpIcon,
-  TrendingDown as TrendingDownIcon,
-  Warning as WarningIcon,
-  Error as ErrorIcon
+  History as HistoryIcon,
+  Person as PersonIcon,
+  Computer as ComputerIcon,
+  Category as CategoryIcon,
+  LocationOn as LocationIcon,
+  Assignment as AssignmentIcon,
+  Login as LoginIcon,
+  Logout as LogoutIcon
 } from '@mui/icons-material';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import dayjs from 'dayjs';
-import axios from 'axios';
+import axios from '../utils/axios';
 
-const Transaksi = () => {
-  const [transaksi, setTransaksi] = useState([]);
-  const [barang, setBarang] = useState([]);
+const HistoriTransaksi = () => {
+  const [historiAktivitas, setHistoriAktivitas] = useState([]);
+  const [pengguna, setPengguna] = useState([]);
   const [loading, setLoading] = useState(true);
   const [openDialog, setOpenDialog] = useState(false);
-  const [dialogMode, setDialogMode] = useState('add'); // 'add', 'edit', 'view'
-  const [selectedTransaksi, setSelectedTransaksi] = useState(null);
+  const [selectedAktivitas, setSelectedAktivitas] = useState(null);
   const [showFilters, setShowFilters] = useState(false);
   
   // Pagination
@@ -62,193 +62,98 @@ const Transaksi = () => {
   
   // Filters
   const [filters, setFilters] = useState({
-    jenis_transaksi: '',
+    jenis_aktivitas: '',
+    modul: '',
     tanggal_mulai: null,
     tanggal_akhir: null,
-    id_barang: '',
-    status: '',
+    id_pengguna: '',
     search: ''
   });
   
-  // Form data
-  const [formData, setFormData] = useState({
-    id_barang: '',
-    jenis_transaksi: '',
-    jumlah: '',
-    keterangan: '',
-    harga_satuan: '',
-    supplier: '',
-    nomor_faktur: ''
-  });
-  
-  const [errors, setErrors] = useState({});
   const [alert, setAlert] = useState({ show: false, message: '', severity: 'success' });
 
-  const jenisTransaksiOptions = [
-    { value: 'masuk', label: 'Barang Masuk', color: 'success', icon: <TrendingUpIcon /> },
-    { value: 'keluar', label: 'Barang Keluar', color: 'primary', icon: <TrendingDownIcon /> },
-    { value: 'rusak', label: 'Barang Rusak', color: 'warning', icon: <WarningIcon /> },
-    { value: 'hilang', label: 'Barang Hilang', color: 'error', icon: <ErrorIcon /> }
+  const jenisAktivitasOptions = [
+    { value: 'create', label: 'Tambah Data', color: 'success', icon: <HistoryIcon /> },
+    { value: 'update', label: 'Ubah Data', color: 'primary', icon: <HistoryIcon /> },
+    { value: 'delete', label: 'Hapus Data', color: 'error', icon: <HistoryIcon /> },
+    { value: 'login', label: 'Login', color: 'info', icon: <LoginIcon /> },
+    { value: 'logout', label: 'Logout', color: 'default', icon: <LogoutIcon /> }
   ];
   
-  const statusOptions = [
-    { value: 'pending', label: 'Pending', color: 'warning' },
-    { value: 'approved', label: 'Disetujui', color: 'success' },
-    { value: 'rejected', label: 'Ditolak', color: 'error' }
+  const modulOptions = [
+    { value: 'barang', label: 'Barang', color: 'primary', icon: <ComputerIcon /> },
+    { value: 'kategori', label: 'Kategori', color: 'secondary', icon: <CategoryIcon /> },
+    { value: 'lokasi', label: 'Lokasi', color: 'info', icon: <LocationIcon /> },
+    { value: 'pengguna', label: 'Pengguna', color: 'warning', icon: <PersonIcon /> },
+    { value: 'peminjaman', label: 'Peminjaman', color: 'success', icon: <AssignmentIcon /> },
+    { value: 'transaksi', label: 'Transaksi', color: 'error', icon: <HistoryIcon /> },
+    { value: 'auth', label: 'Autentikasi', color: 'default', icon: <LoginIcon /> }
   ];
 
   useEffect(() => {
-    fetchTransaksi();
-    fetchBarang();
+    fetchHistoriAktivitas();
+    fetchPengguna();
   }, [page, filters]);
 
-  const fetchTransaksi = async () => {
+  const fetchHistoriAktivitas = async () => {
     try {
       setLoading(true);
       const token = localStorage.getItem('token');
-      const response = await axios.get('/api/transaksi', {
+      const response = await axios.get('/api/histori-aktivitas', {
         params: {
           page,
           limit: limit,
-          jenis_transaksi: filters.jenis_transaksi,
+          jenis_aktivitas: filters.jenis_aktivitas,
+          modul: filters.modul,
           tanggal_mulai: filters.tanggal_mulai ? filters.tanggal_mulai.format('YYYY-MM-DD') : undefined,
           tanggal_akhir: filters.tanggal_akhir ? filters.tanggal_akhir.format('YYYY-MM-DD') : undefined,
-          id_barang: filters.id_barang,
-          status: filters.status,
+          id_pengguna: filters.id_pengguna,
           search: filters.search
         },
         headers: { Authorization: `Bearer ${token}` }
       });
       
-      if (response.data.success) {
-        setTransaksi(response.data.data);
-        // Make sure we're only using setTotalItems and setTotalPages, not setTotalRows
+      if (response.data.success || response.data.sukses) {
+        setHistoriAktivitas(response.data.data);
         setTotalItems(response.data.pagination.total);
         setTotalPages(Math.ceil(response.data.pagination.total / limit));
       } else {
-        console.error('Error fetching transactions:', response.data.message);
-        showAlert(response.data.message, 'error');
+        console.error('Error fetching activity history:', response.data.message || response.data.pesan);
+        showAlert(response.data.message || response.data.pesan, 'error');
       }
       setLoading(false);
     } catch (error) {
-      console.error('Error fetching transactions:', error);
-      showAlert(error.response?.data?.message || 'Gagal memuat data transaksi', 'error');
+      console.error('Error fetching activity history:', error);
+      showAlert(error.response?.data?.message || error.response?.data?.pesan || 'Gagal memuat data histori aktivitas', 'error');
       setLoading(false);
     }
   };
 
-  const fetchBarang = async () => {
+  const fetchPengguna = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.get('/api/barang', {
-        headers: { Authorization: `Bearer ${token}` },
-        params: { limit: 1000 } // Get all items for dropdown
+      const response = await axios.get('/api/pengguna/dropdown', {
+        headers: { Authorization: `Bearer ${token}` }
       });
-      setBarang(response.data.data);
+      setPengguna(response.data.data);
     } catch (error) {
-      console.error('Error fetching items:', error);
+      console.error('Error fetching users:', error);
     }
   };
 
-  const handleOpenDialog = (mode, transaksi = null) => {
-    setDialogMode(mode);
-    setSelectedTransaksi(transaksi);
-    
-    if (mode === 'add') {
-      setFormData({
-        id_barang: '',
-        jenis_transaksi: '',
-        jumlah: '',
-        keterangan: '',
-        harga_satuan: '',
-        supplier: '',
-        nomor_faktur: ''
-      });
-    } else if (mode === 'edit' && transaksi) {
-      setFormData({
-        id_barang: transaksi.id_barang,
-        jenis_transaksi: transaksi.jenis_transaksi,
-        jumlah: transaksi.jumlah,
-        keterangan: transaksi.keterangan || '',
-        harga_satuan: transaksi.harga_satuan || '',
-        supplier: transaksi.supplier || '',
-        nomor_faktur: transaksi.nomor_faktur || ''
-      });
-    }
-    
-    setErrors({});
+  const handleOpenDialog = (aktivitas) => {
+    setSelectedAktivitas(aktivitas);
     setOpenDialog(true);
   };
 
   const handleCloseDialog = () => {
     setOpenDialog(false);
-    setSelectedTransaksi(null);
-    setFormData({
-      id_barang: '',
-      jenis_transaksi: '',
-      jumlah: '',
-      keterangan: '',
-      harga_satuan: '',
-      supplier: '',
-      nomor_faktur: ''
-    });
-    setErrors({});
+    setSelectedAktivitas(null);
   };
 
-  const validateForm = () => {
-    const newErrors = {};
-    
-    if (!formData.id_barang) newErrors.id_barang = 'Barang harus dipilih';
-    if (!formData.jenis_transaksi) newErrors.jenis_transaksi = 'Jenis transaksi harus dipilih';
-    if (!formData.jumlah || formData.jumlah <= 0) newErrors.jumlah = 'Jumlah harus lebih dari 0';
-    
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
+  // Tidak ada fungsi submit karena histori aktivitas hanya untuk melihat data
 
-  const handleSubmit = async () => {
-    if (!validateForm()) return;
-    
-    try {
-      const token = localStorage.getItem('token');
-      const submitData = {
-        ...formData,
-        jumlah: parseInt(formData.jumlah),
-        harga_satuan: formData.harga_satuan ? parseFloat(formData.harga_satuan) : null
-      };
-      
-      if (dialogMode === 'add') {
-        await axios.post('/api/transaksi', submitData, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        showAlert('Transaksi berhasil ditambahkan', 'success');
-      }
-      
-      handleCloseDialog();
-      fetchTransaksi();
-    } catch (error) {
-      console.error('Error saving transaction:', error);
-      const message = error.response?.data?.message || 'Gagal menyimpan transaksi';
-      showAlert(message, 'error');
-    }
-  };
-
-  const handleDelete = async (id) => {
-    if (!window.confirm('Apakah Anda yakin ingin menghapus transaksi ini?')) return;
-    
-    try {
-      const token = localStorage.getItem('token');
-      await axios.delete(`/api/transaksi/${id}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      showAlert('Transaksi berhasil dihapus', 'success');
-      fetchTransaksi();
-    } catch (error) {
-      console.error('Error deleting transaction:', error);
-      const message = error.response?.data?.message || 'Gagal menghapus transaksi';
-      showAlert(message, 'error');
-    }
-  };
+  // Tidak ada fungsi delete karena histori aktivitas tidak dapat dihapus
 
   const handleFilterChange = (field, value) => {
     setFilters(prev => ({ ...prev, [field]: value }));
@@ -257,11 +162,11 @@ const Transaksi = () => {
 
   const clearFilters = () => {
     setFilters({
-      jenis_transaksi: '',
+      jenis_aktivitas: '',
+      modul: '',
       tanggal_mulai: null,
       tanggal_akhir: null,
-      id_barang: '',
-      status: '',
+      id_pengguna: '',
       search: ''
     });
     setPage(1);
@@ -272,14 +177,14 @@ const Transaksi = () => {
     setTimeout(() => setAlert({ show: false, message: '', severity: 'success' }), 5000);
   };
 
-  const getJenisTransaksiInfo = (jenis) => {
-    return jenisTransaksiOptions.find(option => option.value === jenis) || 
+  const getJenisAktivitasInfo = (jenis) => {
+    return jenisAktivitasOptions.find(option => option.value === jenis) || 
            { label: jenis, color: 'default', icon: null };
   };
 
-  const getStatusInfo = (status) => {
-    return statusOptions.find(option => option.value === status) || 
-           { label: status, color: 'default' };
+  const getModulInfo = (modul) => {
+    return modulOptions.find(option => option.value === modul) || 
+           { label: modul, color: 'default', icon: null };
   };
 
   const formatCurrency = (amount) => {
@@ -308,7 +213,7 @@ const Transaksi = () => {
       
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
         <Typography variant="h4" component="h1" fontWeight="bold">
-          Manajemen Transaksi
+          Histori Aktivitas
         </Typography>
         <Box sx={{ display: 'flex', gap: 1 }}>
           <Button
@@ -319,11 +224,10 @@ const Transaksi = () => {
             Filter
           </Button>
           <Button
-            variant="contained"
-            startIcon={<AddIcon />}
-            onClick={() => handleOpenDialog('add')}
+            variant="outlined"
+            startIcon={<DownloadIcon />}
           >
-            Tambah Transaksi
+            Export
           </Button>
         </Box>
       </Box>
@@ -335,14 +239,14 @@ const Transaksi = () => {
             <Grid container spacing={2}>
               <Grid item xs={12} sm={6} md={3}>
                 <FormControl fullWidth>
-                  <InputLabel>Jenis Transaksi</InputLabel>
+                  <InputLabel>Jenis Aktivitas</InputLabel>
                   <Select
-                    value={filters.jenis_transaksi}
-                    label="Jenis Transaksi"
-                    onChange={(e) => handleFilterChange('jenis_transaksi', e.target.value)}
+                    value={filters.jenis_aktivitas}
+                    label="Jenis Aktivitas"
+                    onChange={(e) => handleFilterChange('jenis_aktivitas', e.target.value)}
                   >
                     <MenuItem value="">Semua</MenuItem>
-                    {jenisTransaksiOptions.map(option => (
+                    {jenisAktivitasOptions.map(option => (
                       <MenuItem key={option.value} value={option.value}>
                         {option.label}
                       </MenuItem>
@@ -352,14 +256,14 @@ const Transaksi = () => {
               </Grid>
               <Grid item xs={12} sm={6} md={3}>
                 <FormControl fullWidth>
-                  <InputLabel>Status</InputLabel>
+                  <InputLabel>Modul</InputLabel>
                   <Select
-                    value={filters.status}
-                    label="Status"
-                    onChange={(e) => handleFilterChange('status', e.target.value)}
+                    value={filters.modul}
+                    label="Modul"
+                    onChange={(e) => handleFilterChange('modul', e.target.value)}
                   >
                     <MenuItem value="">Semua</MenuItem>
-                    {statusOptions.map(option => (
+                    {modulOptions.map(option => (
                       <MenuItem key={option.value} value={option.value}>
                         {option.label}
                       </MenuItem>
@@ -385,18 +289,18 @@ const Transaksi = () => {
               </Grid>
               <Grid item xs={12} sm={6} md={4}>
                 <FormControl fullWidth>
-                  <InputLabel>Barang</InputLabel>
+                  <InputLabel>Pengguna</InputLabel>
                   <Select
-                    value={filters.id_barang}
-                    label="Barang"
-                    onChange={(e) => handleFilterChange('id_barang', e.target.value)}
+                    value={filters.id_pengguna}
+                    label="Pengguna"
+                    onChange={(e) => handleFilterChange('id_pengguna', e.target.value)}
                   >
-                    <MenuItem value="">Semua Barang</MenuItem>
-                    {barang.map(item => (
-                      <MenuItem key={item.id} value={item.id}>
-                        {item.nama} ({item.kode})
-                      </MenuItem>
-                    ))}
+                    <MenuItem value="">Semua Pengguna</MenuItem>
+                    {pengguna.map(user => (
+                       <MenuItem key={user.id} value={user.id}>
+                         {user.nama} ({user.nama_pengguna})
+                       </MenuItem>
+                     ))}
                   </Select>
                 </FormControl>
               </Grid>
@@ -406,7 +310,7 @@ const Transaksi = () => {
                   label="Cari..."
                   value={filters.search}
                   onChange={(e) => handleFilterChange('search', e.target.value)}
-                  placeholder="Cari nama barang atau keterangan"
+                  placeholder="Cari deskripsi aktivitas"
                 />
               </Grid>
               <Grid item xs={12} sm={6} md={4}>
@@ -428,7 +332,7 @@ const Transaksi = () => {
         <CardContent>
           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
             <Typography variant="h6">
-              Daftar Transaksi ({totalItems} total)
+              Daftar Aktivitas ({totalItems} total)
             </Typography>
           </Box>
           
@@ -437,13 +341,11 @@ const Transaksi = () => {
               <TableHead>
                 <TableRow>
                   <TableCell>Tanggal</TableCell>
-                  <TableCell>Barang</TableCell>
-                  <TableCell>Jenis</TableCell>
-                  <TableCell>Jumlah</TableCell>
-                  <TableCell>Harga Satuan</TableCell>
-                  <TableCell>Total Harga</TableCell>
-                  <TableCell>Status</TableCell>
                   <TableCell>Pengguna</TableCell>
+                  <TableCell>Jenis Aktivitas</TableCell>
+                  <TableCell>Modul</TableCell>
+                  <TableCell>Deskripsi</TableCell>
+                  <TableCell>IP Address</TableCell>
                   <TableCell align="center">Aksi</TableCell>
                 </TableRow>
               </TableHead>
@@ -458,30 +360,33 @@ const Transaksi = () => {
                       ))}
                     </TableRow>
                   ))
-                ) : transaksi.length === 0 ? (
+                ) : historiAktivitas.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={9} align="center">
+                    <TableCell colSpan={7} align="center">
                       <Typography variant="body2" color="text.secondary">
-                        Tidak ada data transaksi
+                        Tidak ada data histori aktivitas
                       </Typography>
                     </TableCell>
                   </TableRow>
                 ) : (
-                  transaksi.map((item) => {
-                    const jenisInfo = getJenisTransaksiInfo(item.jenis_transaksi);
-                    const statusInfo = getStatusInfo(item.status);
+                  historiAktivitas.map((item) => {
+                    const jenisInfo = getJenisAktivitasInfo(item.jenis_aktivitas);
+                    const modulInfo = getModulInfo(item.modul);
                     
                     return (
-                      <TableRow key={item.id} hover>
-                        <TableCell>{formatDate(item.tanggal_transaksi)}</TableCell>
+                       <TableRow key={item.id} hover>
+                         <TableCell>{formatDate(item.waktu_aktivitas)}</TableCell>
                         <TableCell>
-                          <Box>
-                            <Typography variant="body2" fontWeight="medium">
-                              {item.barang?.nama}
-                            </Typography>
-                            <Typography variant="caption" color="text.secondary">
-                              {item.barang?.kode}
-                            </Typography>
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                            <PersonIcon fontSize="small" color="action" />
+                            <Box>
+                              <Typography variant="body2" fontWeight="medium">
+                                {item.pengguna?.nama}
+                              </Typography>
+                              <Typography variant="caption" color="text.secondary">
+                                 {item.pengguna?.nama_pengguna}
+                               </Typography>
+                            </Box>
                           </Box>
                         </TableCell>
                         <TableCell>
@@ -490,35 +395,34 @@ const Transaksi = () => {
                             label={jenisInfo.label}
                             color={jenisInfo.color}
                             size="small"
+                            variant="outlined"
                           />
                         </TableCell>
-                        <TableCell>{item.jumlah}</TableCell>
-                        <TableCell>{formatCurrency(item.harga_satuan)}</TableCell>
-                        <TableCell>{formatCurrency(item.total_harga)}</TableCell>
                         <TableCell>
                           <Chip
-                            label={statusInfo.label}
-                            color={statusInfo.color}
+                            icon={modulInfo.icon}
+                            label={modulInfo.label}
+                            color={modulInfo.color}
                             size="small"
                           />
                         </TableCell>
-                        <TableCell>{item.pengguna?.nama}</TableCell>
+                        <TableCell>
+                          <Typography variant="body2">
+                            {item.deskripsi}
+                          </Typography>
+                        </TableCell>
+                        <TableCell>
+                          <Typography variant="body2" color="text.secondary">
+                            {item.ip_address}
+                          </Typography>
+                        </TableCell>
                         <TableCell align="center">
                           <Tooltip title="Lihat Detail">
                             <IconButton
                               size="small"
-                              onClick={() => handleOpenDialog('view', item)}
+                              onClick={() => handleOpenDialog(item)}
                             >
                               <ViewIcon />
-                            </IconButton>
-                          </Tooltip>
-                          <Tooltip title="Hapus">
-                            <IconButton
-                              size="small"
-                              color="error"
-                              onClick={() => handleDelete(item.id)}
-                            >
-                              <DeleteIcon />
                             </IconButton>
                           </Tooltip>
                         </TableCell>
@@ -543,162 +447,105 @@ const Transaksi = () => {
         </CardContent>
       </Card>
 
-      {/* Add/Edit/View Dialog */}
+      {/* View Activity Detail Dialog */}
       <Dialog open={openDialog} onClose={handleCloseDialog} maxWidth="md" fullWidth>
         <DialogTitle>
-          {dialogMode === 'add' && 'Tambah Transaksi'}
-          {dialogMode === 'edit' && 'Edit Transaksi'}
-          {dialogMode === 'view' && 'Detail Transaksi'}
+          Detail Aktivitas
         </DialogTitle>
         <DialogContent>
-          <Grid container spacing={2} sx={{ mt: 1 }}>
-            <Grid item xs={12} sm={6}>
-              <FormControl fullWidth error={!!errors.id_barang}>
-                <InputLabel>Barang *</InputLabel>
-                <Select
-                  value={formData.id_barang}
-                  label="Barang *"
-                  onChange={(e) => setFormData(prev => ({ ...prev, id_barang: e.target.value }))}
-                  disabled={dialogMode === 'view'}
-                >
-                  {barang.map(item => (
-                    <MenuItem key={item.id} value={item.id}>
-                      {item.nama} ({item.kode}) - Stok: {item.jumlah}
-                    </MenuItem>
-                  ))}
-                </Select>
-                {errors.id_barang && (
-                  <Typography variant="caption" color="error">
-                    {errors.id_barang}
-                  </Typography>
-                )}
-              </FormControl>
+          {selectedAktivitas && (
+            <Grid container spacing={2} sx={{ mt: 1 }}>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                   fullWidth
+                   label="Tanggal Aktivitas"
+                   value={formatDate(selectedAktivitas.waktu_aktivitas)}
+                   disabled
+                 />
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  fullWidth
+                  label="Pengguna"
+                  value={selectedAktivitas.pengguna?.nama}
+                  disabled
+                />
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                   fullWidth
+                   label="Username"
+                   value={selectedAktivitas.pengguna?.nama_pengguna}
+                   disabled
+                 />
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  fullWidth
+                  label="Jenis Aktivitas"
+                  value={getJenisAktivitasInfo(selectedAktivitas.jenis_aktivitas).label}
+                  disabled
+                />
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  fullWidth
+                  label="Modul"
+                  value={getModulInfo(selectedAktivitas.modul).label}
+                  disabled
+                />
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  fullWidth
+                  label="IP Address"
+                  value={selectedAktivitas.ip_address}
+                  disabled
+                />
+              </Grid>
+              <Grid item xs={12}>
+                <TextField
+                  fullWidth
+                  label="Deskripsi"
+                  multiline
+                  rows={3}
+                  value={selectedAktivitas.deskripsi}
+                  disabled
+                />
+              </Grid>
+              {selectedAktivitas.data_sebelum && (
+                 <Grid item xs={12}>
+                   <TextField
+                     fullWidth
+                     label="Data Sebelum"
+                     multiline
+                     rows={4}
+                     value={JSON.stringify(selectedAktivitas.data_sebelum, null, 2)}
+                     disabled
+                   />
+                 </Grid>
+               )}
+               {selectedAktivitas.data_sesudah && (
+                 <Grid item xs={12}>
+                   <TextField
+                     fullWidth
+                     label="Data Sesudah"
+                     multiline
+                     rows={4}
+                     value={JSON.stringify(selectedAktivitas.data_sesudah, null, 2)}
+                     disabled
+                   />
+                 </Grid>
+               )}
             </Grid>
-            <Grid item xs={12} sm={6}>
-              <FormControl fullWidth error={!!errors.jenis_transaksi}>
-                <InputLabel>Jenis Transaksi *</InputLabel>
-                <Select
-                  value={formData.jenis_transaksi}
-                  label="Jenis Transaksi *"
-                  onChange={(e) => setFormData(prev => ({ ...prev, jenis_transaksi: e.target.value }))}
-                  disabled={dialogMode === 'view'}
-                >
-                  {jenisTransaksiOptions.map(option => (
-                    <MenuItem key={option.value} value={option.value}>
-                      {option.label}
-                    </MenuItem>
-                  ))}
-                </Select>
-                {errors.jenis_transaksi && (
-                  <Typography variant="caption" color="error">
-                    {errors.jenis_transaksi}
-                  </Typography>
-                )}
-              </FormControl>
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <TextField
-                fullWidth
-                label="Jumlah *"
-                type="number"
-                value={formData.jumlah}
-                onChange={(e) => setFormData(prev => ({ ...prev, jumlah: e.target.value }))}
-                error={!!errors.jumlah}
-                helperText={errors.jumlah}
-                disabled={dialogMode === 'view'}
-                inputProps={{ min: 1 }}
-              />
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <TextField
-                fullWidth
-                label="Harga Satuan"
-                type="number"
-                value={formData.harga_satuan}
-                onChange={(e) => setFormData(prev => ({ ...prev, harga_satuan: e.target.value }))}
-                disabled={dialogMode === 'view'}
-                inputProps={{ min: 0, step: 0.01 }}
-              />
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <TextField
-                fullWidth
-                label="Supplier"
-                value={formData.supplier}
-                onChange={(e) => setFormData(prev => ({ ...prev, supplier: e.target.value }))}
-                disabled={dialogMode === 'view'}
-              />
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <TextField
-                fullWidth
-                label="Nomor Faktur"
-                value={formData.nomor_faktur}
-                onChange={(e) => setFormData(prev => ({ ...prev, nomor_faktur: e.target.value }))}
-                disabled={dialogMode === 'view'}
-              />
-            </Grid>
-            <Grid item xs={12}>
-              <TextField
-                fullWidth
-                label="Keterangan"
-                multiline
-                rows={3}
-                value={formData.keterangan}
-                onChange={(e) => setFormData(prev => ({ ...prev, keterangan: e.target.value }))}
-                disabled={dialogMode === 'view'}
-              />
-            </Grid>
-            
-            {dialogMode === 'view' && selectedTransaksi && (
-              <>
-                <Grid item xs={12} sm={6}>
-                  <TextField
-                    fullWidth
-                    label="Total Harga"
-                    value={formatCurrency(selectedTransaksi.total_harga)}
-                    disabled
-                  />
-                </Grid>
-                <Grid item xs={12} sm={6}>
-                  <TextField
-                    fullWidth
-                    label="Status"
-                    value={getStatusInfo(selectedTransaksi.status).label}
-                    disabled
-                  />
-                </Grid>
-                <Grid item xs={12} sm={6}>
-                  <TextField
-                    fullWidth
-                    label="Tanggal Transaksi"
-                    value={formatDate(selectedTransaksi.tanggal_transaksi)}
-                    disabled
-                  />
-                </Grid>
-                <Grid item xs={12} sm={6}>
-                  <TextField
-                    fullWidth
-                    label="Dibuat Oleh"
-                    value={selectedTransaksi.pengguna?.nama}
-                    disabled
-                  />
-                </Grid>
-              </>
-            )}
-          </Grid>
+          )}
         </DialogContent>
         <DialogActions>
-          <Button onClick={handleCloseDialog}>Batal</Button>
-          {dialogMode !== 'view' && (
-            <Button onClick={handleSubmit} variant="contained">
-              {dialogMode === 'add' ? 'Tambah' : 'Simpan'}
-            </Button>
-          )}
+          <Button onClick={handleCloseDialog}>Tutup</Button>
         </DialogActions>
       </Dialog>
     </Box>
   );
 };
 
-export default Transaksi;
+export default HistoriTransaksi;

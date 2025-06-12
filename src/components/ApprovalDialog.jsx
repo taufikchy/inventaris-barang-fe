@@ -58,19 +58,13 @@ const ApprovalDialog = ({
   };
 
   const handleSubmit = () => {
-    if (status === 'disetujui' && !file) {
-      setFileError('Surat peminjaman wajib diunggah untuk persetujuan');
-      return;
-    }
+    // Tidak perlu upload file saat approval, karena surat sudah dicetak dan ditandatangani secara manual
+    const approvalData = {
+      status: status,
+      catatan_persetujuan: catatan
+    };
 
-    const formData = new FormData();
-    formData.append('status', status);
-    formData.append('catatan_persetujuan', catatan);
-    if (file) {
-      formData.append('surat_peminjaman', file);
-    }
-
-    onApprove(peminjamanId, formData);
+    onApprove(peminjamanId, approvalData);
   };
 
   const handleClose = () => {
@@ -121,32 +115,8 @@ const ApprovalDialog = ({
 
         {status === 'disetujui' && (
           <Box sx={{ mt: 3 }}>
-            <Typography variant="subtitle2" gutterBottom>
-              Unggah Surat Peminjaman yang Sudah Ditandatangani
-            </Typography>
-            <Box sx={{ display: 'flex', alignItems: 'center', mt: 1 }}>
-              <label htmlFor="surat-peminjaman-file">
-                <Input
-                  accept="image/jpeg,image/jpg,image/png,application/pdf"
-                  id="surat-peminjaman-file"
-                  type="file"
-                  onChange={handleFileChange}
-                />
-                <Button variant="contained" component="span">
-                  Pilih File
-                </Button>
-              </label>
-              <Typography variant="body2" sx={{ ml: 2 }}>
-                {file ? file.name : 'Belum ada file dipilih'}
-              </Typography>
-            </Box>
-            {fileError && (
-              <Alert severity="error" sx={{ mt: 1 }}>
-                {fileError}
-              </Alert>
-            )}
-            <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 1 }}>
-              Format yang didukung: JPG, PNG, PDF. Ukuran maksimal: 5MB
+            <Typography variant="body2" color="text.secondary">
+              Pastikan surat pengajuan peminjaman sudah dicetak dan ditandatangani sebelum menyetujui peminjaman ini.
             </Typography>
           </Box>
         )}
