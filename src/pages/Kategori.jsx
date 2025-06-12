@@ -146,6 +146,12 @@ const Kategori = () => {
 
   // Table columns definition
   const columns = [
+    { 
+      id: 'no', 
+      label: 'No', 
+      sortable: true,
+      format: (value, row, displayIndex) => displayIndex + 1 // Menampilkan nomor urut berdasarkan posisi setelah sorting
+    },
     { id: 'id', label: 'ID', sortable: true },
     { id: 'nama', label: 'Nama Kategori', sortable: true },
     { id: 'deskripsi', label: 'Deskripsi', sortable: true },

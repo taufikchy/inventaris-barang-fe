@@ -211,6 +211,12 @@ const Peminjaman = () => {
 
   // Table columns definition
   const columns = [
+    { 
+      id: 'no', 
+      label: 'No', 
+      sortable: true,
+      format: (value, row, displayIndex) => displayIndex + 1 // Menampilkan nomor urut berdasarkan posisi setelah sorting
+    },
     { id: 'kode', label: 'Kode', sortable: true },
     { id: 'peminjam', label: 'Peminjam', sortable: true },
     {

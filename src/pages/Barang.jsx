@@ -214,8 +214,8 @@ const Barang = () => {
     { 
       id: 'no', 
       label: 'No', 
-      sortable: false,
-      format: (value, row, index) => index + 1 // Menampilkan nomor urut
+      sortable: true,
+      format: (value, row, displayIndex) => displayIndex + 1 // Menampilkan nomor urut berdasarkan posisi setelah sorting
     },
     { id: 'kode_grup', label: 'Kode Grup', sortable: true },
     { id: 'nama', label: 'Nama Barang', sortable: true },

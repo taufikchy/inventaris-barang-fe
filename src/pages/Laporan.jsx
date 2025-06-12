@@ -395,6 +395,12 @@ const Laporan = () => {
 
   // Table columns definition
   const inventoryColumns = [
+    { 
+      id: 'no', 
+      label: 'No', 
+      sortable: true,
+      format: (value, row, displayIndex) => displayIndex + 1 // Menampilkan nomor urut berdasarkan posisi setelah sorting
+    },
     { id: 'kode', label: 'Kode', sortable: true },
     { id: 'nama', label: 'Nama Barang', sortable: true },
     { id: 'kategori', label: 'Kategori', sortable: true, format: (value) => value?.nama || value || '-' },
@@ -427,6 +433,12 @@ const Laporan = () => {
   ];
 
   const loanColumns = [
+    { 
+      id: 'no', 
+      label: 'No', 
+      sortable: true,
+      format: (value, row, displayIndex) => displayIndex + 1 // Menampilkan nomor urut berdasarkan posisi setelah sorting
+    },
     { id: 'kode', label: 'Kode', sortable: true },
     { id: 'peminjam', label: 'Peminjam', sortable: true },
     { id: 'tanggal_pinjam', label: 'Tanggal Pinjam', sortable: true, format: (value) => {
@@ -463,6 +475,12 @@ const Laporan = () => {
   ];
 
   const conditionColumns = [
+    { 
+      id: 'no', 
+      label: 'No', 
+      sortable: true,
+      format: (value, row, displayIndex) => displayIndex + 1 // Menampilkan nomor urut berdasarkan posisi setelah sorting
+    },
     { id: 'kode', label: 'Kode', sortable: true },
     { id: 'nama', label: 'Nama Barang', sortable: true },
     { id: 'kategori', label: 'Kategori', sortable: true, format: (value) => value?.nama || value || '-' },
@@ -479,6 +497,12 @@ const Laporan = () => {
   ];
 
   const transactionColumns = [
+    { 
+      id: 'no', 
+      label: 'No', 
+      sortable: true,
+      format: (value, row, displayIndex) => displayIndex + 1 // Menampilkan nomor urut berdasarkan posisi setelah sorting
+    },
     { id: 'kode', label: 'Kode', sortable: true },
     { id: 'barang', label: 'Nama Barang', sortable: true },
     { id: 'jenis_transaksi', label: 'Jenis', sortable: true, format: (value) => {
