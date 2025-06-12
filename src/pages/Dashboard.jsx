@@ -220,8 +220,8 @@ const Dashboard = () => {
       <PageHeader title="Dashboard" />
 
       {/* Info Cards */}
-      <Grid container spacing={2} sx={{ mb: 4 }}>
-        <Grid item xs={12} sm={6} md={2.4}>
+      <Grid container spacing={{ xs: 1, sm: 2 }} sx={{ mb: 4 }}>
+        <Grid item xs={12} sm={6} md={2.4} lg={2.4}>
           {loading ? (
             <Skeleton variant="rounded" height={120} />
           ) : (
@@ -233,7 +233,7 @@ const Dashboard = () => {
             />
           )}
         </Grid>
-        <Grid item xs={12} sm={6} md={2.4}>
+        <Grid item xs={12} sm={6} md={2.4} lg={2.4}>
           {loading ? (
             <Skeleton variant="rounded" height={120} />
           ) : (
@@ -245,7 +245,7 @@ const Dashboard = () => {
             />
           )}
         </Grid>
-        <Grid item xs={12} sm={6} md={2.4}>
+        <Grid item xs={12} sm={6} md={2.4} lg={2.4}>
           {loading ? (
             <Skeleton variant="rounded" height={120} />
           ) : (
@@ -257,7 +257,7 @@ const Dashboard = () => {
             />
           )}
         </Grid>
-        <Grid item xs={12} sm={6} md={2.4}>
+        <Grid item xs={12} sm={6} md={2.4} lg={2.4}>
           {loading ? (
             <Skeleton variant="rounded" height={120} />
           ) : (
@@ -269,7 +269,7 @@ const Dashboard = () => {
             />
           )}
         </Grid>
-        <Grid item xs={12} sm={6} md={2.4}>
+        <Grid item xs={12} sm={6} md={2.4} lg={2.4}>
           {loading ? (
             <Skeleton variant="rounded" height={120} />
           ) : (
@@ -284,9 +284,9 @@ const Dashboard = () => {
       </Grid>
 
       {/* Charts and Tables */}
-      <Grid container spacing={3}>
+      <Grid container spacing={{ xs: 2, sm: 3 }}>
         {/* Distribusi Barang per Ruangan Chart */}
-        <Grid item xs={12} md={7}>
+        <Grid item xs={12} lg={7}>
           <Card sx={{ height: '100%' }}>
             <CardContent>
               <Typography variant="h6" gutterBottom>
@@ -295,8 +295,25 @@ const Dashboard = () => {
               {loading ? (
                 <Skeleton variant="rectangular" height={300} />
               ) : (
-                <Box sx={{ height: 300 }}>
-                  <Bar data={barChartData} options={barChartOptions} />
+                <Box sx={{ 
+                  height: { xs: 250, sm: 300 },
+                  width: '100%',
+                  overflow: 'hidden'
+                }}>
+                  <Bar data={barChartData} options={{
+                    ...barChartOptions,
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                      ...barChartOptions.scales,
+                      x: {
+                        ticks: {
+                          maxRotation: 45,
+                          minRotation: 0
+                        }
+                      }
+                    }
+                  }} />
                 </Box>
               )}
             </CardContent>
@@ -304,7 +321,7 @@ const Dashboard = () => {
         </Grid>
 
         {/* Distribusi Barang per Kondisi Chart */}
-        <Grid item xs={12} md={5}>
+        <Grid item xs={12} lg={5}>
           <Card sx={{ height: '100%' }}>
             <CardContent>
               <Typography variant="h6" gutterBottom>
@@ -313,8 +330,26 @@ const Dashboard = () => {
               {loading ? (
                 <Skeleton variant="rectangular" height={300} />
               ) : (
-                <Box sx={{ height: 300, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-                  <Pie data={pieChartData} />
+                <Box sx={{ 
+                  height: { xs: 250, sm: 300 }, 
+                  display: 'flex', 
+                  justifyContent: 'center', 
+                  alignItems: 'center',
+                  width: '100%'
+                }}>
+                  <Pie data={pieChartData} options={{
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                      legend: {
+                        position: 'bottom',
+                        labels: {
+                          padding: 20,
+                          usePointStyle: true
+                        }
+                      }
+                    }
+                  }} />
                 </Box>
               )}
             </CardContent>
@@ -325,7 +360,14 @@ const Dashboard = () => {
         <Grid item xs={12} md={6}>
           <Card>
             <CardContent>
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+              <Box sx={{ 
+                display: 'flex', 
+                justifyContent: 'space-between', 
+                alignItems: 'center', 
+                mb: 2,
+                flexDirection: { xs: 'column', sm: 'row' },
+                gap: { xs: 1, sm: 0 }
+              }}>
                 <Typography variant="h6">Peminjaman Terbaru</Typography>
                 <Button
                   size="small"
@@ -338,12 +380,12 @@ const Dashboard = () => {
               {loading ? (
                 <Skeleton variant="rectangular" height={200} />
               ) : (
-                <TableContainer component={Paper} sx={{ boxShadow: 'none' }}>
+                <TableContainer component={Paper} sx={{ boxShadow: 'none', overflowX: 'auto' }}>
                   <Table size="small">
                     <TableHead>
                       <TableRow>
                         <TableCell>Peminjam</TableCell>
-                        <TableCell>Tanggal Pinjam</TableCell>
+                        <TableCell sx={{ display: { xs: 'none', sm: 'table-cell' } }}>Tanggal Pinjam</TableCell>
                         <TableCell>Status</TableCell>
                         <TableCell align="right">Aksi</TableCell>
                       </TableRow>
@@ -351,8 +393,16 @@ const Dashboard = () => {
                     <TableBody>
                       {recentPeminjaman.map((row) => (
                         <TableRow key={row.id}>
-                          <TableCell>{row.nama_peminjam}</TableCell>
-                          <TableCell>{formatDate(row.tanggal_pinjam)}</TableCell>
+                          <TableCell>
+                            <Typography variant="body2" noWrap>
+                              {row.nama_peminjam}
+                            </Typography>
+                          </TableCell>
+                          <TableCell sx={{ display: { xs: 'none', sm: 'table-cell' } }}>
+                            <Typography variant="body2">
+                              {formatDate(row.tanggal_pinjam)}
+                            </Typography>
+                          </TableCell>
                           <TableCell>
                             <Chip
                               label={row.status === 'dipinjam' ? 'Dipinjam' : 'Dikembalikan'}
@@ -382,7 +432,14 @@ const Dashboard = () => {
         <Grid item xs={12} md={6}>
           <Card>
             <CardContent>
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+              <Box sx={{ 
+                display: 'flex', 
+                justifyContent: 'space-between', 
+                alignItems: 'center', 
+                mb: 2,
+                flexDirection: { xs: 'column', sm: 'row' },
+                gap: { xs: 1, sm: 0 }
+              }}>
                 <Typography variant="h6">Transaksi Terbaru</Typography>
                 <Button
                   size="small"
@@ -395,20 +452,20 @@ const Dashboard = () => {
               {loading ? (
                 <Skeleton variant="rectangular" height={200} />
               ) : (
-                <TableContainer component={Paper} sx={{ boxShadow: 'none' }}>
+                <TableContainer component={Paper} sx={{ boxShadow: 'none', overflowX: 'auto' }}>
                   <Table size="small">
                     <TableHead>
                       <TableRow>
                         <TableCell>Barang</TableCell>
                         <TableCell>Jenis</TableCell>
-                        <TableCell>Jumlah</TableCell>
-                        <TableCell>Tanggal</TableCell>
+                        <TableCell sx={{ display: { xs: 'none', sm: 'table-cell' } }}>Jumlah</TableCell>
+                        <TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}>Tanggal</TableCell>
                       </TableRow>
                     </TableHead>
                     <TableBody>
                       {recentTransaksi.length === 0 ? (
                         <TableRow>
-                          <TableCell colSpan={4} align="center">
+                          <TableCell colSpan={{ xs: 2, sm: 3, md: 4 }} align="center">
                             <Typography variant="body2" color="text.secondary">
                               Tidak ada data transaksi
                             </Typography>
@@ -433,8 +490,16 @@ const Dashboard = () => {
                                 size="small"
                               />
                             </TableCell>
-                            <TableCell>{transaksi.jumlah}</TableCell>
-                            <TableCell>{formatDate(transaksi.tanggal_transaksi)}</TableCell>
+                            <TableCell sx={{ display: { xs: 'none', sm: 'table-cell' } }}>
+                              <Typography variant="body2">
+                                {transaksi.jumlah}
+                              </Typography>
+                            </TableCell>
+                            <TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}>
+                              <Typography variant="body2">
+                                {formatDate(transaksi.tanggal_transaksi)}
+                              </Typography>
+                            </TableCell>
                           </TableRow>
                         ))
                       )}

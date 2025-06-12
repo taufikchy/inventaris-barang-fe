@@ -1,13 +1,15 @@
 import { useState } from 'react';
 import { Outlet } from 'react-router-dom';
-import { Box, Toolbar, Container } from '@mui/material';
+import { Box, Toolbar, Container, useMediaQuery, useTheme } from '@mui/material';
 import Header from '../components/Header';
 import Sidebar from '../components/Sidebar';
 
-const drawerWidth = 5;
+const drawerWidth = 240;
 
 const MainLayout = () => {
   const [open, setOpen] = useState(true);
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
 
   return (
     <Box sx={{ display: 'flex', minHeight: '100vh' }}>
@@ -17,18 +19,33 @@ const MainLayout = () => {
         component="main"
         sx={{
           flexGrow: 1,
-          p: 2,
-          ml: { md: open ? `${drawerWidth}px` : 0 },
-          mr: 2,
+          p: { xs: 1, sm: 2 },
+          ml: { 
+            xs: 0, 
+            md: open ? `${drawerWidth}px` : 0 
+          },
+          mr: { xs: 1, sm: 2 },
+          width: {
+            xs: '100%',
+            md: open ? `calc(100% - ${drawerWidth}px)` : '100%'
+          },
           transition: (theme) =>
-            theme.transitions.create(['margin'], {
+            theme.transitions.create(['margin', 'width'], {
               easing: theme.transitions.easing.easeInOut,
               duration: theme.transitions.duration.standard,
             }),
         }}
       >
         <Toolbar /> {/* This is for spacing below the app bar */}
-        <Container maxWidth="xl" sx={{ mt: 2 }}>
+        <Container 
+          maxWidth="xl" 
+          sx={{ 
+            mt: 2,
+            px: { xs: 1, sm: 2 },
+            width: '100%',
+            maxWidth: '100% !important'
+          }}
+        >
           <Outlet />
         </Container>
       </Box>

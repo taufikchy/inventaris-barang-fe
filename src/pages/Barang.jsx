@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from '../utils/axios';
 import { toast } from 'react-toastify';
@@ -113,7 +113,7 @@ const Barang = () => {
 
   useEffect(() => {
     fetchBarangs();
-  }, []);
+  }, [filters]);
 
   // Handle delete confirmation
   const handleDeleteConfirm = (barang) => {
@@ -249,6 +249,11 @@ const Barang = () => {
   // State untuk dialog detail unit
   const [unitDialogOpen, setUnitDialogOpen] = useState(false);
   const [selectedBarang, setSelectedBarang] = useState(null);
+  const [unitFilters, setUnitFilters] = useState({
+    kondisi: '',
+    status: '',
+    search: ''
+  });
 
   // Handle buka dialog detail unit
   const handleOpenUnitDialog = (barang) => {
@@ -260,6 +265,34 @@ const Barang = () => {
   const handleCloseUnitDialog = () => {
     setUnitDialogOpen(false);
     setSelectedBarang(null);
+    setUnitFilters({
+      kondisi: '',
+      status: '',
+      search: ''
+    });
+  };
+
+  // Handle filter change untuk unit dialog
+  const handleUnitFilterChange = (event) => {
+    const { name, value } = event.target;
+    setUnitFilters({
+      ...unitFilters,
+      [name]: value,
+    });
+  };
+
+  // Filter units berdasarkan filter yang dipilih
+  const getFilteredUnits = () => {
+    if (!selectedBarang?.units) return [];
+    
+    return selectedBarang.units.filter((unit) => {
+      const matchesKondisi = unitFilters.kondisi === '' || unit.kondisi === unitFilters.kondisi;
+      const matchesStatus = unitFilters.status === '' || unit.status === unitFilters.status;
+      const matchesSearch = unitFilters.search === '' || 
+        unit.kode.toLowerCase().includes(unitFilters.search.toLowerCase());
+      
+      return matchesKondisi && matchesStatus && matchesSearch;
+    });
   };
 
   // Table actions
@@ -400,18 +433,81 @@ const Barang = () => {
         </DialogTitle>
         <DialogContent>
           {selectedBarang && (
-            <TableContainer component={Paper}>
-              <Table>
-                <TableHead>
-                  <TableRow>
-                    <TableCell>Kode Unit</TableCell>
-                    <TableCell>Kondisi</TableCell>
-                    <TableCell>Status</TableCell>
-                    <TableCell align="right">Aksi</TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {selectedBarang.units && selectedBarang.units.map((unit) => (
+            <>
+              {/* Filter dan Pencarian untuk Unit */}
+              <Box sx={{ mb: 3 }}>
+                <Typography variant="h6" gutterBottom>
+                  Filter & Pencarian Unit
+                </Typography>
+                <Grid container spacing={2}>
+                  <Grid item xs={12} sm={4}>
+                    <TextField
+                      fullWidth
+                      label="Pencarian Kode Unit"
+                      name="search"
+                      value={unitFilters.search}
+                      onChange={handleUnitFilterChange}
+                      size="small"
+                      placeholder="Cari berdasarkan kode unit..."
+                    />
+                  </Grid>
+                  <Grid item xs={12} sm={4}>
+                    <TextField
+                      select
+                      fullWidth
+                      label="Kondisi"
+                      name="kondisi"
+                      value={unitFilters.kondisi}
+                      onChange={handleUnitFilterChange}
+                      size="small"
+                    >
+                      <MenuItem value="">Semua Kondisi</MenuItem>
+                      <MenuItem value="Baik">Baik</MenuItem>
+                      <MenuItem value="Rusak Ringan">Rusak Ringan</MenuItem>
+                      <MenuItem value="Rusak Berat">Rusak Berat</MenuItem>
+                    </TextField>
+                  </Grid>
+                  <Grid item xs={12} sm={4}>
+                    <TextField
+                      select
+                      fullWidth
+                      label="Status"
+                      name="status"
+                      value={unitFilters.status}
+                      onChange={handleUnitFilterChange}
+                      size="small"
+                    >
+                      <MenuItem value="">Semua Status</MenuItem>
+                      <MenuItem value="Tersedia">Tersedia</MenuItem>
+                      <MenuItem value="Dipinjam">Dipinjam</MenuItem>
+                      <MenuItem value="Perbaikan">Perbaikan</MenuItem>
+                      <MenuItem value="Rusak">Rusak</MenuItem>
+                    </TextField>
+                  </Grid>
+                </Grid>
+              </Box>
+
+              <TableContainer component={Paper}>
+                <Table>
+                  <TableHead>
+                    <TableRow>
+                      <TableCell>Kode Unit</TableCell>
+                      <TableCell>Kondisi</TableCell>
+                      <TableCell>Status</TableCell>
+                      <TableCell align="right">Aksi</TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {getFilteredUnits().length === 0 ? (
+                      <TableRow>
+                        <TableCell colSpan={4} align="center">
+                          <Typography variant="body2" color="text.secondary">
+                            {selectedBarang.units?.length === 0 ? 'Tidak ada unit untuk barang ini' : 'Tidak ada unit yang sesuai dengan filter'}
+                          </Typography>
+                        </TableCell>
+                      </TableRow>
+                    ) : (
+                      getFilteredUnits().map((unit) => (
                     <TableRow key={unit.id}>
                       <TableCell>{unit.kode}</TableCell>
                       <TableCell>
@@ -451,10 +547,12 @@ const Barang = () => {
                         </Box>
                       </TableCell>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </TableContainer>
+                  ))
+                )}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+            </>
           )}
         </DialogContent>
         <DialogActions>

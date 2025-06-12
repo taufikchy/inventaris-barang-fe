@@ -11,10 +11,10 @@ const PageHeader = ({
   children,
 }) => {
   return (
-    <Box sx={{ mb: 3 }}>
+    <Box sx={{ mb: { xs: 2, sm: 3 } }}>
       {/* Breadcrumbs */}
       {breadcrumbs.length > 0 && (
-        <Breadcrumbs sx={{ mb: 1 }}>
+        <Breadcrumbs sx={{ mb: 1, fontSize: { xs: '0.75rem', sm: '0.875rem' } }}>
           <Link
             component={RouterLink}
             to="/dashboard"
@@ -51,12 +51,19 @@ const PageHeader = ({
         sx={{
           display: 'flex',
           justifyContent: 'space-between',
-          alignItems: 'center',
-          flexWrap: 'wrap',
-          gap: 2,
+          alignItems: { xs: 'flex-start', sm: 'center' },
+          flexDirection: { xs: 'column', sm: 'row' },
+          gap: { xs: 1, sm: 2 },
         }}
       >
-        <Typography variant="h4" component="h1" sx={{ fontWeight: 600 }}>
+        <Typography 
+          variant="h4" 
+          component="h1" 
+          sx={{ 
+            fontWeight: 600,
+            fontSize: { xs: '1.5rem', sm: '2rem', md: '2.125rem' }
+          }}
+        >
           {title}
         </Typography>
 
@@ -65,7 +72,11 @@ const PageHeader = ({
             variant="contained"
             startIcon={actionIcon}
             onClick={onActionClick}
-            sx={{ px: 3 }}
+            sx={{ 
+              px: { xs: 2, sm: 3 },
+              fontSize: { xs: '0.75rem', sm: '0.875rem' },
+              alignSelf: { xs: 'stretch', sm: 'auto' }
+            }}
           >
             {actionText}
           </Button>
@@ -73,7 +84,7 @@ const PageHeader = ({
       </Box>
 
       {/* Optional children content */}
-      {children && <Box sx={{ mt: 2 }}>{children}</Box>}
+      {children && <Box sx={{ mt: { xs: 1, sm: 2 } }}>{children}</Box>}
     </Box>
   );
 };
