@@ -349,7 +349,7 @@ const Laporan = () => {
     { id: 'lokasi', label: 'Lokasi', sortable: true, format: (value) => value?.nama || value || '-' },
     { id: 'kondisi', label: 'Kondisi', sortable: true },
     { id: 'tanggal_perolehan', label: 'Tanggal Perolehan', sortable: true },
-    { id: 'harga', label: 'Harga (Rp)', sortable: true, format: (value) => value.toLocaleString('id-ID') },
+    { id: 'harga', label: 'Harga (Rp)', sortable: true, format: (value) => value ? value.toLocaleString('id-ID') : '-' },
     { id: 'status', label: 'Status', sortable: true },
   ];
 
