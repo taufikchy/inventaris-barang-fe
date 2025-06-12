@@ -70,7 +70,7 @@ const PeminjamanDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
-  const { user } = useAuth(); // Mendapatkan informasi pengguna yang login
+  const { user, isKepalaLab, isAdminOrToolman } = useAuth(); // Mendapatkan informasi pengguna yang login
   const isNewPeminjaman = id === 'new';
   const isEditMode = location.pathname.includes('/edit') || isNewPeminjaman;
   
@@ -963,22 +963,56 @@ const PeminjamanDetail = () => {
                     </Grid>
                   </Grid>
                   
-                  <Box sx={{ mt: 2, display: 'flex', justifyContent: 'space-between' }}>
-                    <Button
-                      variant="outlined"
-                      startIcon={<EditIcon />}
-                      onClick={() => navigate(`/peminjaman/${id}/edit`)}
-                    >
-                      Edit
-                    </Button>
-                    <Button
-                      variant="outlined"
-                      color="error"
-                      startIcon={<DeleteIcon />}
-                      onClick={() => setConfirmDelete(true)}
-                    >
-                      Hapus
-                    </Button>
+                  <Box sx={{ mt: 2, display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                    {/* Tombol Edit - hanya untuk Admin/Toolman dan status menunggu persetujuan */}
+                    {isAdminOrToolman() && peminjaman.status === 'menunggu_persetujuan' && (
+                      <Button
+                        variant="outlined"
+                        startIcon={<EditIcon />}
+                        onClick={() => navigate(`/peminjaman/${id}/edit`)}
+                        size="small"
+                      >
+                        Edit
+                      </Button>
+                    )}
+                    
+                    {/* Tombol Cetak Surat Pengajuan - untuk Admin/Toolman */}
+                    {isAdminOrToolman() && (
+                      <Button
+                        variant="outlined"
+                        color="primary"
+                        onClick={() => window.print()}
+                        size="small"
+                      >
+                        Cetak Surat Pengajuan
+                      </Button>
+                    )}
+                    
+                    {/* Tombol Approval - hanya untuk Kepala Lab dan status menunggu persetujuan */}
+                    {isKepalaLab() && peminjaman.status === 'menunggu_persetujuan' && (
+                      <Button
+                        variant="contained"
+                        color="primary"
+                        startIcon={<CheckCircleIcon />}
+                        onClick={() => setApprovalDialogOpen(true)}
+                        size="small"
+                      >
+                        Proses Persetujuan
+                      </Button>
+                    )}
+                    
+                    {/* Tombol Hapus - hanya untuk Kepala Lab */}
+                    {isKepalaLab() && (
+                      <Button
+                        variant="outlined"
+                        color="error"
+                        startIcon={<DeleteIcon />}
+                        onClick={() => setConfirmDelete(true)}
+                        size="small"
+                      >
+                        Hapus
+                      </Button>
+                    )}
                   </Box>
                 </CardContent>
               </Card>

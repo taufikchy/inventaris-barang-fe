@@ -133,7 +133,19 @@ const PrintBorrowingLetter = forwardRef(({ peminjaman }, ref) => {
             <Typography variant="body1" sx={{ width: 200 }}>
               Nama Peminjam
             </Typography>
-            <Typography variant="body1">: {peminjaman.peminjam}</Typography>
+            <Typography variant="body1">: {peminjaman.nama_peminjam}</Typography>
+          </Box>
+          <Box sx={{ display: 'flex', mb: 1 }}>
+            <Typography variant="body1" sx={{ width: 200 }}>
+              Kontak Peminjam
+            </Typography>
+            <Typography variant="body1">: {peminjaman.kontak_peminjam}</Typography>
+          </Box>
+          <Box sx={{ display: 'flex', mb: 1 }}>
+            <Typography variant="body1" sx={{ width: 200 }}>
+              Kelas
+            </Typography>
+            <Typography variant="body1">: {peminjaman.kelas_peminjam}</Typography>
           </Box>
           <Box sx={{ display: 'flex', mb: 1 }}>
             <Typography variant="body1" sx={{ width: 200 }}>
@@ -143,15 +155,15 @@ const PrintBorrowingLetter = forwardRef(({ peminjaman }, ref) => {
           </Box>
           <Box sx={{ display: 'flex', mb: 1 }}>
             <Typography variant="body1" sx={{ width: 200 }}>
-              Tanggal Pengembalian
+              Tanggal Pengembalian Harapan
             </Typography>
-            <Typography variant="body1">: {formatDate(peminjaman.tanggal_kembali) || 'Belum ditentukan'}</Typography>
+            <Typography variant="body1">: {formatDate(peminjaman.tanggal_kembali_harapan)}</Typography>
           </Box>
           <Box sx={{ display: 'flex', mb: 1 }}>
             <Typography variant="body1" sx={{ width: 200 }}>
-              Keterangan
+              Catatan
             </Typography>
-            <Typography variant="body1">: {peminjaman.keterangan || '-'}</Typography>
+            <Typography variant="body1">: {peminjaman.catatan || '-'}</Typography>
           </Box>
         </Box>
       </Box>
@@ -172,13 +184,13 @@ const PrintBorrowingLetter = forwardRef(({ peminjaman }, ref) => {
             </TableRow>
           </TableHead>
           <TableBody>
-            {peminjaman.detail_peminjaman.map((item, index) => (
+            {peminjaman.DetailPeminjaman?.map((detail, index) => (
               <TableRow key={index}>
                 <TableCell align="center">{index + 1}</TableCell>
-                <TableCell>{item.kode_barang}</TableCell>
-                <TableCell>{item.nama_barang}</TableCell>
-                <TableCell align="center">{item.jumlah}</TableCell>
-                <TableCell>{item.kondisi_saat_pinjam}</TableCell>
+                <TableCell>{detail.Barang?.kode_barang}</TableCell>
+                <TableCell>{detail.Barang?.nama_barang}</TableCell>
+                <TableCell align="center">{detail.jumlah}</TableCell>
+                <TableCell>{detail.kondisi_saat_pinjam || 'Baik'}</TableCell>
               </TableRow>
             ))}
           </TableBody>

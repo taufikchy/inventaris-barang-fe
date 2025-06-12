@@ -22,6 +22,7 @@ import {
   Delete as DeleteIcon,
   Visibility as VisibilityIcon,
   FilterAlt as FilterAltIcon,
+  CheckCircle as CheckCircleIcon,
 } from '@mui/icons-material';
 import PageHeader from '../components/PageHeader';
 import DataTable from '../components/DataTable';
@@ -265,6 +266,15 @@ const Peminjaman = () => {
         <Tooltip title="Edit">
           <IconButton onClick={() => navigate(`/peminjaman/${row.id}/edit`)} size="small">
             <EditIcon fontSize="small" />
+          </IconButton>
+        </Tooltip>
+      )}
+      
+      {/* Approval button - only for Kepala Lab and status menunggu_persetujuan */}
+      {isKepalaLab() && row.status === 'menunggu_persetujuan' && (
+        <Tooltip title="Proses Persetujuan">
+          <IconButton onClick={() => navigate(`/peminjaman/${row.id}`)} size="small" color="primary">
+            <CheckCircleIcon fontSize="small" />
           </IconButton>
         </Tooltip>
       )}
