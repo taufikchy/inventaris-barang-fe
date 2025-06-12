@@ -399,18 +399,65 @@ const Laporan = () => {
     { id: 'nama', label: 'Nama Barang', sortable: true },
     { id: 'kategori', label: 'Kategori', sortable: true, format: (value) => value?.nama || value || '-' },
     { id: 'lokasi', label: 'Lokasi', sortable: true, format: (value) => value?.nama || value || '-' },
-    { id: 'kondisi', label: 'Kondisi', sortable: true },
-    { id: 'tanggal_perolehan', label: 'Tanggal Perolehan', sortable: true },
-    { id: 'harga', label: 'Harga (Rp)', sortable: true, format: (value) => value ? value.toLocaleString('id-ID') : '-' },
-    { id: 'status', label: 'Status', sortable: true },
+    { id: 'kondisi', label: 'Kondisi', sortable: true, format: (value) => {
+      const kondisiLabels = {
+        'baik': 'Baik',
+        'rusak_ringan': 'Rusak Ringan',
+        'rusak_berat': 'Rusak Berat'
+      };
+      return kondisiLabels[value] || value || '-';
+    }},
+    { id: 'tanggal_perolehan', label: 'Tanggal Perolehan', sortable: true, format: (value) => {
+      if (!value) return '-';
+      const date = new Date(value);
+      return date.toLocaleDateString('id-ID', {
+        day: '2-digit',
+        month: 'long',
+        year: 'numeric'
+      });
+    }},
+    { id: 'status', label: 'Status', sortable: true, format: (value) => {
+      const statusLabels = {
+        'tersedia': 'Tersedia',
+        'dipinjam': 'Dipinjam',
+        'dalam_perbaikan': 'Dalam Perbaikan'
+      };
+      return statusLabels[value] || value || '-';
+    }},
   ];
 
   const loanColumns = [
     { id: 'kode', label: 'Kode', sortable: true },
     { id: 'peminjam', label: 'Peminjam', sortable: true },
-    { id: 'tanggal_pinjam', label: 'Tanggal Pinjam', sortable: true },
-    { id: 'tanggal_kembali', label: 'Tanggal Kembali', sortable: true },
-    { id: 'status', label: 'Status', sortable: true },
+    { id: 'tanggal_pinjam', label: 'Tanggal Pinjam', sortable: true, format: (value) => {
+      if (!value) return '-';
+      const date = new Date(value);
+      return date.toLocaleDateString('id-ID', {
+        day: '2-digit',
+        month: 'long',
+        year: 'numeric'
+      });
+    }},
+    { id: 'tanggal_kembali', label: 'Tanggal Kembali', sortable: true, format: (value) => {
+      if (!value) return '-';
+      const date = new Date(value);
+      return date.toLocaleDateString('id-ID', {
+        day: '2-digit',
+        month: 'long',
+        year: 'numeric'
+      });
+    }},
+    { id: 'status', label: 'Status', sortable: true, format: (value) => {
+      const statusLabels = {
+        'menunggu_persetujuan': 'Menunggu Persetujuan',
+        'disetujui': 'Disetujui',
+        'ditolak': 'Ditolak',
+        'dipinjam': 'Dipinjam',
+        'dikembalikan': 'Dikembalikan',
+        'terlambat': 'Terlambat'
+      };
+      return statusLabels[value] || value || '-';
+    }},
     { id: 'jumlah_barang', label: 'Jumlah Barang', sortable: true },
     { id: 'keterangan', label: 'Keterangan', sortable: true },
   ];
@@ -420,7 +467,14 @@ const Laporan = () => {
     { id: 'nama', label: 'Nama Barang', sortable: true },
     { id: 'kategori', label: 'Kategori', sortable: true, format: (value) => value?.nama || value || '-' },
     { id: 'lokasi', label: 'Lokasi', sortable: true, format: (value) => value?.nama || value || '-' },
-    { id: 'kondisi', label: 'Kondisi', sortable: true },
+    { id: 'kondisi', label: 'Kondisi', sortable: true, format: (value) => {
+      const kondisiLabels = {
+        'baik': 'Baik',
+        'rusak_ringan': 'Rusak Ringan',
+        'rusak_berat': 'Rusak Berat'
+      };
+      return kondisiLabels[value] || value || '-';
+    }},
     { id: 'keterangan', label: 'Keterangan', sortable: true },
   ];
 
@@ -437,7 +491,15 @@ const Laporan = () => {
       return labels[value] || value;
     }},
     { id: 'jumlah', label: 'Jumlah', sortable: true },
-    { id: 'tanggal_transaksi', label: 'Tanggal', sortable: true },
+    { id: 'tanggal_transaksi', label: 'Tanggal', sortable: true, format: (value) => {
+      if (!value) return '-';
+      const date = new Date(value);
+      return date.toLocaleDateString('id-ID', {
+        day: '2-digit',
+        month: 'long',
+        year: 'numeric'
+      });
+    }},
     { id: 'harga_satuan', label: 'Harga Satuan', sortable: true, format: (value) => 
       new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR' }).format(value)
     },
