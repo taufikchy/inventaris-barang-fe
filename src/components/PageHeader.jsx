@@ -1,6 +1,6 @@
-import { Box, Typography, Button, Breadcrumbs, Link } from '@mui/material';
+import { Box, Typography, Button, Breadcrumbs, Link, IconButton } from '@mui/material';
 import { Link as RouterLink } from 'react-router-dom';
-import { Home as HomeIcon } from '@mui/icons-material';
+import { Home as HomeIcon, ArrowBack as ArrowBackIcon } from '@mui/icons-material';
 
 const PageHeader = ({
   title,
@@ -9,6 +9,9 @@ const PageHeader = ({
   onActionClick,
   breadcrumbs = [],
   children,
+  backButton = false,
+  onBackClick,
+  actionButton,
 }) => {
   return (
     <Box sx={{ mb: { xs: 2, sm: 3 } }}>
@@ -56,31 +59,65 @@ const PageHeader = ({
           gap: { xs: 1, sm: 2 },
         }}
       >
-        <Typography 
-          variant="h4" 
-          component="h1" 
-          sx={{ 
-            fontWeight: 600,
-            fontSize: { xs: '1.5rem', sm: '2rem', md: '2.125rem' }
-          }}
-        >
-          {title}
-        </Typography>
-
-        {actionText && onActionClick && (
-          <Button
-            variant="contained"
-            startIcon={actionIcon}
-            onClick={onActionClick}
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          {backButton && onBackClick && (
+            <IconButton
+              onClick={onBackClick}
+              sx={{ 
+                mr: 1,
+                color: 'primary.main',
+                '&:hover': {
+                  backgroundColor: 'primary.light',
+                  color: 'white'
+                }
+              }}
+            >
+              <ArrowBackIcon />
+            </IconButton>
+          )}
+          <Typography 
+            variant="h4" 
+            component="h1" 
             sx={{ 
-              px: { xs: 2, sm: 3 },
-              fontSize: { xs: '0.75rem', sm: '0.875rem' },
-              alignSelf: { xs: 'stretch', sm: 'auto' }
+              fontWeight: 600,
+              fontSize: { xs: '1.5rem', sm: '2rem', md: '2.125rem' }
             }}
           >
-            {actionText}
-          </Button>
-        )}
+            {title}
+          </Typography>
+        </Box>
+
+        <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
+          {actionText && onActionClick && (
+            <Button
+              variant="contained"
+              startIcon={actionIcon}
+              onClick={onActionClick}
+              sx={{ 
+                px: { xs: 2, sm: 3 },
+                fontSize: { xs: '0.75rem', sm: '0.875rem' },
+                alignSelf: { xs: 'stretch', sm: 'auto' }
+              }}
+            >
+              {actionText}
+            </Button>
+          )}
+          {actionButton && (
+            <Button
+              variant="contained"
+              color={actionButton.color || 'primary'}
+              startIcon={actionButton.icon}
+              onClick={actionButton.onClick}
+              sx={{ 
+                px: { xs: 2, sm: 3 },
+                fontSize: { xs: '0.75rem', sm: '0.875rem' },
+                alignSelf: { xs: 'stretch', sm: 'auto' }
+              }}
+            >
+              {actionButton.text}
+            </Button>
+          )}
+        </Box>
       </Box>
 
       {/* Optional children content */}
