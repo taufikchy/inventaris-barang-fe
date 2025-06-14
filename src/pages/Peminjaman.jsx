@@ -71,6 +71,10 @@ const Peminjaman = () => {
           const peminjamData = {
             ...peminjaman,
             peminjam: peminjaman.nama_peminjam,
+            // Generate kode peminjaman dari ID
+            kode: `PJM-${peminjaman.id.toString().padStart(3, '0')}`,
+            // Gunakan tanggal_kembali_aktual jika ada, jika tidak gunakan tanggal_kembali_harapan
+            tanggal_kembali: peminjaman.tanggal_kembali_aktual || peminjaman.tanggal_kembali_harapan,
             // Hitung jumlah barang dari detail_peminjaman jika ada
             jumlah_barang: peminjaman.detail_peminjaman ? 
               peminjaman.detail_peminjaman.reduce((total, detail) => total + detail.jumlah, 0) : 

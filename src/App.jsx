@@ -1,3 +1,4 @@
+import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
@@ -132,6 +133,7 @@ function App() {
               <Route path="/lokasi" element={<Lokasi />} />
               <Route path="/peminjaman" element={<Peminjaman />} />
               <Route path="/peminjaman/:id" element={<DetailPeminjaman />} />
+              <Route path="/peminjaman/:id/edit" element={<DetailPeminjaman />} />
               <Route path="/transaksi" element={<HistoriTransaksi />} />
               <Route path="/laporan" element={<Laporan />} />
               

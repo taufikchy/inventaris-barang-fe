@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import axios from '../utils/axios';
 import { toast } from 'react-toastify';
@@ -108,7 +108,7 @@ const PeminjamanDetail = () => {
       
       // Initialize new peminjaman
       setPeminjaman({
-        kode: 'PJM-' + Math.floor(Math.random() * 1000).toString().padStart(3, '0'),
+        kode: 'PJM-NEW', // Temporary code for new peminjaman
         peminjam: '',
         kontak: '',
         kelas: '',
@@ -129,7 +129,39 @@ const PeminjamanDetail = () => {
       const response = await axios.get(`/api/peminjaman/${id}`);
       
       if (response.data.sukses) {
-        setPeminjaman(response.data.data);
+        const peminjamanData = response.data.data;
+        // Generate kode peminjaman dari ID jika belum ada
+        if (!peminjamanData.kode) {
+          peminjamanData.kode = `PJM-${peminjamanData.id.toString().padStart(3, '0')}`;
+        }
+        
+        // Helper function to format date for HTML date input
+        const formatDateForInput = (dateString) => {
+          if (!dateString) return '';
+          const date = new Date(dateString);
+          return date.toISOString().split('T')[0];
+        };
+        
+        // Map backend fields to frontend expected fields
+        const mappedData = {
+          ...peminjamanData,
+          peminjam: peminjamanData.nama_peminjam,
+          kontak: peminjamanData.kontak_peminjam,
+          kelas: peminjamanData.kelas_peminjam,
+          tanggal_pinjam: formatDateForInput(peminjamanData.tanggal_pinjam),
+          tanggal_kembali_harapan: formatDateForInput(peminjamanData.tanggal_kembali_harapan),
+          tanggal_kembali: formatDateForInput(peminjamanData.tanggal_kembali_aktual || peminjamanData.tanggal_kembali_harapan),
+          keterangan: peminjamanData.catatan,
+          detail_peminjaman: peminjamanData.detail_peminjaman?.map(item => ({
+            ...item,
+            kode_barang: item.barang?.kode || '',
+            nama_barang: item.barang?.nama || '',
+            kondisi_saat_pinjam: item.kondisi_sebelum || 'baik',
+            lokasi_ruangan: item.barang?.lokasi?.nama || '-'
+          })) || []
+        };
+        
+        setPeminjaman(mappedData);
       } else {
         toast.error('Gagal memuat data peminjaman: ' + response.data.pesan);
         navigate('/peminjaman');
@@ -441,12 +473,13 @@ const PeminjamanDetail = () => {
       // Update existing barang
       const updatedDetailPeminjaman = [...values.detail_peminjaman];
       updatedDetailPeminjaman[selectedBarangIndex] = {
-        id_barang: barang.id,
-        nama_barang: barang.nama,
-        kode_barang: barang.kode,
-        jumlah: parseInt(jumlah),
-        kondisi_saat_pinjam: barang.kondisi,
-      };
+          id_barang: barang.id,
+          nama_barang: barang.nama,
+          kode_barang: barang.kode,
+          jumlah: parseInt(jumlah),
+          kondisi_saat_pinjam: barang.kondisi,
+          lokasi_ruangan: barang.lokasi?.nama || '-'
+        };
       setFieldValue('detail_peminjaman', updatedDetailPeminjaman);
     } else {
       // Add new barang
@@ -456,6 +489,7 @@ const PeminjamanDetail = () => {
         kode_barang: barang.kode,
         jumlah: parseInt(jumlah),
         kondisi_saat_pinjam: barang.kondisi,
+        lokasi_ruangan: barang.lokasi?.nama || '-',
       };
       // Pastikan values.detail_peminjaman adalah array sebelum menggunakan spread operator
       const currentDetailPeminjaman = Array.isArray(values.detail_peminjaman) ? values.detail_peminjaman : [];
@@ -657,27 +691,88 @@ const PeminjamanDetail = () => {
                       <TableContainer component={Paper} variant="outlined">
                         <Table size="small">
                           <TableHead>
-                            <TableRow>
-                              <TableCell>Kode</TableCell>
-                              <TableCell>Nama Barang</TableCell>
-                              <TableCell align="right">Jumlah</TableCell>
-                              <TableCell>Kondisi</TableCell>
-                              <TableCell align="center">Aksi</TableCell>
+                            <TableRow sx={{ backgroundColor: '#f5f5f5' }}>
+                              <TableCell sx={{ 
+                                fontWeight: 'bold', 
+                                minWidth: 80, 
+                                padding: '12px 16px',
+                                borderRight: '1px solid #e0e0e0'
+                              }}>Kode</TableCell>
+                              <TableCell sx={{ 
+                                fontWeight: 'bold', 
+                                minWidth: 200, 
+                                padding: '12px 16px',
+                                borderRight: '1px solid #e0e0e0'
+                              }}>Nama Barang</TableCell>
+                              <TableCell sx={{ 
+                                fontWeight: 'bold', 
+                                minWidth: 120, 
+                                padding: '12px 16px',
+                                borderRight: '1px solid #e0e0e0'
+                              }}>Lokasi Ruangan</TableCell>
+                              <TableCell align="center" sx={{ 
+                                fontWeight: 'bold', 
+                                minWidth: 80, 
+                                padding: '12px 16px',
+                                borderRight: '1px solid #e0e0e0'
+                              }}>Jumlah</TableCell>
+                              <TableCell sx={{ 
+                                fontWeight: 'bold', 
+                                minWidth: 120, 
+                                padding: '12px 16px',
+                                borderRight: '1px solid #e0e0e0'
+                              }}>Kondisi</TableCell>
+                              <TableCell align="center" sx={{ 
+                                fontWeight: 'bold', 
+                                minWidth: 100, 
+                                padding: '12px 16px'
+                              }}>Aksi</TableCell>
                             </TableRow>
                           </TableHead>
                           <TableBody>
                             {values.detail_peminjaman.length > 0 ? (
                               values.detail_peminjaman.map((item, index) => (
-                                <TableRow key={index}>
-                                  <TableCell>{item.kode_barang}</TableCell>
-                                  <TableCell>{item.nama_barang}</TableCell>
-                                  <TableCell align="right">{item.jumlah}</TableCell>
-                                  <TableCell>{item.kondisi_saat_pinjam}</TableCell>
-                                  <TableCell align="center">
+                                <TableRow key={index} sx={{ 
+                                  '&:nth-of-type(odd)': { backgroundColor: '#fafafa' },
+                                  '&:hover': { backgroundColor: '#f0f0f0' }
+                                }}>
+                                  <TableCell sx={{ 
+                                    fontSize: '0.875rem', 
+                                    padding: '12px 16px',
+                                    borderRight: '1px solid #e0e0e0',
+                                    fontFamily: 'monospace',
+                                    fontWeight: 500
+                                  }}>{item.kode_barang}</TableCell>
+                                  <TableCell sx={{ 
+                                    fontSize: '0.875rem', 
+                                    padding: '12px 16px',
+                                    borderRight: '1px solid #e0e0e0',
+                                    wordBreak: 'break-word'
+                                  }}>{item.nama_barang}</TableCell>
+                                  <TableCell sx={{ 
+                                    fontSize: '0.875rem', 
+                                    padding: '12px 16px',
+                                    borderRight: '1px solid #e0e0e0',
+                                    textAlign: 'center'
+                                  }}>{item.lokasi_ruangan || '-'}</TableCell>
+                                  <TableCell align="center" sx={{ 
+                                    fontSize: '0.875rem', 
+                                    padding: '12px 16px',
+                                    borderRight: '1px solid #e0e0e0',
+                                    fontWeight: 500
+                                  }}>{item.jumlah}</TableCell>
+                                  <TableCell sx={{ 
+                                    fontSize: '0.875rem', 
+                                    padding: '12px 16px',
+                                    borderRight: '1px solid #e0e0e0',
+                                    textAlign: 'center'
+                                  }}>{item.kondisi_saat_pinjam}</TableCell>
+                                  <TableCell align="center" sx={{ padding: '8px 16px' }}>
                                     <IconButton
                                       size="small"
                                       onClick={() => openBarangDialog(index)}
                                       color="primary"
+                                      sx={{ mr: 0.5 }}
                                     >
                                       <EditIcon fontSize="small" />
                                     </IconButton>
@@ -693,7 +788,7 @@ const PeminjamanDetail = () => {
                               ))
                             ) : (
                               <TableRow>
-                                <TableCell colSpan={5} align="center">
+                                <TableCell colSpan={6} align="center">
                                   Belum ada barang yang dipilih
                                 </TableCell>
                               </TableRow>
@@ -1026,28 +1121,92 @@ const PeminjamanDetail = () => {
                   </Typography>
                   <Divider sx={{ mb: 2 }} />
                   
-                  <TableContainer>
+                  <TableContainer component={Paper} variant="outlined">
                     <Table size="small">
                       <TableHead>
-                        <TableRow>
-                          <TableCell>Kode</TableCell>
-                          <TableCell>Nama Barang</TableCell>
-                          <TableCell align="right">Jumlah</TableCell>
-                          <TableCell>Kondisi Saat Pinjam</TableCell>
+                        <TableRow sx={{ backgroundColor: '#f5f5f5' }}>
+                          <TableCell sx={{ 
+                            fontWeight: 'bold', 
+                            minWidth: 80, 
+                            padding: '12px 16px',
+                            borderRight: '1px solid #e0e0e0'
+                          }}>Kode</TableCell>
+                          <TableCell sx={{ 
+                            fontWeight: 'bold', 
+                            minWidth: 200, 
+                            padding: '12px 16px',
+                            borderRight: '1px solid #e0e0e0'
+                          }}>Nama Barang</TableCell>
+                          <TableCell sx={{ 
+                            fontWeight: 'bold', 
+                            minWidth: 120, 
+                            padding: '12px 16px',
+                            borderRight: '1px solid #e0e0e0'
+                          }}>Lokasi Ruangan</TableCell>
+                          <TableCell align="center" sx={{ 
+                            fontWeight: 'bold', 
+                            minWidth: 80, 
+                            padding: '12px 16px',
+                            borderRight: '1px solid #e0e0e0'
+                          }}>Jumlah</TableCell>
+                          <TableCell sx={{ 
+                            fontWeight: 'bold', 
+                            minWidth: 120, 
+                            padding: '12px 16px',
+                            borderRight: peminjaman.status === 'Dikembalikan' ? '1px solid #e0e0e0' : 'none'
+                          }}>Kondisi Saat Pinjam</TableCell>
                           {peminjaman.status === 'Dikembalikan' && (
-                            <TableCell>Kondisi Saat Kembali</TableCell>
+                            <TableCell sx={{ 
+                              fontWeight: 'bold', 
+                              minWidth: 120, 
+                              padding: '12px 16px'
+                            }}>Kondisi Saat Kembali</TableCell>
                           )}
                         </TableRow>
                       </TableHead>
                       <TableBody>
                         {peminjaman.detail_peminjaman.map((item, index) => (
-                          <TableRow key={index}>
-                            <TableCell>{item.kode_barang}</TableCell>
-                            <TableCell>{item.nama_barang}</TableCell>
-                            <TableCell align="right">{item.jumlah}</TableCell>
-                            <TableCell>{item.kondisi_saat_pinjam}</TableCell>
+                          <TableRow key={index} sx={{ 
+                            '&:nth-of-type(odd)': { backgroundColor: '#fafafa' },
+                            '&:hover': { backgroundColor: '#f0f0f0' }
+                          }}>
+                            <TableCell sx={{ 
+                              fontSize: '0.875rem', 
+                              padding: '12px 16px',
+                              borderRight: '1px solid #e0e0e0',
+                              fontFamily: 'monospace',
+                              fontWeight: 500
+                            }}>{item.kode_barang}</TableCell>
+                            <TableCell sx={{ 
+                              fontSize: '0.875rem', 
+                              padding: '12px 16px',
+                              borderRight: '1px solid #e0e0e0',
+                              wordBreak: 'break-word'
+                            }}>{item.nama_barang}</TableCell>
+                            <TableCell sx={{ 
+                              fontSize: '0.875rem', 
+                              padding: '12px 16px',
+                              borderRight: '1px solid #e0e0e0',
+                              textAlign: 'center'
+                            }}>{item.lokasi_ruangan || '-'}</TableCell>
+                            <TableCell align="center" sx={{ 
+                              fontSize: '0.875rem', 
+                              padding: '12px 16px',
+                              borderRight: '1px solid #e0e0e0',
+                              fontWeight: 500
+                            }}>{item.jumlah}</TableCell>
+                            <TableCell sx={{ 
+                              fontSize: '0.875rem', 
+                              padding: '12px 16px',
+                              borderRight: peminjaman.status === 'Dikembalikan' ? '1px solid #e0e0e0' : 'none',
+                              textAlign: 'center'
+                            }}>{item.kondisi_saat_pinjam}</TableCell>
                             {peminjaman.status === 'Dikembalikan' && (
-                              <TableCell>{item.kondisi_saat_kembali}</TableCell>
+                              <TableCell sx={{ 
+                                fontSize: '0.875rem', 
+                                padding: '12px 16px',
+                                textAlign: 'center'
+                              }}>{item.kondisi_saat_kembali}</TableCell>
                             )}
                           </TableRow>
                         ))}
