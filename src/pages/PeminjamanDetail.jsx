@@ -44,6 +44,7 @@ import {
 import PageHeader from '../components/PageHeader';
 import ConfirmDialog from '../components/ConfirmDialog';
 import ApprovalDialog from '../components/ApprovalDialog';
+import ReturnDialog from '../components/ReturnDialog';
 import PrintBorrowingLetter from '../components/PrintBorrowingLetter';
 
 // Validation schema for peminjaman form
@@ -340,12 +341,13 @@ const PeminjamanDetail = () => {
   };
 
   // Handle return
-  const handleReturn = async () => {
+  const handleReturn = async (returnData) => {
     try {
       setReturnLoading(true);
       const response = await axios.put(`/api/peminjaman/${id}/kembalikan`, {
-        kondisi_barang: 'baik', // Default kondisi
-        catatan: 'Barang dikembalikan'
+        kondisi_barang: returnData.kondisi_barang,
+        catatan: returnData.catatan,
+        detail_kondisi: returnData.detail_kondisi
       });
       if (response.data.sukses) {
         toast.success('Barang berhasil dikembalikan!');
@@ -521,7 +523,7 @@ const PeminjamanDetail = () => {
         title={isNewPeminjaman ? 'Tambah Peminjaman Baru' : 'Detail Peminjaman'}
         backButton
         onBackClick={() => navigate('/peminjaman')}
-        actionButton={!isNewPeminjaman && !isEditMode && peminjaman.status === 'disetujui' ? {
+        actionButton={!isNewPeminjaman && !isEditMode && peminjaman.status === 'dipinjam' ? {
           icon: <CheckCircleIcon />,
           text: 'Kembalikan',
           onClick: () => setConfirmReturn(true),
@@ -1232,16 +1234,13 @@ const PeminjamanDetail = () => {
         loading={deleteLoading}
       />
 
-      {/* Confirm Return Dialog */}
-      <ConfirmDialog
+      {/* Return Dialog */}
+      <ReturnDialog
         open={confirmReturn}
-        title="Kembalikan Peminjaman"
-        message={`Apakah Anda yakin ingin mengembalikan peminjaman dengan kode "${peminjaman?.kode}"?`}
-        confirmText="Kembalikan"
-        confirmButtonColor="success"
+        onClose={() => setConfirmReturn(false)}
         onConfirm={handleReturn}
-        onCancel={() => setConfirmReturn(false)}
         loading={returnLoading}
+        peminjaman={peminjaman}
       />
 
       {/* Approval Dialog */}
