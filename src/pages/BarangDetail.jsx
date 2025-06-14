@@ -58,7 +58,6 @@ const BarangSchema = Yup.object().shape({
   tanggal_perolehan: Yup.date().required('Tanggal pengadaan barang wajib diisi'),
   id_kategori: Yup.number().required('Kategori wajib dipilih'),
   id_lokasi: Yup.number().required('Lokasi wajib dipilih'),
-  status: Yup.string().required('Status barang wajib diisi'),
 });
 
 const BarangDetail = () => {
@@ -367,7 +366,6 @@ const BarangDetail = () => {
             tanggal_perolehan: barang?.tanggal_perolehan || new Date().toISOString().split('T')[0],
             id_kategori: barang?.id_kategori || '',
             id_lokasi: barang?.id_lokasi || '',
-            status: barang?.status || 'Tersedia',
           }}
           validationSchema={BarangSchema}
           onSubmit={handleSubmit}
@@ -431,6 +429,7 @@ const BarangDetail = () => {
                       <Grid item xs={12} sm={6}>
                         <Field
                           as={TextField}
+                          id="nama"
                           name="nama"
                           label="Nama Barang"
                           fullWidth
@@ -442,6 +441,7 @@ const BarangDetail = () => {
                       <Grid item xs={12}>
                         <Field
                           as={TextField}
+                          id="deskripsi"
                           name="deskripsi"
                           label="Deskripsi"
                           fullWidth
@@ -455,6 +455,7 @@ const BarangDetail = () => {
                         <Field
                           as={TextField}
                           select
+                          id="id_kategori"
                           name="id_kategori"
                           label="Kategori"
                           fullWidth
@@ -475,6 +476,7 @@ const BarangDetail = () => {
                         <Field
                           as={TextField}
                           select
+                          id="id_lokasi"
                           name="id_lokasi"
                           label="Lokasi"
                           fullWidth
@@ -494,6 +496,7 @@ const BarangDetail = () => {
                       <Grid item xs={12} sm={3}>
                         <Field
                           as={TextField}
+                          id="jumlah"
                           name="jumlah"
                           label="Jumlah"
                           type="number"
@@ -508,6 +511,7 @@ const BarangDetail = () => {
                         <Field
                           as={TextField}
                           select
+                          id="satuan"
                           name="satuan"
                           label="Satuan"
                           fullWidth
@@ -526,6 +530,7 @@ const BarangDetail = () => {
                         <Field
                           as={TextField}
                           select
+                          id="kondisi"
                           name="kondisi"
                           label="Kondisi"
                           fullWidth
@@ -540,28 +545,11 @@ const BarangDetail = () => {
                           <MenuItem value="Rusak Berat">Rusak Berat</MenuItem>
                         </Field>
                       </Grid>
+
                       <Grid item xs={12} sm={6}>
                         <Field
                           as={TextField}
-                          select
-                          name="status"
-                          label="Status"
-                          fullWidth
-                          required
-                          value={values.status}
-                          onChange={handleChange}
-                          error={touched.status && Boolean(errors.status)}
-                          helperText={touched.status && errors.status}
-                        >
-                          <MenuItem value="Tersedia">Tersedia</MenuItem>
-                          <MenuItem value="Dipinjam">Dipinjam</MenuItem>
-                          <MenuItem value="Perbaikan">Perbaikan</MenuItem>
-                          <MenuItem value="Rusak">Rusak</MenuItem>
-                        </Field>
-                      </Grid>
-                      <Grid item xs={12} sm={6}>
-                        <Field
-                          as={TextField}
+                          id="tanggal_perolehan"
                           name="tanggal_perolehan"
                           label="Tanggal Pengadaan Barang"
                           type="date"

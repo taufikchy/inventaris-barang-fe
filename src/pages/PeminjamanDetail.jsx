@@ -579,6 +579,7 @@ const PeminjamanDetail = () => {
                   <Grid item xs={12} sm={6}>
                     <Field
                       as={TextField}
+                      id="peminjam"
                       name="peminjam"
                       label="Nama Peminjam"
                       fullWidth
@@ -592,6 +593,7 @@ const PeminjamanDetail = () => {
                   <Grid item xs={12} sm={6}>
                     <Field
                       as={TextField}
+                      id="kontak"
                       name="kontak"
                       label="Kontak Peminjam"
                       fullWidth
@@ -605,6 +607,7 @@ const PeminjamanDetail = () => {
                   <Grid item xs={12} sm={6}>
                     <Field
                       as={TextField}
+                      id="kelas"
                       name="kelas"
                       label="Kelas Peminjam"
                       fullWidth
@@ -618,6 +621,7 @@ const PeminjamanDetail = () => {
                   <Grid item xs={12} sm={6}>
                     <Field
                       as={TextField}
+                      id="tanggal_pinjam"
                       name="tanggal_pinjam"
                       label="Tanggal Pinjam"
                       type="date"
@@ -633,6 +637,7 @@ const PeminjamanDetail = () => {
                   <Grid item xs={12} sm={6}>
                     <Field
                       as={TextField}
+                      id="tanggal_kembali_harapan"
                       name="tanggal_kembali_harapan"
                       label="Tanggal Kembali Harapan"
                       type="date"
@@ -649,6 +654,7 @@ const PeminjamanDetail = () => {
                     <Field
                       as={TextField}
                       select
+                      id="status"
                       name="status"
                       label="Status"
                       fullWidth
@@ -671,6 +677,7 @@ const PeminjamanDetail = () => {
                   <Grid item xs={12}>
                     <Field
                       as={TextField}
+                      id="keterangan"
                       name="keterangan"
                       label="Keterangan"
                       fullWidth

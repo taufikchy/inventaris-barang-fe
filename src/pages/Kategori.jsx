@@ -215,6 +215,7 @@ const Kategori = () => {
                   as={TextField}
                   fullWidth
                   margin="normal"
+                  id="nama"
                   name="nama"
                   label="Nama Kategori"
                   error={touched.nama && Boolean(errors.nama)}
@@ -224,6 +225,7 @@ const Kategori = () => {
                   as={TextField}
                   fullWidth
                   margin="normal"
+                  id="deskripsi"
                   name="deskripsi"
                   label="Deskripsi"
                   multiline
