@@ -52,11 +52,10 @@ import PDFGenerator from '../components/PDFGenerator';
 const PeminjamanSchema = Yup.object().shape({
   peminjam: Yup.string().required('Nama peminjam wajib diisi'),
   kontak: Yup.string().required('Kontak peminjam wajib diisi'),
-  kelas: Yup.string().required('Kelas peminjam wajib diisi'),
+  kelas: Yup.string().required('Instansi peminjam wajib diisi'),
   tanggal_pinjam: Yup.date().required('Tanggal pinjam wajib diisi'),
-  tanggal_kembali_harapan: Yup.date().required('Tanggal kembali harapan wajib diisi'),
+  tanggal_kembali_harapan: Yup.date().required('Tanggal rencana kembali wajib diisi'),
   keterangan: Yup.string(),
-  status: Yup.string().required('Status peminjaman wajib diisi'),
   detail_peminjaman: Yup.array().of(
     Yup.object().shape({
       id_barang: Yup.number().required('Barang wajib dipilih'),
@@ -128,7 +127,6 @@ const PeminjamanDetail = () => {
         kelas: '',
         tanggal_pinjam: new Date().toISOString().split('T')[0],
         tanggal_kembali_harapan: new Date().toISOString().split('T')[0],
-        status: 'menunggu_persetujuan', // Mengubah dari 'Dipinjam' menjadi 'menunggu_persetujuan' sesuai dengan model backend
         keterangan: '',
         detail_peminjaman: [],
       });
@@ -290,7 +288,6 @@ const PeminjamanDetail = () => {
         tanggal_pinjam: values.tanggal_pinjam,
         tanggal_kembali_harapan: values.tanggal_kembali_harapan,
         catatan: values.keterangan || '',
-        status: values.status,
         id_pengguna: user?.id, // Menambahkan id_pengguna dari user yang login
         detail_peminjaman: values.detail_peminjaman.map(item => ({
           id_barang: item.id_barang,
@@ -552,7 +549,6 @@ const PeminjamanDetail = () => {
             kelas: peminjaman.kelas || '',
             tanggal_pinjam: peminjaman.tanggal_pinjam,
             tanggal_kembali_harapan: peminjaman.tanggal_kembali_harapan || '',
-            status: peminjaman.status,
             keterangan: peminjaman.keterangan || '',
             detail_peminjaman: peminjaman.detail_peminjaman || [],
           }}
@@ -609,7 +605,7 @@ const PeminjamanDetail = () => {
                       as={TextField}
                       id="kelas"
                       name="kelas"
-                      label="Kelas Peminjam"
+                      label="Instansi Peminjam"
                       fullWidth
                       required
                       size="small"
@@ -639,7 +635,7 @@ const PeminjamanDetail = () => {
                       as={TextField}
                       id="tanggal_kembali_harapan"
                       name="tanggal_kembali_harapan"
-                      label="Tanggal Kembali Harapan"
+                      label="Tanggal Rencana Kembali"
                       type="date"
                       fullWidth
                       required
@@ -650,30 +646,7 @@ const PeminjamanDetail = () => {
                       helperText={touched.tanggal_kembali_harapan && errors.tanggal_kembali_harapan}
                     />
                   </Grid>
-                  <Grid item xs={12} sm={6}>
-                    <Field
-                      as={TextField}
-                      select
-                      id="status"
-                      name="status"
-                      label="Status"
-                      fullWidth
-                      required
-                      size="small"
-                      margin="normal"
-                      value={values.status}
-                      onChange={handleChange}
-                      error={touched.status && Boolean(errors.status)}
-                      helperText={touched.status && errors.status}
-                    >
-                      <MenuItem value="menunggu_persetujuan">Menunggu Persetujuan</MenuItem>
-                      <MenuItem value="disetujui">Disetujui</MenuItem>
-                      <MenuItem value="ditolak">Ditolak</MenuItem>
-                      <MenuItem value="dipinjam">Dipinjam</MenuItem>
-                      <MenuItem value="dikembalikan">Dikembalikan</MenuItem>
-                      <MenuItem value="terlambat">Terlambat</MenuItem>
-                    </Field>
-                  </Grid>
+
                   <Grid item xs={12}>
                     <Field
                       as={TextField}
