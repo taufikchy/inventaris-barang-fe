@@ -510,6 +510,10 @@ const Barang = () => {
                           label={unit.kondisi}
                           size="small"
                           color={getKondisiColor(unit.kondisi)}
+                          sx={{
+                            color: 'white',
+                            fontWeight: 'bold'
+                          }}
                         />
                       </TableCell>
                       <TableCell>
@@ -517,6 +521,10 @@ const Barang = () => {
                           label={unit.status}
                           size="small"
                           color={getStatusColor(unit.status)}
+                          sx={{
+                            color: 'white',
+                            fontWeight: 'bold'
+                          }}
                         />
                       </TableCell>
                       <TableCell>{unit.lokasi ? (typeof unit.lokasi === 'object' ? unit.lokasi.nama : unit.lokasi) : '-'}</TableCell>

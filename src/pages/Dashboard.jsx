@@ -369,7 +369,7 @@ const Dashboard = () => {
                 flexDirection: { xs: 'column', sm: 'row' },
                 gap: { xs: 1, sm: 0 }
               }}>
-                <Typography variant="h6">Peminjaman Terbaru</Typography>
+                <Typography variant="h6">Peminjaman Aktif</Typography>
                 <Button
                   size="small"
                   endIcon={<ArrowForwardIcon />}
@@ -409,6 +409,10 @@ const Dashboard = () => {
                               label={row.status === 'dipinjam' ? 'Dipinjam' : 'Dikembalikan'}
                               color={getStatusColor(row.status)}
                               size="small"
+                              sx={{
+                                color: 'white',
+                                fontWeight: 'bold'
+                              }}
                             />
                           </TableCell>
                           <TableCell align="right">

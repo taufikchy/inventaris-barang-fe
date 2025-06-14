@@ -396,6 +396,10 @@ const HistoriTransaksi = () => {
                             color={jenisInfo.color}
                             size="small"
                             variant="outlined"
+                            sx={{
+                              color: 'white',
+                              fontWeight: 'bold'
+                            }}
                           />
                         </TableCell>
                         <TableCell>
@@ -404,6 +408,10 @@ const HistoriTransaksi = () => {
                             label={modulInfo.label}
                             color={modulInfo.color}
                             size="small"
+                            sx={{
+                              color: 'white',
+                              fontWeight: 'bold'
+                            }}
                           />
                         </TableCell>
                         <TableCell>

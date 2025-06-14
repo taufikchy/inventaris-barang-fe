@@ -251,6 +251,10 @@ const Peminjaman = () => {
           label={getStatusLabel(value)}
           size="small"
           color={getStatusColor(value)}
+          sx={{
+            color: 'white',
+            fontWeight: 'bold'
+          }}
         />
       ),
     },

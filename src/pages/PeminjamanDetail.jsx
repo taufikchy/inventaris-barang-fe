@@ -1016,7 +1016,11 @@ const PeminjamanDetail = () => {
                       label={getStatusLabel(peminjaman.status)}
                       size="small"
                       color={getStatusColor(peminjaman.status)}
-                      sx={{ mt: 0.5 }}
+                      sx={{ 
+                        mt: 0.5,
+                        color: 'white',
+                        fontWeight: 'bold'
+                      }}
                     />
                   </Grid>
                     <Grid item xs={12}>
