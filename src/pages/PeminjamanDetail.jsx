@@ -46,6 +46,7 @@ import ConfirmDialog from '../components/ConfirmDialog';
 import ApprovalDialog from '../components/ApprovalDialog';
 import ReturnDialog from '../components/ReturnDialog';
 import PrintBorrowingLetter from '../components/PrintBorrowingLetter';
+import PDFGenerator from '../components/PDFGenerator';
 
 // Validation schema for peminjaman form
 const PeminjamanSchema = Yup.object().shape({
@@ -96,6 +97,18 @@ const PeminjamanDetail = () => {
   const [selectedFile, setSelectedFile] = useState(null);
   const [fileError, setFileError] = useState('');
   const printRef = useRef();
+
+  // Handle PDF generation
+  const handlePrintPDF = async () => {
+    try {
+      const pdfGenerator = new PDFGenerator();
+      const doc = await pdfGenerator.generateBorrowingLetter(peminjaman);
+      pdfGenerator.openPDF();
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      toast.error('Gagal membuat PDF. Silakan coba lagi.');
+    }
+  };
 
   // Fetch peminjaman data
   const fetchPeminjaman = async () => {
@@ -1078,10 +1091,10 @@ const PeminjamanDetail = () => {
                       <Button
                         variant="outlined"
                         color="primary"
-                        onClick={() => window.print()}
+                        onClick={handlePrintPDF}
                         size="small"
                       >
-                        Cetak Surat Pengajuan
+                        Cetak Surat Pengajuan (PDF)
                       </Button>
                     )}
                     

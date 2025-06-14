@@ -34,6 +34,7 @@ import { Chart as ChartJS, ArcElement, Tooltip, Legend, CategoryScale, LinearSca
 import { Pie, Bar } from 'react-chartjs-2';
 import PageHeader from '../components/PageHeader';
 import InfoCard from '../components/InfoCard';
+import PDFTestButton from '../components/PDFTestButton';
 
 // Register ChartJS components
 ChartJS.register(ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement, Title);
@@ -511,6 +512,11 @@ const Dashboard = () => {
           </Card>
         </Grid>
       </Grid>
+
+      {/* PDF Test Button - for development */}
+      <Box sx={{ mt: 3, display: 'flex', justifyContent: 'center' }}>
+        <PDFTestButton />
+      </Box>
     </>
   );
 };
