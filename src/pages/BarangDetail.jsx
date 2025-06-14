@@ -701,14 +701,7 @@ const BarangDetail = () => {
                           {barang?.tanggal_perolehan ? formatDate(barang.tanggal_perolehan) : '-'}
                         </Typography>
                       </Grid>
-                      <Grid item xs={12} sm={6}>
-                        <Typography variant="body2" color="text.secondary">
-                          Harga Perolehan
-                        </Typography>
-                        <Typography variant="body1" gutterBottom>
-                          {barang?.harga_perolehan ? formatCurrency(barang.harga_perolehan) : '-'}
-                        </Typography>
-                      </Grid>
+
                     </Grid>
                   </Grid>
                 </Grid>
