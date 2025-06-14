@@ -382,7 +382,7 @@ const BarangDetail = () => {
                         <CardMedia
                           component="img"
                           height="250"
-                          image={imagePreview || barang.gambar || 'https://via.placeholder.com/400x300?text=No+Image'}
+                          image={imagePreview || barang.gambar || 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjMwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZGRkIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxOCIgZmlsbD0iIzk5OSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPk5vIEltYWdlPC90ZXh0Pjwvc3ZnPg=='}
                           alt={values.nama}
                           sx={{ objectFit: 'contain', bgcolor: 'grey.100', p: 2 }}
                         />
@@ -635,7 +635,7 @@ const BarangDetail = () => {
                       <CardMedia
                         component="img"
                         height="250"
-                        image={barang?.gambar || 'https://via.placeholder.com/400x300?text=No+Image'}
+                        image={barang?.gambar || 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjMwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZGRkIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxOCIgZmlsbD0iIzk5OSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPk5vIEltYWdlPC90ZXh0Pjwvc3ZnPg=='}
                         alt={barang?.nama || 'Barang'}
                         sx={{ objectFit: 'contain', bgcolor: 'grey.100', p: 2 }}
                       />

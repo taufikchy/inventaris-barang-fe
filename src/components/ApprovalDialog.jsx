@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import {
   Button,
   Dialog,
@@ -64,7 +64,7 @@ const ApprovalDialog = ({
       catatan_persetujuan: catatan
     };
 
-    onApprove(peminjamanId, approvalData);
+    onApprove(approvalData);
   };
 
   const handleClose = () => {

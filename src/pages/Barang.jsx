@@ -226,12 +226,6 @@ const Barang = () => {
       format: (value) => value?.nama || value || '-',
     },
     {
-      id: 'lokasi',
-      label: 'Lokasi',
-      sortable: true,
-      format: (value) => value?.nama || value || '-',
-    },
-    {
       id: 'tanggal_perolehan',
       label: 'Tanggal Pengadaan Barang',
       sortable: true,
@@ -494,13 +488,14 @@ const Barang = () => {
                       <TableCell>Kode Unit</TableCell>
                       <TableCell>Kondisi</TableCell>
                       <TableCell>Status</TableCell>
+                      <TableCell>Lokasi</TableCell>
                       <TableCell align="right">Aksi</TableCell>
                     </TableRow>
                   </TableHead>
                   <TableBody>
                     {getFilteredUnits().length === 0 ? (
                       <TableRow>
-                        <TableCell colSpan={4} align="center">
+                        <TableCell colSpan={5} align="center">
                           <Typography variant="body2" color="text.secondary">
                             {selectedBarang.units?.length === 0 ? 'Tidak ada unit untuk barang ini' : 'Tidak ada unit yang sesuai dengan filter'}
                           </Typography>
@@ -524,6 +519,7 @@ const Barang = () => {
                           color={getStatusColor(unit.status)}
                         />
                       </TableCell>
+                      <TableCell>{unit.lokasi ? (typeof unit.lokasi === 'object' ? unit.lokasi.nama : unit.lokasi) : '-'}</TableCell>
                       <TableCell align="right">
                         <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
                           <Tooltip title="Lihat Detail">
