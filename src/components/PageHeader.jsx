@@ -111,7 +111,11 @@ const PageHeader = ({
               sx={{ 
                 px: { xs: 2, sm: 3 },
                 fontSize: { xs: '0.75rem', sm: '0.875rem' },
-                alignSelf: { xs: 'stretch', sm: 'auto' }
+                alignSelf: { xs: 'stretch', sm: 'auto' },
+                color: 'white',
+                '& .MuiSvgIcon-root': {
+                  color: 'white'
+                }
               }}
             >
               {actionButton.text}

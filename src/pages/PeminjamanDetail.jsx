@@ -1240,6 +1240,92 @@ const PeminjamanDetail = () => {
                 </CardContent>
               </Card>
             </Grid>
+            
+            {/* Detail Kondisi Barang Setelah Dipinjam - hanya muncul jika sudah dikembalikan */}
+            {peminjaman.status === 'dikembalikan' && (
+              <Grid item xs={12}>
+                <Card variant="outlined">
+                  <CardContent>
+                    <Typography variant="h6" gutterBottom>
+                      Detail Kondisi Barang Setelah Dipinjam
+                    </Typography>
+                    <Divider sx={{ mb: 2 }} />
+                    
+                    <TableContainer component={Paper}>
+                      <Table>
+                        <TableHead>
+                          <TableRow>
+                            <TableCell>Nama Barang</TableCell>
+                            <TableCell align="center">Jumlah</TableCell>
+                            <TableCell>Kondisi Saat Pinjam</TableCell>
+                            <TableCell>Kondisi Saat Kembali</TableCell>
+                            <TableCell>Catatan Kembali</TableCell>
+                          </TableRow>
+                        </TableHead>
+                        <TableBody>
+                          {peminjaman.detail_peminjaman.map((item, index) => (
+                            <TableRow key={index}>
+                              <TableCell>
+                                <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                                  {item.nama_barang}
+                                </Typography>
+                                <Typography variant="caption" color="text.secondary">
+                                  {item.kode_barang}
+                                </Typography>
+                              </TableCell>
+                              <TableCell align="center">
+                                <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                                  {item.jumlah}
+                                </Typography>
+                              </TableCell>
+                              <TableCell>
+                                <Chip
+                                  label={formatKondisiLabel(item.kondisi_saat_pinjam)}
+                                  size="small"
+                                  color={getKondisiColor(item.kondisi_saat_pinjam)}
+                                  sx={{
+                                    color: 'white',
+                                    fontWeight: 'bold'
+                                  }}
+                                />
+                              </TableCell>
+                              <TableCell>
+                                {item.kondisi_saat_kembali ? (
+                                  <Chip
+                                    label={formatKondisiLabel(item.kondisi_saat_kembali)}
+                                    size="small"
+                                    color={getKondisiColor(item.kondisi_saat_kembali)}
+                                    sx={{
+                                      color: 'white',
+                                      fontWeight: 'bold'
+                                    }}
+                                  />
+                                ) : (
+                                  <Typography variant="body2" color="text.secondary">
+                                    -
+                                  </Typography>
+                                )}
+                              </TableCell>
+                              <TableCell>
+                                <Typography 
+                                  variant="body2" 
+                                  sx={{ 
+                                    fontStyle: item.catatan_kondisi ? 'normal' : 'italic',
+                                    color: item.catatan_kondisi ? 'text.primary' : 'text.secondary'
+                                  }}
+                                >
+                                  {item.catatan_kondisi || 'Tidak ada catatan'}
+                                </Typography>
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </TableContainer>
+                  </CardContent>
+                </Card>
+              </Grid>
+            )}
           </Grid>
         </Paper>
       )}
