@@ -1,6 +1,12 @@
 import React from 'react';
 import jsPDF from 'jspdf';
-import 'jspdf/dist/jspdf.es.min.js';
+import autoTable from 'jspdf-autotable';
+
+// Extend jsPDF with autoTable
+jsPDF.autoTableSetDefaults = autoTable.setDefaults || function() {};
+if (typeof jsPDF.API.autoTable === 'undefined') {
+  jsPDF.API.autoTable = autoTable;
+}
 
 class PDFGenerator {
   constructor() {
@@ -84,6 +90,11 @@ class PDFGenerator {
       filters: ['ASCIIHexEncode']
     });
     
+    // Ensure autoTable is available on this instance
+    if (typeof this.doc.autoTable === 'undefined') {
+      this.doc.autoTable = autoTable;
+    }
+    
     // Set font default Times New Roman
     this.doc.setFont('times', 'normal');
     this.doc.setFontSize(12);
@@ -151,25 +162,26 @@ class PDFGenerator {
     doc.setFont('times', 'bold');
     
     // Baris 1: PEMERINTAH PROVINSI JAWA BARAT
-    doc.setFontSize(13);
+    doc.setFontSize(12);
     const line1 = 'PEMERINTAH PROVINSI JAWA BARAT';
-    doc.text(line1, textStartX + (textWidth - doc.getTextWidth(line1)) / 2, currentY + 8);
+    const centerX = textStartX + textWidth / 2;
+    doc.text(line1, centerX, currentY + 8, { align: 'center' });
     
     // Baris 2: DINAS PENDIDIKAN
-    doc.setFontSize(13);
+    doc.setFontSize(12);
     const line2 = 'DINAS PENDIDIKAN';
-    doc.text(line2, textStartX + (textWidth - doc.getTextWidth(line2)) / 2, currentY + 14);
+    doc.text(line2, centerX, currentY + 14, { align: 'center' });
     
     // Baris 3: SMK NEGERI MANONJAYA (lebih besar)
-    doc.setFontSize(16);
+    doc.setFontSize(14);
     const line3 = 'SMK NEGERI MANONJAYA';
-    doc.text(line3, textStartX + (textWidth - doc.getTextWidth(line3)) / 2, currentY + 21);
+    doc.text(line3, centerX, currentY + 20, { align: 'center' });
     
-    currentY += logoSize + 5; // Jarak setelah logo
+    currentY += logoSize + 10; // Jarak setelah logo
     
     // Alamat dan kontak (full width, centered)
     doc.setFont('times', 'normal');
-    doc.setFontSize(9);
+    doc.setFontSize(10);
     
     const address = 'Jl. Raya Manonjaya No. 152, Manonjaya, Tasikmalaya, Jawa Barat 46197';
     doc.text(address, this.pageWidth / 2, currentY, { align: 'center' });
@@ -180,11 +192,7 @@ class PDFGenerator {
     currentY += 8;
     
     // Garis pembatas
-    doc.setDrawColor(0, 0, 0);
-    doc.setLineWidth(1.2);
-    doc.line(this.margins.left, currentY, this.pageWidth - this.margins.right, currentY);
-    
-    currentY += 2;
+   
     
     doc.setLineWidth(0.5);
     doc.line(this.margins.left, currentY, this.pageWidth - this.margins.right, currentY);
@@ -245,12 +253,11 @@ class PDFGenerator {
     doc.text(lampiran, this.margins.left + 25, currentY);
     currentY += 7;
     
-    // Perihal dengan text wrapping
+    // Perihal
     doc.text('Perihal', this.margins.left, currentY);
     doc.text(':', this.margins.left + 20, currentY);
-    const splitPerihal = doc.splitTextToSize(perihal, this.contentWidth - 25);
-    doc.text(splitPerihal, this.margins.left + 25, currentY);
-    currentY += splitPerihal.length * 6 + 6;
+    doc.text(perihal, this.margins.left + 25, currentY);
+    currentY += 12;
     
     return currentY;
   }
@@ -290,21 +297,15 @@ class PDFGenerator {
     doc.text(splitText, this.margins.left + 10, currentY);
     currentY += splitText.length * 6 + 10;
     
-    // Informasi peminjam dengan text wrapping
-    const namaPeminjam = `Nama Peminjam   : ${peminjaman.nama_peminjam || peminjaman.peminjam || '-'}`;
-    const splitNama = doc.splitTextToSize(namaPeminjam, this.contentWidth);
-    doc.text(splitNama, this.margins.left, currentY);
-    currentY += splitNama.length * 6 + 1;
+    // Informasi peminjam
+    doc.text(`Nama Peminjam   : ${peminjaman.nama_peminjam || peminjaman.peminjam || '-'}`, this.margins.left, currentY);
+    currentY += 7;
     
-    const kelasPeminjam = `Kelas/NIM         : ${peminjaman.kelas_peminjam || peminjaman.kelas || '-'}`;
-    const splitKelas = doc.splitTextToSize(kelasPeminjam, this.contentWidth);
-    doc.text(splitKelas, this.margins.left, currentY);
-    currentY += splitKelas.length * 6 + 1;
+    doc.text(`Kelas/NIM         : ${peminjaman.kelas_peminjam || peminjaman.kelas || '-'}`, this.margins.left, currentY);
+    currentY += 7;
     
-    const tanggalPinjam = `Tanggal Pinjam : ${this.formatDate(peminjaman.tanggal_pinjam)}`;
-    const splitTanggal = doc.splitTextToSize(tanggalPinjam, this.contentWidth);
-    doc.text(splitTanggal, this.margins.left, currentY);
-    currentY += splitTanggal.length * 6 + 15;
+    doc.text(`Tanggal Pinjam : ${this.formatDate(peminjaman.tanggal_pinjam)}`, this.margins.left, currentY);
+    currentY += 15;
     
     return currentY;
   }
@@ -323,66 +324,48 @@ class PDFGenerator {
     doc.text('Adapun barang yang akan dipinjam adalah sebagai berikut:', this.margins.left, currentY);
     currentY += 10;
     
-    // Table setup - using manual implementation instead of autoTable
-    const tableStartX = this.margins.left;
-    const colWidths = [15, 80, 25, 25, 25];
-    const rowHeight = 8;
+    // Header tabel
+    const tableConfig = {
+      startX: this.margins.left,
+      startY: currentY,
+      head: [['No.', 'Nama Barang', 'Jumlah', 'Satuan', 'Kondisi']],
+      headStyles: {
+        fillColor: [41, 128, 185],
+        textColor: [255, 255, 255],
+        fontStyle: 'bold',
+        fontSize: 10
+      },
+      bodyStyles: {
+        fontSize: 10,
+        textColor: [0, 0, 0]
+      },
+      columnStyles: {
+        0: { cellWidth: 10 },
+        1: { cellWidth: 80 },
+        2: { cellWidth: 20 },
+        3: { cellWidth: 20 },
+        4: { cellWidth: 30 }
+      },
+      margin: { top: 10 }
+    };
     
-    // Table header
-    doc.setFontSize(10);
-    doc.setFont('times', 'bold');
+    // Data tabel
+    const tableData = items.map((item, index) => [
+      (index + 1).toString(),
+      item.nama_barang || item.nama || '-',
+      item.jumlah || item.qty || '1',
+      item.satuan || item.unit || 'pcs',
+      item.kondisi || item.status || 'Baik'
+    ]);
     
-    let currentX = tableStartX;
-    doc.text('No.', currentX + 2, currentY + 4);
-    currentX += colWidths[0];
-    doc.text('Nama Barang', currentX + 2, currentY + 4);
-    currentX += colWidths[1];
-    doc.text('Jumlah', currentX + 2, currentY + 4);
-    currentX += colWidths[2];
-    doc.text('Satuan', currentX + 2, currentY + 4);
-    currentX += colWidths[3];
-    doc.text('Kondisi', currentX + 2, currentY + 4);
-    
-    // Header line
-    doc.setLineWidth(0.5);
-    doc.line(tableStartX, currentY + 6, tableStartX + colWidths.reduce((a, b) => a + b, 0), currentY + 6);
-    currentY += rowHeight;
-    
-    // Table rows
-    doc.setFont('times', 'normal');
-    
-    items.forEach((item, index) => {
-      // Check if we need a new page for each row
-      currentY = this.checkPageBreak(currentY, rowHeight + 2);
-      
-      currentX = tableStartX;
-      
-      // Row data
-      doc.text((index + 1).toString(), currentX + 2, currentY + 4);
-      currentX += colWidths[0];
-      
-      const itemName = item.nama_barang || item.nama || 'N/A';
-      const maxWidth = colWidths[1] - 4;
-      const splitName = doc.splitTextToSize(itemName, maxWidth);
-      doc.text(splitName[0], currentX + 2, currentY + 4);
-      currentX += colWidths[1];
-      
-      doc.text((item.jumlah || item.qty || '1').toString(), currentX + 2, currentY + 4);
-      currentX += colWidths[2];
-      
-      doc.text(item.satuan || item.unit || 'pcs', currentX + 2, currentY + 4);
-      currentX += colWidths[3];
-      
-      doc.text(item.kondisi || item.status || 'Baik', currentX + 2, currentY + 4);
-      
-      currentY += rowHeight;
+    // Tambahkan tabel ke dokumen
+    autoTable(doc, {
+      ...tableConfig,
+      body: tableData
     });
     
-    // Bottom line
-    doc.setLineWidth(0.5);
-    doc.line(tableStartX, currentY, tableStartX + colWidths.reduce((a, b) => a + b, 0), currentY);
-    
-    currentY += 10;
+    // Update posisi Y setelah tabel
+    currentY = doc.lastAutoTable.finalY + 10;
     
     return currentY;
   }
@@ -413,13 +396,10 @@ class PDFGenerator {
     
     terms.forEach((term, index) => {
       // Periksa jika perlu halaman baru untuk setiap item
-      currentY = this.checkPageBreak(currentY, 15);
+      currentY = this.checkPageBreak(currentY, 8);
       
-      // Split text untuk memastikan tidak melewati batas kanan
-      const termText = `${index + 1}. ${term}`;
-      const splitTerm = doc.splitTextToSize(termText, this.contentWidth - 10);
-      doc.text(splitTerm, this.margins.left + 5, currentY);
-      currentY += splitTerm.length * 6 + 2;
+      doc.text(`${index + 1}. ${term}`, this.margins.left + 5, currentY);
+      currentY += 7;
     });
     
     currentY += 10;
