@@ -308,6 +308,7 @@ const Pengguna = () => {
                 <TextField
                   fullWidth
                   margin="normal"
+                  id="nama"
                   name="nama"
                   label="Nama Lengkap"
                   value={values.nama}
@@ -320,6 +321,7 @@ const Pengguna = () => {
                 <TextField
                   fullWidth
                   margin="normal"
+                  id="username"
                   name="username"
                   label="Username"
                   value={values.username}
@@ -333,6 +335,7 @@ const Pengguna = () => {
                 <TextField
                   fullWidth
                   margin="normal"
+                  id="email"
                   name="email"
                   label="Email"
                   type="email"
@@ -346,6 +349,7 @@ const Pengguna = () => {
                 <TextField
                   fullWidth
                   margin="normal"
+                  id="password"
                   name="password"
                   label={currentUser ? 'Password (Kosongkan jika tidak diubah)' : 'Password'}
                   type={showPassword ? 'text' : 'password'}
@@ -374,11 +378,13 @@ const Pengguna = () => {
                   error={touched.role && Boolean(errors.role)}
                   disabled={currentUser?.username === 'admin'} // Prevent changing admin role
                 >
-                  <InputLabel>Role</InputLabel>
+                  <InputLabel id="role-label">Role</InputLabel>
                   <Select
+                    id="role"
                     name="role"
                     value={values.role}
                     label="Role"
+                    labelId="role-label"
                     onChange={handleChange}
                     onBlur={handleBlur}
                   >

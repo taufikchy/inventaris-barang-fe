@@ -30,7 +30,7 @@ import ConfirmDialog from '../components/ConfirmDialog';
 
 const Peminjaman = () => {
   const navigate = useNavigate();
-  const { isAdmin, isKepalaLab, isToolman, isAdminOrToolman } = useAuth();
+  const { isAdmin, isKepalaLab, isToolman, isAdminOrToolman, isAdminToolmanOrKepalaLab } = useAuth();
   const [loading, setLoading] = useState(true);
   const [peminjamans, setPeminjamans] = useState([]);
   const [confirmDelete, setConfirmDelete] = useState(false);
@@ -251,6 +251,10 @@ const Peminjaman = () => {
           label={getStatusLabel(value)}
           size="small"
           color={getStatusColor(value)}
+          sx={{
+            color: 'white',
+            fontWeight: 'bold'
+          }}
         />
       ),
     },
@@ -265,8 +269,8 @@ const Peminjaman = () => {
         </IconButton>
       </Tooltip>
       
-      {/* Edit button - only for Admin and Toolman, and only for peminjaman with status menunggu_persetujuan */}
-      {isAdminOrToolman() && row.status === 'menunggu_persetujuan' && (
+      {/* Edit button - only for Admin, Toolman, and Kepala Lab, and only for peminjaman with status menunggu_persetujuan */}
+      {isAdminToolmanOrKepalaLab() && row.status === 'menunggu_persetujuan' && (
         <Tooltip title="Edit">
           <IconButton onClick={() => navigate(`/peminjaman/${row.id}/edit`)} size="small">
             <EditIcon fontSize="small" />
@@ -301,7 +305,7 @@ const Peminjaman = () => {
         actionText="Tambah Peminjaman"
         actionIcon={<AddIcon />}
         onActionClick={() => navigate('/peminjaman/new')}
-        showAction={isAdminOrToolman()}
+        showAction={isAdminToolmanOrKepalaLab()}
       />
 
       {/* Filters */}

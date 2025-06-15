@@ -34,6 +34,7 @@ import { Chart as ChartJS, ArcElement, Tooltip, Legend, CategoryScale, LinearSca
 import { Pie, Bar } from 'react-chartjs-2';
 import PageHeader from '../components/PageHeader';
 import InfoCard from '../components/InfoCard';
+import PDFTestButton from '../components/PDFTestButton';
 
 // Register ChartJS components
 ChartJS.register(ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement, Title);
@@ -368,7 +369,7 @@ const Dashboard = () => {
                 flexDirection: { xs: 'column', sm: 'row' },
                 gap: { xs: 1, sm: 0 }
               }}>
-                <Typography variant="h6">Peminjaman Terbaru</Typography>
+                <Typography variant="h6">Peminjaman Aktif</Typography>
                 <Button
                   size="small"
                   endIcon={<ArrowForwardIcon />}
@@ -408,6 +409,10 @@ const Dashboard = () => {
                               label={row.status === 'dipinjam' ? 'Dipinjam' : 'Dikembalikan'}
                               color={getStatusColor(row.status)}
                               size="small"
+                              sx={{
+                                color: 'white',
+                                fontWeight: 'bold'
+                              }}
                             />
                           </TableCell>
                           <TableCell align="right">
@@ -511,6 +516,11 @@ const Dashboard = () => {
           </Card>
         </Grid>
       </Grid>
+
+      {/* PDF Test Button - for development */}
+      <Box sx={{ mt: 3, display: 'flex', justifyContent: 'center' }}>
+        <PDFTestButton />
+      </Box>
     </>
   );
 };

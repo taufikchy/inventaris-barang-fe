@@ -32,7 +32,6 @@ const ReturnDialog = ({
   peminjaman 
 }) => {
   const [returnData, setReturnData] = useState({
-    kondisi_barang: 'baik',
     catatan: '',
     detail_kondisi: []
   });
@@ -110,7 +109,6 @@ const ReturnDialog = ({
 
   const handleClose = () => {
     setReturnData({
-      kondisi_barang: 'baik',
       catatan: '',
       detail_kondisi: []
     });
@@ -278,37 +276,19 @@ const ReturnDialog = ({
           </Typography>
         )}
 
-        {/* Kondisi Umum dan Catatan */}
-        <Grid container spacing={2}>
-          <Grid item xs={12} md={4}>
-            <FormControl fullWidth>
-              <InputLabel>Kondisi Umum</InputLabel>
-              <Select
-                value={returnData.kondisi_barang}
-                onChange={(e) => handleInputChange('kondisi_barang', e.target.value)}
-                label="Kondisi Umum"
-              >
-                <MenuItem value="baik">Baik</MenuItem>
-                <MenuItem value="rusak_ringan">Rusak Ringan</MenuItem>
-                <MenuItem value="rusak">Rusak</MenuItem>
-              </Select>
-            </FormControl>
-          </Grid>
-          <Grid item xs={12} md={8}>
-            <TextField
-              fullWidth
-              label="Catatan Pengembalian"
-              multiline
-              rows={3}
-              value={returnData.catatan}
-              onChange={(e) => handleInputChange('catatan', e.target.value)}
-              placeholder="Masukkan catatan pengembalian..."
-              required
-              error={!!errors.catatan}
-              helperText={errors.catatan}
-            />
-          </Grid>
-        </Grid>
+        {/* Catatan Pengembalian */}
+        <TextField
+          fullWidth
+          label="Catatan Pengembalian"
+          multiline
+          rows={3}
+          value={returnData.catatan}
+          onChange={(e) => handleInputChange('catatan', e.target.value)}
+          placeholder="Masukkan catatan pengembalian umum..."
+          required
+          error={!!errors.catatan}
+          helperText={errors.catatan}
+        />
       </DialogContent>
       
       <DialogActions sx={{ p: 2 }}>
@@ -324,6 +304,12 @@ const ReturnDialog = ({
           variant="contained"
           color="success"
           startIcon={<ReturnIcon />}
+          sx={{
+            color: 'white',
+            '& .MuiSvgIcon-root': {
+              color: 'white'
+            }
+          }}
         >
           {loading ? 'Memproses...' : 'Kembalikan Barang'}
         </Button>
