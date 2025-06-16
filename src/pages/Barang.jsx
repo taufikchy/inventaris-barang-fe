@@ -57,6 +57,7 @@ const Barang = () => {
     kondisi: '',
   });
   const [showFilters, setShowFilters] = useState(false);
+  const [isInitialized, setIsInitialized] = useState(false);
 
   // Fetch dropdown data (kategori and lokasi)
   const fetchDropdownData = async () => {
@@ -128,7 +129,7 @@ const Barang = () => {
 
   // Read URL parameters and set filters when lokasis data is available
   useEffect(() => {
-    if (lokasis.length === 0) return; // Wait for lokasis data to be loaded
+    if (lokasis.length === 0 || isInitialized) return; // Wait for lokasis data to be loaded and prevent re-initialization
     
     const kategori = searchParams.get('kategori') || '';
     const lokasiParam = searchParams.get('lokasi') || '';
@@ -158,7 +159,9 @@ const Barang = () => {
       status,
       kondisi: kondisiValue
     });
-  }, [searchParams, lokasis]);
+    
+    setIsInitialized(true);
+  }, [searchParams, lokasis, isInitialized]);
 
   // Fetch barangs when filters change
   useEffect(() => {

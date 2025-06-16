@@ -654,11 +654,19 @@ const BarangDetail = () => {
                         label={barang?.status || 'Tersedia'}
                         size="small"
                         color={getStatusColor(barang?.status || 'Tersedia')}
+                        sx={{
+                          color: 'white',
+                          fontWeight: 'bold'
+                        }}
                       />
                       <Chip
                         label={barang?.kondisi || 'Baik'}
                         size="small"
                         color={getKondisiColor(barang?.kondisi || 'Baik')}
+                        sx={{
+                          color: 'white',
+                          fontWeight: 'bold'
+                        }}
                       />
                     </Box>
                     
@@ -737,6 +745,10 @@ const BarangDetail = () => {
                             label={barang.kondisi}
                             size="small"
                             color={getKondisiColor(barang.kondisi)}
+                            sx={{
+                              color: 'white',
+                              fontWeight: 'bold'
+                            }}
                           />
                         </TableCell>
                         <TableCell>
@@ -744,6 +756,10 @@ const BarangDetail = () => {
                             label={barang.status}
                             size="small"
                             color={getStatusColor(barang.status)}
+                            sx={{
+                              color: 'white',
+                              fontWeight: 'bold'
+                            }}
                           />
                         </TableCell>
                         <TableCell>{barang.lokasi ? (typeof barang.lokasi === 'object' ? barang.lokasi.nama : barang.lokasi) : '-'}</TableCell>
@@ -763,6 +779,10 @@ const BarangDetail = () => {
                               label={unit.kondisi}
                               size="small"
                               color={getKondisiColor(unit.kondisi)}
+                              sx={{
+                                color: 'white',
+                                fontWeight: 'bold'
+                              }}
                             />
                           </TableCell>
                           <TableCell>
@@ -770,6 +790,10 @@ const BarangDetail = () => {
                               label={unit.status}
                               size="small"
                               color={getStatusColor(unit.status)}
+                              sx={{
+                                color: 'white',
+                                fontWeight: 'bold'
+                              }}
                             />
                           </TableCell>
                           <TableCell>{unit.lokasi ? (typeof unit.lokasi === 'object' ? unit.lokasi.nama : unit.lokasi) : '-'}</TableCell>
