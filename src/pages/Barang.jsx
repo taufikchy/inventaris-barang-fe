@@ -294,9 +294,15 @@ const Barang = () => {
     },
     {
       id: 'tanggal_perolehan',
-      label: 'Tanggal Pengadaan Barang',
+      label: 'Tanggal Pencatatan Barang',
       sortable: true,
       format: (value) => formatDate(value),
+    },
+    {
+      id: 'tahun_pengadaan',
+      label: 'Tahun Pengadaan',
+      sortable: true,
+      align: 'center'
     },
     {
       id: 'jumlah',
