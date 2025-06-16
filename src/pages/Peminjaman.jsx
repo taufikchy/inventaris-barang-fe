@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import axios from '../utils/axios';
 import { toast } from 'react-toastify';
 import { useAuth } from '../contexts/AuthContext';
@@ -30,6 +30,7 @@ import ConfirmDialog from '../components/ConfirmDialog';
 
 const Peminjaman = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { isAdmin, isKepalaLab, isToolman, isAdminOrToolman, isAdminToolmanOrKepalaLab } = useAuth();
   const [loading, setLoading] = useState(true);
   const [peminjamans, setPeminjamans] = useState([]);
@@ -100,6 +101,19 @@ const Peminjaman = () => {
       setLoading(false);
     }
   };
+
+  // Read URL parameters and set filters on component mount
+  useEffect(() => {
+    const status = searchParams.get('status') || '';
+    const tanggal_mulai = searchParams.get('tanggal_mulai') || '';
+    const tanggal_selesai = searchParams.get('tanggal_selesai') || '';
+    
+    setFilters({
+      status,
+      tanggal_mulai,
+      tanggal_selesai
+    });
+  }, [searchParams]);
 
   useEffect(() => {
     fetchPeminjamans();

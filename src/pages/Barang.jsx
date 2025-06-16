@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import axios from '../utils/axios';
 import { toast } from 'react-toastify';
 import { useAuth } from '../contexts/AuthContext';
@@ -41,6 +41,7 @@ import ConfirmDialog from '../components/ConfirmDialog';
 
 const Barang = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { canCRUD, canDeleteBarang } = useAuth();
   const [loading, setLoading] = useState(true);
   const [barangs, setBarangs] = useState([]);
@@ -57,34 +58,10 @@ const Barang = () => {
   });
   const [showFilters, setShowFilters] = useState(false);
 
-  // Fetch barang data
-  const fetchBarangs = async () => {
+  // Fetch dropdown data (kategori and lokasi)
+  const fetchDropdownData = async () => {
     try {
-      setLoading(true);
-      
-      // Build query parameters based on filters
-      const params = new URLSearchParams();
-      if (filters.kategori) params.append('kategori', filters.kategori);
-      if (filters.lokasi) params.append('lokasi', filters.lokasi);
-      if (filters.status) params.append('status', filters.status);
-      if (filters.kondisi) params.append('kondisi', filters.kondisi);
-      
-      // Fetch data from API
-      const response = await axios.get(`/api/barang?${params.toString()}`);
-      
-      if (response.data.sukses) {
-        // Tambahkan satuan default jika tidak ada
-        const barangsWithSatuan = response.data.data.map(barang => ({
-          ...barang,
-          satuan: barang.satuan || 'unit' // Default satuan jika tidak ada dari backend
-        }));
-        setBarangs(barangsWithSatuan);
-      } else {
-        toast.error('Gagal memuat data barang: ' + response.data.pesan);
-        setBarangs([]);
-      }
-      
-      // Fetch kategori and lokasi data for dropdowns
+      // Fetch kategori data for dropdowns
       const kategoriResponse = await axios.get('/api/kategori/dropdown');
       if (kategoriResponse.data.sukses) {
         setKategoris(kategoriResponse.data.data);
@@ -101,6 +78,39 @@ const Barang = () => {
         toast.error('Gagal memuat data lokasi: ' + lokasiResponse.data.pesan);
         setLokasis([]);
       }
+    } catch (error) {
+      console.error('Error fetching dropdown data:', error);
+      toast.error('Gagal memuat data dropdown: ' + (error.response?.data?.pesan || error.message));
+    }
+  };
+
+  // Fetch barang data
+  const fetchBarangs = async () => {
+    try {
+      setLoading(true);
+      
+      // Build query parameters based on filters
+      const apiFilters = getApiFilters();
+      const params = new URLSearchParams();
+      if (apiFilters.kategori) params.append('kategori', apiFilters.kategori);
+      if (apiFilters.lokasi) params.append('lokasi', apiFilters.lokasi);
+      if (apiFilters.status) params.append('status', apiFilters.status);
+      if (apiFilters.kondisi) params.append('kondisi', apiFilters.kondisi);
+      
+      // Fetch data from API
+      const response = await axios.get(`/api/barang?${params.toString()}`);
+      
+      if (response.data.sukses) {
+        // Tambahkan satuan default jika tidak ada
+        const barangsWithSatuan = response.data.data.map(barang => ({
+          ...barang,
+          satuan: barang.satuan || 'unit' // Default satuan jika tidak ada dari backend
+        }));
+        setBarangs(barangsWithSatuan);
+      } else {
+        toast.error('Gagal memuat data barang: ' + response.data.pesan);
+        setBarangs([]);
+      }
       
       setLoading(false);
     } catch (error) {
@@ -111,6 +121,46 @@ const Barang = () => {
     }
   };
 
+  // Fetch dropdown data on component mount
+  useEffect(() => {
+    fetchDropdownData();
+  }, []);
+
+  // Read URL parameters and set filters when lokasis data is available
+  useEffect(() => {
+    if (lokasis.length === 0) return; // Wait for lokasis data to be loaded
+    
+    const kategori = searchParams.get('kategori') || '';
+    const lokasiParam = searchParams.get('lokasi') || '';
+    const status = searchParams.get('status') || '';
+    const kondisi = searchParams.get('kondisi') || '';
+    
+    // If lokasi parameter is a name (from dashboard), find the corresponding ID
+    let lokasiValue = lokasiParam;
+    if (lokasiParam) {
+      const foundLokasi = lokasis.find(lok => lok.nama === lokasiParam);
+      if (foundLokasi) {
+        lokasiValue = foundLokasi.id.toString();
+      }
+    }
+    
+    // Map kondisi from backend value to display value for dropdown
+    let kondisiValue = kondisi;
+    if (kondisi) {
+      if (kondisi === 'baik') kondisiValue = 'Baik';
+      else if (kondisi === 'rusak_ringan') kondisiValue = 'Rusak Ringan';
+      else if (kondisi === 'rusak_berat') kondisiValue = 'Rusak Berat';
+    }
+    
+    setFilters({
+      kategori,
+      lokasi: lokasiValue,
+      status,
+      kondisi: kondisiValue
+    });
+  }, [searchParams, lokasis]);
+
+  // Fetch barangs when filters change
   useEffect(() => {
     fetchBarangs();
   }, [filters]);
@@ -152,6 +202,20 @@ const Barang = () => {
       ...filters,
       [name]: value,
     });
+  };
+
+  // Convert filter values for API call
+  const getApiFilters = () => {
+    const apiFilters = { ...filters };
+    
+    // Convert kondisi display value to backend value
+    if (apiFilters.kondisi) {
+      if (apiFilters.kondisi === 'Baik') apiFilters.kondisi = 'baik';
+      else if (apiFilters.kondisi === 'Rusak Ringan') apiFilters.kondisi = 'rusak_ringan';
+      else if (apiFilters.kondisi === 'Rusak Berat') apiFilters.kondisi = 'rusak_berat';
+    }
+    
+    return apiFilters;
   };
 
   // Apply filters to barang data
