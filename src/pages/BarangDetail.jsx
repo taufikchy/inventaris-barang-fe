@@ -55,9 +55,8 @@ const BarangSchema = Yup.object().shape({
     .integer('Jumlah harus berupa bilangan bulat'),
   satuan: Yup.string().required('Satuan barang wajib diisi'),
   kondisi: Yup.string().required('Kondisi barang wajib diisi'),
-  tanggal_perolehan: Yup.date().required('Tanggal pencatatan barang wajib diisi'),
-    tahun_pengadaan: Yup.number().integer('Tahun harus berupa angka').min(1900, 'Tahun minimal 1900').max(new Date().getFullYear(), `Tahun maksimal ${new Date().getFullYear()}`),
-    id_kategori: Yup.number().required('Kategori wajib dipilih'),
+  tanggal_perolehan: Yup.date().required('Tanggal pengadaan barang wajib diisi'),
+  id_kategori: Yup.number().required('Kategori wajib dipilih'),
   id_lokasi: Yup.number().required('Lokasi wajib dipilih'),
   status: Yup.string().required('Status barang wajib diisi'),
 });
@@ -366,11 +365,9 @@ const BarangDetail = () => {
             satuan: barang?.satuan || 'unit',
             kondisi: barang?.kondisi || 'Baik',
             tanggal_perolehan: barang?.tanggal_perolehan || new Date().toISOString().split('T')[0],
-        tahun_pengadaan: barang?.tahun_pengadaan || new Date().getFullYear(),
-        harga_perolehan: barang?.harga_perolehan || '',
-        id_kategori: barang?.id_kategori || '',
-        id_lokasi: barang?.id_lokasi || '',
-        status: barang?.status || 'Tersedia',
+            id_kategori: barang?.id_kategori || '',
+            id_lokasi: barang?.id_lokasi || '',
+            status: barang?.status || 'Tersedia',
           }}
           validationSchema={BarangSchema}
           onSubmit={handleSubmit}
@@ -566,26 +563,13 @@ const BarangDetail = () => {
                         <Field
                           as={TextField}
                           name="tanggal_perolehan"
-                          label="Tanggal Pencatatan Barang"
+                          label="Tanggal Pengadaan Barang"
                           type="date"
                           fullWidth
                           required
                           InputLabelProps={{ shrink: true }}
                           error={touched.tanggal_perolehan && Boolean(errors.tanggal_perolehan)}
                           helperText={touched.tanggal_perolehan && errors.tanggal_perolehan}
-                        />
-                      </Grid>
-                      <Grid item xs={12} sm={6}>
-                        <Field
-                          as={TextField}
-                          name="tahun_pengadaan"
-                          label="Tahun Pengadaan"
-                          type="number"
-                          fullWidth
-                          InputLabelProps={{ shrink: true }}
-                          inputProps={{ min: 1900, max: new Date().getFullYear() }}
-                          error={touched.tahun_pengadaan && Boolean(errors.tahun_pengadaan)}
-                          helperText={touched.tahun_pengadaan && errors.tahun_pengadaan}
                         />
                       </Grid>
                     </Grid>
@@ -670,19 +654,11 @@ const BarangDetail = () => {
                         label={barang?.status || 'Tersedia'}
                         size="small"
                         color={getStatusColor(barang?.status || 'Tersedia')}
-                        sx={{
-                          color: 'white',
-                          fontWeight: 'bold'
-                        }}
                       />
                       <Chip
                         label={barang?.kondisi || 'Baik'}
                         size="small"
                         color={getKondisiColor(barang?.kondisi || 'Baik')}
-                        sx={{
-                          color: 'white',
-                          fontWeight: 'bold'
-                        }}
                       />
                     </Box>
                     
@@ -761,10 +737,6 @@ const BarangDetail = () => {
                             label={barang.kondisi}
                             size="small"
                             color={getKondisiColor(barang.kondisi)}
-                            sx={{
-                              color: 'white',
-                              fontWeight: 'bold'
-                            }}
                           />
                         </TableCell>
                         <TableCell>
@@ -772,10 +744,6 @@ const BarangDetail = () => {
                             label={barang.status}
                             size="small"
                             color={getStatusColor(barang.status)}
-                            sx={{
-                              color: 'white',
-                              fontWeight: 'bold'
-                            }}
                           />
                         </TableCell>
                         <TableCell>{barang.lokasi ? (typeof barang.lokasi === 'object' ? barang.lokasi.nama : barang.lokasi) : '-'}</TableCell>
@@ -795,10 +763,6 @@ const BarangDetail = () => {
                               label={unit.kondisi}
                               size="small"
                               color={getKondisiColor(unit.kondisi)}
-                              sx={{
-                                color: 'white',
-                                fontWeight: 'bold'
-                              }}
                             />
                           </TableCell>
                           <TableCell>
@@ -806,10 +770,6 @@ const BarangDetail = () => {
                               label={unit.status}
                               size="small"
                               color={getStatusColor(unit.status)}
-                              sx={{
-                                color: 'white',
-                                fontWeight: 'bold'
-                              }}
                             />
                           </TableCell>
                           <TableCell>{unit.lokasi ? (typeof unit.lokasi === 'object' ? unit.lokasi.nama : unit.lokasi) : '-'}</TableCell>
