@@ -1,14 +1,21 @@
 import { Box, Card, CardContent, Typography, Avatar } from '@mui/material';
 
-const InfoCard = ({ title, value, icon, color, subtitle }) => {
+const InfoCard = ({ title, value, icon, color, subtitle, onClick }) => {
   return (
     <Card
+      onClick={onClick}
       sx={{
         height: '100%',
         display: 'flex',
         flexDirection: 'column',
         position: 'relative',
         overflow: 'hidden',
+        cursor: onClick ? 'pointer' : 'default',
+        transition: 'transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out',
+        '&:hover': onClick ? {
+          transform: 'translateY(-2px)',
+          boxShadow: 3,
+        } : {},
       }}
     >
       <CardContent sx={{ flex: 1, zIndex: 1, p: { xs: 2, sm: 3 } }}>

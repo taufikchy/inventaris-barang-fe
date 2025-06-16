@@ -83,6 +83,7 @@ const PeminjamanDetail = () => {
   const [lokasis, setLokasis] = useState([]);
   const [filterKategori, setFilterKategori] = useState('');
   const [filterLokasi, setFilterLokasi] = useState('');
+  const [filterKondisi, setFilterKondisi] = useState('');
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [confirmReturn, setConfirmReturn] = useState(false);
@@ -228,6 +229,7 @@ const PeminjamanDetail = () => {
       params.append('tersedia', 'true');
       if (filterKategori) params.append('kategori', filterKategori);
       if (filterLokasi) params.append('lokasi', filterLokasi);
+      if (filterKondisi) params.append('kondisi', filterKondisi);
       
       // Fetch data from API
       const response = await axios.get(`/api/barang/dropdown?${params.toString()}`);
@@ -299,13 +301,15 @@ const PeminjamanDetail = () => {
       setFilterKategori(value);
     } else if (name === 'lokasi') {
       setFilterLokasi(value);
+    } else if (name === 'kondisi') {
+      setFilterKondisi(value);
     }
   };
 
   // Effect untuk memanggil fetchBarangs ketika filter berubah
   useEffect(() => {
     fetchBarangs();
-  }, [filterKategori, filterLokasi]);
+  }, [filterKategori, filterLokasi, filterKondisi]);
 
   // Handle form submission
   const handleSubmit = async (values, { setSubmitting }) => {
@@ -885,7 +889,7 @@ const PeminjamanDetail = () => {
                         Filter Barang
                       </Typography>
                       <Grid container spacing={2}>
-                        <Grid item xs={12} sm={6}>
+                        <Grid item xs={12} sm={4}>
                           <TextField
                             select
                             fullWidth
@@ -903,7 +907,7 @@ const PeminjamanDetail = () => {
                             ))}
                           </TextField>
                         </Grid>
-                        <Grid item xs={12} sm={6}>
+                        <Grid item xs={12} sm={4}>
                           <TextField
                             select
                             fullWidth
@@ -919,6 +923,22 @@ const PeminjamanDetail = () => {
                                 {lokasi.nama}
                               </MenuItem>
                             ))}
+                          </TextField>
+                        </Grid>
+                        <Grid item xs={12} sm={4}>
+                          <TextField
+                            select
+                            fullWidth
+                            label="Kondisi"
+                            name="kondisi"
+                            value={filterKondisi}
+                            onChange={handleFilterChange}
+                            size="small"
+                          >
+                            <MenuItem value="">Semua Kondisi</MenuItem>
+                            <MenuItem value="baik">Baik</MenuItem>
+                            <MenuItem value="rusak_ringan">Rusak Ringan</MenuItem>
+                            <MenuItem value="rusak_berat">Rusak Berat</MenuItem>
                           </TextField>
                         </Grid>
                       </Grid>

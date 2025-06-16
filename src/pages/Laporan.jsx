@@ -413,7 +413,10 @@ const Laporan = () => {
       };
       return kondisiLabels[value] || value || '-';
     }},
-    { id: 'tanggal_perolehan', label: 'Tanggal Perolehan', sortable: true, format: (value) => {
+    { id: 'tahun_pengadaan', label: 'Tahun Pengadaan', sortable: true, format: (value) => {
+      return value || '-';
+    }},
+    { id: 'tanggal_perolehan', label: 'Tanggal Pencatatan Barang', sortable: true, format: (value) => {
       if (!value) return '-';
       const date = new Date(value);
       return date.toLocaleDateString('id-ID', {
@@ -439,8 +442,8 @@ const Laporan = () => {
       sortable: true,
       format: (value, row, displayIndex) => displayIndex + 1 // Menampilkan nomor urut berdasarkan posisi setelah sorting
     },
-    { id: 'kode', label: 'Kode', sortable: true },
-    { id: 'peminjam', label: 'Peminjam', sortable: true },
+    { id: 'id', label: 'Kode', sortable: true, format: (value) => `PJM-${value.toString().padStart(3, '0')}` },
+    { id: 'nama_peminjam', label: 'Peminjam', sortable: true },
     { id: 'tanggal_pinjam', label: 'Tanggal Pinjam', sortable: true, format: (value) => {
       if (!value) return '-';
       const date = new Date(value);
@@ -450,7 +453,7 @@ const Laporan = () => {
         year: 'numeric'
       });
     }},
-    { id: 'tanggal_kembali', label: 'Tanggal Kembali', sortable: true, format: (value) => {
+    { id: 'tanggal_kembali_aktual', label: 'Tanggal Kembali', sortable: true, format: (value) => {
       if (!value) return '-';
       const date = new Date(value);
       return date.toLocaleDateString('id-ID', {
@@ -470,8 +473,29 @@ const Laporan = () => {
       };
       return statusLabels[value] || value || '-';
     }},
-    { id: 'jumlah_barang', label: 'Jumlah Barang', sortable: true },
-    { id: 'keterangan', label: 'Keterangan', sortable: true },
+    { 
+      id: 'jumlah', 
+      label: 'Jumlah Barang', 
+      sortable: true,
+      format: (value, row) => {
+        if (row.detail_peminjaman && row.detail_peminjaman.length > 0) {
+          return row.detail_peminjaman.reduce((total, detail) => total + (detail.jumlah || 0), 0);
+        }
+        return '-';
+      }
+    },
+    { 
+      id: 'catatan', 
+      label: 'Keterangan', 
+      sortable: true,
+      format: (value, row) => {
+        if (row.detail_peminjaman && row.detail_peminjaman.length > 0) {
+          const catatan = row.detail_peminjaman.map(detail => detail.catatan).filter(c => c).join(', ');
+          return catatan || '-';
+        }
+        return row.catatan || '-';
+      }
+    },
   ];
 
   const conditionColumns = [
