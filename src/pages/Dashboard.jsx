@@ -392,39 +392,49 @@ const Dashboard = () => {
                       </TableRow>
                     </TableHead>
                     <TableBody>
-                      {recentPeminjaman.map((row) => (
-                        <TableRow key={row.id}>
-                          <TableCell>
-                            <Typography variant="body2" noWrap>
-                              {row.nama_peminjam}
+                      {recentPeminjaman.length === 0 ? (
+                        <TableRow>
+                          <TableCell colSpan={4} align="center">
+                            <Typography variant="body2" color="text.secondary" sx={{ py: 3 }}>
+                              Tidak ada peminjaman aktif
                             </Typography>
-                          </TableCell>
-                          <TableCell sx={{ display: { xs: 'none', sm: 'table-cell' } }}>
-                            <Typography variant="body2">
-                              {formatDate(row.tanggal_pinjam)}
-                            </Typography>
-                          </TableCell>
-                          <TableCell>
-                            <Chip
-                              label={row.status === 'dipinjam' ? 'Dipinjam' : 'Dikembalikan'}
-                              color={getStatusColor(row.status)}
-                              size="small"
-                              sx={{
-                                color: 'white',
-                                fontWeight: 'bold'
-                              }}
-                            />
-                          </TableCell>
-                          <TableCell align="right">
-                            <Button
-                              size="small"
-                              onClick={() => navigate(`/peminjaman/${row.id}`)}
-                            >
-                              Detail
-                            </Button>
                           </TableCell>
                         </TableRow>
-                      ))}
+                      ) : (
+                        recentPeminjaman.map((row) => (
+                          <TableRow key={row.id}>
+                            <TableCell>
+                              <Typography variant="body2" noWrap>
+                                {row.nama_peminjam}
+                              </Typography>
+                            </TableCell>
+                            <TableCell sx={{ display: { xs: 'none', sm: 'table-cell' } }}>
+                              <Typography variant="body2">
+                                {formatDate(row.tanggal_pinjam)}
+                              </Typography>
+                            </TableCell>
+                            <TableCell>
+                              <Chip
+                                label={row.status === 'dipinjam' ? 'Dipinjam' : 'Dikembalikan'}
+                                color={getStatusColor(row.status)}
+                                size="small"
+                                sx={{
+                                  color: 'white',
+                                  fontWeight: 'bold'
+                                }}
+                              />
+                            </TableCell>
+                            <TableCell align="right">
+                              <Button
+                                size="small"
+                                onClick={() => navigate(`/peminjaman/${row.id}`)}
+                              >
+                                Detail
+                              </Button>
+                            </TableCell>
+                          </TableRow>
+                        ))
+                      )}
                     </TableBody>
                   </Table>
                 </TableContainer>
