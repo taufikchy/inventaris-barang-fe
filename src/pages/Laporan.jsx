@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { toast } from 'react-toastify';
 import axios from '../utils/axios';
 import {
@@ -29,7 +29,6 @@ import {
   FilterList as FilterListIcon,
   Search as SearchIcon,
   PictureAsPdf as PdfIcon,
-  ViewColumn as ExcelIcon,
   MoreVert as MoreVertIcon,
   Inventory as InventoryIcon,
   SwapHoriz as SwapHorizIcon,
@@ -39,6 +38,7 @@ import {
 import dayjs from 'dayjs';
 import PageHeader from '../components/PageHeader';
 import DataTable from '../components/DataTable';
+import PDFGenerator from '../components/PDFGenerator';
 
 // Tab panel component
 function TabPanel(props) {
@@ -98,12 +98,102 @@ const Laporan = () => {
     setExportMenu(null);
   };
 
-  const handleExport = (format) => {
-    toast.info(`Mengekspor laporan dalam format ${format}...`);
-    // In a real application, you would implement the export functionality here
-    setTimeout(() => {
-      toast.success(`Laporan berhasil diekspor dalam format ${format}`);
-    }, 1500);
+  const handleExport = async (format) => {
+    if (format === 'PDF') {
+      try {
+        toast.info('Mengekspor laporan dalam format PDF...');
+        
+        const pdfGenerator = new PDFGenerator();
+        
+        let reportTitle = '';
+        let reportData = [];
+        let columns = [];
+        
+        // Tentukan data berdasarkan tab aktif
+        switch (activeTab) {
+          case 0: // Laporan Inventaris
+            reportTitle = 'LAPORAN INVENTARIS BARANG';
+            reportData = filteredInventoryData;
+            columns = [
+              { header: 'No', dataKey: 'no' },
+              { header: 'Kode Barang', dataKey: 'kode' },
+              { header: 'Nama Barang', dataKey: 'nama' },
+              { header: 'Kategori', dataKey: 'kategori' },
+              { header: 'Lokasi', dataKey: 'lokasi' },
+              { header: 'Kondisi', dataKey: 'kondisi' },
+              { header: 'Status', dataKey: 'status' },
+              { header: 'Tahun Pengadaan', dataKey: 'tahun_pengadaan' },
+              { header: 'Tanggal Pencatatan', dataKey: 'tanggal_perolehan' }
+            ];
+            break;
+          case 1: // Laporan Peminjaman
+            reportTitle = 'LAPORAN PEMINJAMAN BARANG';
+            reportData = filteredLoanData;
+            columns = [
+              { header: 'No', dataKey: 'no' },
+              { header: 'Kode Peminjaman', dataKey: 'kode_peminjaman' },
+              { header: 'Peminjam', dataKey: 'nama_peminjam' },
+              { header: 'Barang', dataKey: 'nama_barang' },
+              { header: 'Jumlah', dataKey: 'jumlah_dipinjam' },
+              { header: 'Tanggal Pinjam', dataKey: 'tanggal_pinjam' },
+              { header: 'Tanggal Kembali', dataKey: 'tanggal_kembali' },
+              { header: 'Status', dataKey: 'status' }
+            ];
+            break;
+          case 2: // Laporan Kondisi
+            reportTitle = 'LAPORAN KONDISI BARANG';
+            reportData = filteredConditionData;
+            columns = [
+              { header: 'No', dataKey: 'no' },
+              { header: 'Kode Barang', dataKey: 'kode' },
+              { header: 'Nama Barang', dataKey: 'nama' },
+              { header: 'Kondisi', dataKey: 'kondisi' },
+              { header: 'Jumlah', dataKey: 'jumlah' },
+              { header: 'Keterangan', dataKey: 'keterangan' }
+            ];
+            break;
+          case 3: // Laporan Transaksi
+            reportTitle = 'LAPORAN TRANSAKSI BARANG';
+            reportData = filteredTransactionData;
+            columns = [
+              { header: 'No', dataKey: 'no' },
+              { header: 'Tanggal', dataKey: 'tanggal' },
+              { header: 'Jenis Transaksi', dataKey: 'jenis_transaksi' },
+              { header: 'Kode Barang', dataKey: 'kode_barang' },
+              { header: 'Nama Barang', dataKey: 'nama_barang' },
+              { header: 'Jumlah', dataKey: 'jumlah' },
+              { header: 'Keterangan', dataKey: 'keterangan' }
+            ];
+            break;
+        }
+        
+        // Buat periode laporan
+        const periode = `Periode: ${startDate.format('DD/MM/YYYY')} - ${endDate.format('DD/MM/YYYY')}`;
+        
+        // Generate PDF menggunakan method yang sesuai
+        let doc;
+        if (activeTab === 0) {
+          // Laporan Inventaris menggunakan method khusus
+          doc = await pdfGenerator.generateInventoryReport(reportData, reportTitle, periode, columns);
+        } else {
+          // Laporan lainnya menggunakan method umum
+          doc = await pdfGenerator.generateGeneralReport(reportData, reportTitle, periode, columns);
+        }
+        
+        // Simpan PDF dengan nama file yang sesuai
+        const fileName = `${reportTitle.toLowerCase().replace(/\s+/g, '_')}_${dayjs().format('YYYY-MM-DD')}.pdf`;
+        doc.save(fileName);
+        
+        toast.success('Laporan berhasil diekspor dalam format PDF');
+      } catch (error) {
+        console.error('Error exporting PDF:', error);
+        toast.error('Gagal mengekspor laporan PDF');
+      }
+    } else if (format === 'Print') {
+      toast.info('Membuka dialog cetak...');
+      window.print();
+    }
+    
     handleExportClose();
   };
 
@@ -575,9 +665,6 @@ const Laporan = () => {
       >
         <MenuItem onClick={() => handleExport('PDF')}>
           <PdfIcon sx={{ mr: 1 }} /> Ekspor PDF
-        </MenuItem>
-        <MenuItem onClick={() => handleExport('Excel')}>
-          <ExcelIcon sx={{ mr: 1 }} /> Ekspor Excel
         </MenuItem>
         <MenuItem onClick={() => handleExport('Print')}>
           <PrintIcon sx={{ mr: 1 }} /> Cetak
