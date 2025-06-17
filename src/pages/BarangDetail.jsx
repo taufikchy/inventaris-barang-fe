@@ -55,7 +55,11 @@ const BarangSchema = Yup.object().shape({
     .integer('Jumlah harus berupa bilangan bulat'),
   satuan: Yup.string().required('Satuan barang wajib diisi'),
   kondisi: Yup.string().required('Kondisi barang wajib diisi'),
-  tanggal_perolehan: Yup.date().required('Tanggal pengadaan barang wajib diisi'),
+  tanggal_perolehan: Yup.date().required('Tanggal pencatatan barang wajib diisi'),
+  tahun_pengadaan: Yup.number()
+    .required('Tahun pengadaan wajib diisi')
+    .min(1900, 'Tahun pengadaan tidak valid')
+    .max(new Date().getFullYear() + 10, 'Tahun pengadaan tidak valid'),
   id_kategori: Yup.number().required('Kategori wajib dipilih'),
   id_lokasi: Yup.number().required('Lokasi wajib dipilih'),
   status: Yup.string().required('Status barang wajib diisi'),
@@ -102,6 +106,7 @@ const BarangDetail = () => {
         satuan: 'unit',
         kondisi: 'Baik',
         tanggal_perolehan: new Date().toISOString().split('T')[0],
+        tahun_pengadaan: new Date().getFullYear(),
         id_kategori: '',
         id_lokasi: '',
         status: 'Tersedia',
@@ -365,6 +370,7 @@ const BarangDetail = () => {
             satuan: barang?.satuan || 'unit',
             kondisi: barang?.kondisi || 'Baik',
             tanggal_perolehan: barang?.tanggal_perolehan || new Date().toISOString().split('T')[0],
+            tahun_pengadaan: barang?.tahun_pengadaan || new Date().getFullYear(),
             id_kategori: barang?.id_kategori || '',
             id_lokasi: barang?.id_lokasi || '',
             status: barang?.status || 'Tersedia',
@@ -563,13 +569,26 @@ const BarangDetail = () => {
                         <Field
                           as={TextField}
                           name="tanggal_perolehan"
-                          label="Tanggal Pengadaan Barang"
+                          label="Tanggal Pencatatan Barang"
                           type="date"
                           fullWidth
                           required
                           InputLabelProps={{ shrink: true }}
                           error={touched.tanggal_perolehan && Boolean(errors.tanggal_perolehan)}
                           helperText={touched.tanggal_perolehan && errors.tanggal_perolehan}
+                        />
+                      </Grid>
+                      <Grid item xs={12} sm={6}>
+                        <Field
+                          as={TextField}
+                          name="tahun_pengadaan"
+                          label="Tahun Pengadaan"
+                          type="number"
+                          fullWidth
+                          required
+                          inputProps={{ min: 1900, max: new Date().getFullYear() + 10 }}
+                          error={touched.tahun_pengadaan && Boolean(errors.tahun_pengadaan)}
+                          helperText={touched.tahun_pengadaan && errors.tahun_pengadaan}
                         />
                       </Grid>
                     </Grid>
@@ -654,11 +673,19 @@ const BarangDetail = () => {
                         label={barang?.status || 'Tersedia'}
                         size="small"
                         color={getStatusColor(barang?.status || 'Tersedia')}
+                        sx={{
+                          color: 'white',
+                          fontWeight: 'bold'
+                        }}
                       />
                       <Chip
                         label={barang?.kondisi || 'Baik'}
                         size="small"
                         color={getKondisiColor(barang?.kondisi || 'Baik')}
+                        sx={{
+                          color: 'white',
+                          fontWeight: 'bold'
+                        }}
                       />
                     </Box>
                     
@@ -695,10 +722,18 @@ const BarangDetail = () => {
                       </Grid>
                       <Grid item xs={12} sm={6}>
                         <Typography variant="body2" color="text.secondary">
-                          Tanggal Perolehan
+                          Tanggal Pencatatan
                         </Typography>
                         <Typography variant="body1" gutterBottom>
                           {barang?.tanggal_perolehan ? formatDate(barang.tanggal_perolehan) : '-'}
+                        </Typography>
+                      </Grid>
+                      <Grid item xs={12} sm={6}>
+                        <Typography variant="body2" color="text.secondary">
+                          Tahun Pengadaan
+                        </Typography>
+                        <Typography variant="body1" gutterBottom>
+                          {barang?.tahun_pengadaan || '-'}
                         </Typography>
                       </Grid>
 
@@ -737,6 +772,10 @@ const BarangDetail = () => {
                             label={barang.kondisi}
                             size="small"
                             color={getKondisiColor(barang.kondisi)}
+                            sx={{
+                              color: 'white',
+                              fontWeight: 'bold'
+                            }}
                           />
                         </TableCell>
                         <TableCell>
@@ -744,6 +783,10 @@ const BarangDetail = () => {
                             label={barang.status}
                             size="small"
                             color={getStatusColor(barang.status)}
+                            sx={{
+                              color: 'white',
+                              fontWeight: 'bold'
+                            }}
                           />
                         </TableCell>
                         <TableCell>{barang.lokasi ? (typeof barang.lokasi === 'object' ? barang.lokasi.nama : barang.lokasi) : '-'}</TableCell>
@@ -763,6 +806,10 @@ const BarangDetail = () => {
                               label={unit.kondisi}
                               size="small"
                               color={getKondisiColor(unit.kondisi)}
+                              sx={{
+                                color: 'white',
+                                fontWeight: 'bold'
+                              }}
                             />
                           </TableCell>
                           <TableCell>
@@ -770,6 +817,10 @@ const BarangDetail = () => {
                               label={unit.status}
                               size="small"
                               color={getStatusColor(unit.status)}
+                              sx={{
+                                color: 'white',
+                                fontWeight: 'bold'
+                              }}
                             />
                           </TableCell>
                           <TableCell>{unit.lokasi ? (typeof unit.lokasi === 'object' ? unit.lokasi.nama : unit.lokasi) : '-'}</TableCell>
