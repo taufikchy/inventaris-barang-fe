@@ -104,18 +104,6 @@ const Laporan = () => {
         toast.info('Mengekspor laporan dalam format PDF...');
         
         const pdfGenerator = new PDFGenerator();
-        await pdfGenerator.loadLogo();
-        const doc = pdfGenerator.initDocument();
-        
-        let currentY = pdfGenerator.margins.top;
-        
-        // Tambahkan kop surat
-        currentY = pdfGenerator.addHeader(currentY);
-        
-        // Judul laporan
-        doc.setFont('times', 'bold');
-        doc.setFontSize(16);
-        doc.setTextColor(0, 0, 0);
         
         let reportTitle = '';
         let reportData = [];
@@ -125,7 +113,7 @@ const Laporan = () => {
         switch (activeTab) {
           case 0: // Laporan Inventaris
             reportTitle = 'LAPORAN INVENTARIS BARANG';
-            reportData = inventoryData;
+            reportData = filteredInventoryData;
             columns = [
               { header: 'No', dataKey: 'no' },
               { header: 'Kode Barang', dataKey: 'kode' },
@@ -134,14 +122,13 @@ const Laporan = () => {
               { header: 'Lokasi', dataKey: 'lokasi' },
               { header: 'Kondisi', dataKey: 'kondisi' },
               { header: 'Status', dataKey: 'status' },
-              { header: 'Jumlah', dataKey: 'jumlah' },
               { header: 'Tahun Pengadaan', dataKey: 'tahun_pengadaan' },
               { header: 'Tanggal Pencatatan', dataKey: 'tanggal_perolehan' }
             ];
             break;
           case 1: // Laporan Peminjaman
             reportTitle = 'LAPORAN PEMINJAMAN BARANG';
-            reportData = loanData;
+            reportData = filteredLoanData;
             columns = [
               { header: 'No', dataKey: 'no' },
               { header: 'Kode Peminjaman', dataKey: 'kode_peminjaman' },
@@ -155,7 +142,7 @@ const Laporan = () => {
             break;
           case 2: // Laporan Kondisi
             reportTitle = 'LAPORAN KONDISI BARANG';
-            reportData = conditionData;
+            reportData = filteredConditionData;
             columns = [
               { header: 'No', dataKey: 'no' },
               { header: 'Kode Barang', dataKey: 'kode' },
@@ -167,7 +154,7 @@ const Laporan = () => {
             break;
           case 3: // Laporan Transaksi
             reportTitle = 'LAPORAN TRANSAKSI BARANG';
-            reportData = transactionData;
+            reportData = filteredTransactionData;
             columns = [
               { header: 'No', dataKey: 'no' },
               { header: 'Tanggal', dataKey: 'tanggal' },
@@ -180,55 +167,20 @@ const Laporan = () => {
             break;
         }
         
-        // Tambahkan judul laporan
-        doc.text(reportTitle, pdfGenerator.pageWidth / 2, currentY + 10, { align: 'center' });
-        currentY += 20;
-        
-        // Tambahkan periode laporan
-        doc.setFont('times', 'normal');
-        doc.setFontSize(12);
+        // Buat periode laporan
         const periode = `Periode: ${startDate.format('DD/MM/YYYY')} - ${endDate.format('DD/MM/YYYY')}`;
-        doc.text(periode, pdfGenerator.pageWidth / 2, currentY, { align: 'center' });
-        currentY += 15;
         
-        // Siapkan data untuk tabel dengan nomor urut
-        const tableData = reportData.map((item, index) => ({
-          ...item,
-          no: index + 1
-        }));
+        // Generate PDF menggunakan method yang sesuai
+        let doc;
+        if (activeTab === 0) {
+          // Laporan Inventaris menggunakan method khusus
+          doc = await pdfGenerator.generateInventoryReport(reportData, reportTitle, periode, columns);
+        } else {
+          // Laporan lainnya menggunakan method umum
+          doc = await pdfGenerator.generateGeneralReport(reportData, reportTitle, periode, columns);
+        }
         
-        // Tambahkan tabel
-        doc.autoTable({
-          startY: currentY,
-          head: [columns.map(col => col.header)],
-          body: tableData.map(row => columns.map(col => row[col.dataKey] || '-')),
-          styles: {
-            font: 'times',
-            fontSize: 9,
-            cellPadding: 3
-          },
-          headStyles: {
-            fillColor: [41, 128, 185],
-            textColor: 255,
-            fontStyle: 'bold'
-          },
-          alternateRowStyles: {
-            fillColor: [245, 245, 245]
-          },
-          margin: { left: pdfGenerator.margins.left, right: pdfGenerator.margins.right }
-        });
-        
-        // Tambahkan footer dengan tanggal cetak
-        const finalY = doc.lastAutoTable.finalY || currentY + 50;
-        doc.setFont('times', 'normal');
-        doc.setFontSize(10);
-        doc.text(
-          `Dicetak pada: ${dayjs().format('DD/MM/YYYY HH:mm:ss')}`,
-          pdfGenerator.margins.left,
-          pdfGenerator.pageHeight - 15
-        );
-        
-        // Simpan PDF
+        // Simpan PDF dengan nama file yang sesuai
         const fileName = `${reportTitle.toLowerCase().replace(/\s+/g, '_')}_${dayjs().format('YYYY-MM-DD')}.pdf`;
         doc.save(fileName);
         

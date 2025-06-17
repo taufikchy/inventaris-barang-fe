@@ -1,12 +1,51 @@
 import React from 'react';
 import jsPDF from 'jspdf';
-import autoTable from 'jspdf-autotable';
 
-// Extend jsPDF with autoTable
-jsPDF.autoTableSetDefaults = autoTable.setDefaults || function() {};
-if (typeof jsPDF.API.autoTable === 'undefined') {
-  jsPDF.API.autoTable = autoTable;
-}
+// Dynamic import untuk autoTable
+let autoTableLoaded = false;
+let autoTableFunction = null;
+
+const loadAutoTable = async () => {
+  if (!autoTableLoaded) {
+    try {
+      console.log('Loading jspdf-autotable module...');
+      
+      // Import autoTable module
+      const autoTableModule = await import('jspdf-autotable');
+      console.log('AutoTable module imported:', autoTableModule);
+      
+      // Dapatkan function autoTable dari module
+      autoTableFunction = autoTableModule.default || autoTableModule.autoTable || autoTableModule;
+      console.log('AutoTable function type:', typeof autoTableFunction);
+      
+      if (typeof autoTableFunction !== 'function') {
+        throw new Error('AutoTable function not found in module');
+      }
+      
+      // Pastikan jsPDF prototype memiliki autoTable
+      if (!jsPDF.prototype.autoTable) {
+        jsPDF.prototype.autoTable = autoTableFunction;
+        console.log('AutoTable function added to jsPDF prototype');
+      }
+      
+      // Verifikasi bahwa autoTable tersedia
+      if (typeof jsPDF.prototype.autoTable !== 'function') {
+        throw new Error('Failed to add autoTable to jsPDF prototype');
+      }
+      
+      autoTableLoaded = true;
+      console.log('AutoTable plugin loaded successfully');
+      
+    } catch (error) {
+      console.error('Failed to load autoTable:', error);
+      autoTableLoaded = false;
+      autoTableFunction = null;
+      throw new Error(`Failed to load jsPDF autoTable plugin: ${error.message}`);
+    }
+  }
+  
+  return autoTableFunction;
+};
 
 class PDFGenerator {
   constructor() {
@@ -82,37 +121,101 @@ class PDFGenerator {
   }
 
   // Inisialisasi dokumen PDF
-  initDocument() {
-    this.doc = new jsPDF({
-      orientation: 'portrait',
-      unit: 'mm',
-      format: 'a4',
-      filters: ['ASCIIHexEncode']
-    });
-    
-    // Ensure autoTable is available on this instance
-    if (typeof this.doc.autoTable === 'undefined') {
-      this.doc.autoTable = autoTable;
+  async initDocument() {
+    try {
+      console.log('Initializing PDF document...');
+      
+      // Pastikan jsPDF tersedia
+      if (typeof jsPDF === 'undefined') {
+        throw new Error('jsPDF not available');
+      }
+      
+      // Load autoTable plugin dan dapatkan function
+      const autoTableFunc = await loadAutoTable();
+      console.log('AutoTable function loaded:', typeof autoTableFunc);
+      
+      // Delay untuk memastikan plugin ter-load sempurna
+      await new Promise(resolve => setTimeout(resolve, 300));
+      
+      // Buat instance jsPDF baru
+      this.doc = new jsPDF('portrait', 'mm', 'a4');
+      
+      // Pastikan instance berhasil dibuat
+      if (!this.doc) {
+        throw new Error('Failed to create jsPDF instance');
+      }
+      
+      // Pastikan semua method jsPDF dasar tersedia terlebih dahulu
+      const basicMethods = ['getTextWidth', 'setFont', 'setFontSize', 'text', 'line', 'setTextColor', 'getFontSize', 'getFont'];
+      for (const method of basicMethods) {
+        if (typeof this.doc[method] !== 'function') {
+          console.error(`jsPDF basic method '${method}' not available`);
+          throw new Error(`jsPDF basic method '${method}' not available`);
+        }
+      }
+      
+      console.log('Basic jsPDF methods verified successfully');
+      
+      // Verifikasi bahwa autoTable tersedia pada instance
+      console.log('Checking autoTable on instance...');
+      console.log('jsPDF.prototype.autoTable:', typeof jsPDF.prototype.autoTable);
+      console.log('this.doc.autoTable:', typeof this.doc.autoTable);
+      
+      // Jika autoTable tidak tersedia pada instance, tambahkan secara manual
+      if (typeof this.doc.autoTable !== 'function') {
+        if (typeof autoTableFunc === 'function') {
+          // Bind autoTable function dengan context yang benar
+          this.doc.autoTable = function(...args) {
+            return autoTableFunc.call(this, ...args);
+          }.bind(this.doc);
+          console.log('AutoTable manually bound to instance with proper context');
+        } else {
+          throw new Error('AutoTable function not available');
+        }
+      }
+      
+      // Final verification untuk autoTable
+      if (typeof this.doc.autoTable !== 'function') {
+        console.error('Final check: autoTable still not available');
+        console.error('Available methods on this.doc:', Object.getOwnPropertyNames(this.doc).filter(name => typeof this.doc[name] === 'function'));
+        throw new Error('autoTable method not available on jsPDF instance after all attempts');
+      }
+      
+      // Test basic jsPDF functionality
+      try {
+        this.doc.setFont('helvetica', 'normal');
+        this.doc.setFontSize(12);
+        const testWidth = this.doc.getTextWidth('test');
+        console.log('jsPDF basic functionality test passed, text width:', testWidth);
+      } catch (testError) {
+        console.error('jsPDF basic functionality test failed:', testError);
+        throw new Error('jsPDF instance not functioning properly');
+      }
+      
+      console.log('PDF document initialized successfully with autoTable');
+      
+      // Set font default Times New Roman
+      this.doc.setFont('times', 'normal');
+      this.doc.setFontSize(12);
+      
+      // Margin standar surat resmi Indonesia
+      this.margins = {
+        top: 25,    // 2.5 cm dari atas
+        left: 25,   // 2.5 cm dari kiri
+        right: 20,  // 2 cm dari kanan
+        bottom: 20  // 2 cm dari bawah
+      };
+      
+      // Dimensi halaman
+      this.pageWidth = 210;
+      this.pageHeight = 297;
+      this.contentWidth = this.pageWidth - this.margins.left - this.margins.right;
+      
+      return this.doc;
+    } catch (error) {
+      console.error('Error initializing PDF document:', error);
+      throw error;
     }
-    
-    // Set font default Times New Roman
-    this.doc.setFont('times', 'normal');
-    this.doc.setFontSize(12);
-    
-    // Margin standar surat resmi Indonesia
-    this.margins = {
-      top: 25,    // 2.5 cm dari atas
-      left: 25,   // 2.5 cm dari kiri
-      right: 20,  // 2 cm dari kanan
-      bottom: 20  // 2 cm dari bawah
-    };
-    
-    // Dimensi halaman
-    this.pageWidth = 210;
-    this.pageHeight = 297;
-    this.contentWidth = this.pageWidth - this.margins.left - this.margins.right;
-    
-    return this.doc;
   }
 
   // Membuat kop surat yang profesional
@@ -205,6 +308,23 @@ class PDFGenerator {
     const doc = this.doc;
     let currentY = yPos;
     
+    // Pastikan doc sudah terinisialisasi
+    if (!doc) {
+      console.error('PDF document not initialized');
+      return currentY + 20;
+    }
+    
+    // Pastikan getTextWidth method tersedia
+    if (typeof doc.getTextWidth !== 'function') {
+      console.error('getTextWidth method not available on PDF document');
+      // Fallback: gunakan estimasi lebar teks
+      doc.setFont('times', 'bold');
+      doc.setFontSize(14);
+      doc.setTextColor(0, 0, 0);
+      doc.text(title, this.pageWidth / 2, currentY, { align: 'center' });
+      return currentY + 20;
+    }
+    
     // Judul utama
     doc.setFont('times', 'bold');
     doc.setFontSize(14);
@@ -224,8 +344,13 @@ class PDFGenerator {
       doc.setFont('times', 'normal');
       doc.setFontSize(12);
       
-      const subtitleWidth = doc.getTextWidth(subtitle);
-      doc.text(subtitle, (this.pageWidth - subtitleWidth) / 2, currentY);
+      if (typeof doc.getTextWidth === 'function') {
+        const subtitleWidth = doc.getTextWidth(subtitle);
+        doc.text(subtitle, (this.pageWidth - subtitleWidth) / 2, currentY);
+      } else {
+        // Fallback jika getTextWidth tidak tersedia
+        doc.text(subtitle, this.pageWidth / 2, currentY, { align: 'center' });
+      }
       currentY += 10;
     }
     
@@ -534,6 +659,397 @@ class PDFGenerator {
   openPDF() {
     if (this.doc) {
       window.open(this.doc.output('bloburl'), '_blank');
+    }
+  }
+
+  // Generate laporan inventaris
+  async generateInventoryReport(reportData, reportTitle, periode, columns) {
+    try {
+      console.log('Starting PDF generation...');
+      
+      // Reset document jika sudah ada
+      this.doc = null;
+      
+      // Muat logo terlebih dahulu
+      await this.loadLogo();
+      
+      // Inisialisasi dokumen
+      await this.initDocument();
+      
+      console.log('PDF document initialized successfully');
+      
+      // Pastikan dokumen terinisialisasi dengan benar
+      if (!this.doc) {
+        throw new Error('Failed to initialize PDF document');
+      }
+      
+      // Pastikan semua method yang diperlukan tersedia
+      if (typeof this.doc.setFont !== 'function' || 
+          typeof this.doc.setFontSize !== 'function' ||
+          typeof this.doc.text !== 'function') {
+        throw new Error('jsPDF methods not available');
+      }
+      
+      // Tambahkan kop surat
+      let currentY = this.addHeader(this.margins.top);
+      
+      // Tambahkan judul laporan
+      currentY = this.addTitle(reportTitle, null, currentY + 10);
+      
+      // Pastikan currentY valid
+      if (isNaN(currentY) || currentY < 0) {
+        currentY = this.margins.top + 60;
+      }
+    
+    // Tambahkan periode laporan
+    this.doc.setFont('times', 'normal');
+    this.doc.setFontSize(12);
+    this.doc.setTextColor(0, 0, 0);
+    
+    // Pastikan getTextWidth tersedia
+    if (typeof this.doc.getTextWidth === 'function') {
+      const periodeWidth = this.doc.getTextWidth(periode);
+      this.doc.text(periode, (this.pageWidth - periodeWidth) / 2, currentY + 5);
+    } else {
+      // Fallback jika getTextWidth tidak tersedia
+      this.doc.text(periode, this.pageWidth / 2, currentY + 5, { align: 'center' });
+    }
+    currentY += 20;
+    
+    // Siapkan data untuk tabel dengan nomor urut
+    const tableData = reportData.map((item, index) => {
+      const formattedItem = { ...item, no: index + 1 };
+      
+      // Format data khusus untuk inventaris
+      if (reportTitle.includes('INVENTARIS')) {
+        formattedItem.kategori = item.kategori?.nama || item.kategori || '-';
+        formattedItem.lokasi = item.lokasi?.nama || item.lokasi || '-';
+        formattedItem.kondisi = {
+          'baik': 'Baik',
+          'rusak_ringan': 'Rusak Ringan', 
+          'rusak_berat': 'Rusak Berat'
+        }[item.kondisi] || item.kondisi || '-';
+        formattedItem.status = {
+          'tersedia': 'Tersedia',
+          'dipinjam': 'Dipinjam',
+          'dalam_perbaikan': 'Dalam Perbaikan'
+        }[item.status] || item.status || '-';
+        formattedItem.tanggal_perolehan = item.tanggal_perolehan ? 
+          new Date(item.tanggal_perolehan).toLocaleDateString('id-ID', {
+            day: '2-digit',
+            month: 'long', 
+            year: 'numeric'
+          }) : '-';
+      }
+      
+      return formattedItem;
+    });
+    
+    // Debug: Log data yang akan ditampilkan
+    console.log('Report Data:', reportData);
+    console.log('Columns:', columns);
+    console.log('Table Data:', tableData);
+    
+    // Tambahkan tabel menggunakan autoTable
+    let tableEndY = currentY + 100; // Default fallback position
+    
+    // Pastikan this.doc tersedia dan valid
+    if (!this.doc) {
+      throw new Error('PDF document not initialized');
+    }
+    
+    // Pastikan semua method yang diperlukan tersedia
+    if (typeof this.doc.setFont !== 'function' || 
+        typeof this.doc.setFontSize !== 'function' ||
+        typeof this.doc.text !== 'function' ||
+        typeof this.doc.autoTable !== 'function') {
+      throw new Error('Required PDF methods not available');
+    }
+    
+    // Pastikan data tidak kosong
+    if (!tableData || tableData.length === 0) {
+      this.doc.setFont('times', 'normal');
+      this.doc.setFontSize(12);
+      this.doc.text('Tidak ada data untuk ditampilkan', this.margins.left, currentY);
+      tableEndY = currentY + 20;
+    } else {
+      // Buat tabel dengan autoTable
+      try {
+        console.log('About to call autoTable...');
+        console.log('this.doc methods available:', {
+          autoTable: typeof this.doc.autoTable,
+          setFont: typeof this.doc.setFont,
+          setFontSize: typeof this.doc.setFontSize,
+          getFontSize: typeof this.doc.getFontSize
+        });
+        
+        this.doc.autoTable({
+        startY: currentY,
+        head: [columns.map(col => col.header)],
+        body: tableData.map(row => columns.map(col => row[col.dataKey] || '-')),
+        styles: {
+          fontSize: 9,
+          cellPadding: 3,
+          textColor: [0, 0, 0],
+          halign: 'left'
+        },
+        headStyles: {
+          fillColor: [41, 128, 185],
+          textColor: [255, 255, 255],
+          fontStyle: 'bold',
+          fontSize: 10,
+          halign: 'center'
+        },
+        alternateRowStyles: {
+          fillColor: [245, 245, 245]
+        },
+        margin: { 
+          left: this.margins.left, 
+          right: this.margins.right 
+        },
+        theme: 'grid',
+        tableWidth: 'auto',
+        columnStyles: {
+          0: { cellWidth: 10 }, // No column
+          1: { cellWidth: 'auto' }, // Other columns auto width
+        }
+      });
+      
+      console.log('autoTable call completed successfully');
+      
+      // Get the actual end position of the table
+      if (this.doc.lastAutoTable && this.doc.lastAutoTable.finalY) {
+        tableEndY = this.doc.lastAutoTable.finalY;
+      }
+      
+      } catch (autoTableError) {
+        console.error('Error in autoTable call:', autoTableError);
+        console.error('autoTable error stack:', autoTableError.stack);
+        
+        // Fallback: create simple text table
+        this.doc.setFont('times', 'normal');
+        this.doc.setFontSize(10);
+        this.doc.text('Error creating table. Data available but table generation failed.', this.margins.left, currentY);
+        tableEndY = currentY + 20;
+      }
+    }
+    
+    // Tambahkan footer dengan tanggal cetak
+    const footerY = tableEndY + 20;
+    
+    this.doc.setFont('times', 'italic');
+    this.doc.setFontSize(10);
+    const printDate = `Dicetak pada: ${new Date().toLocaleDateString('id-ID', {
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    })}`;
+    
+    this.doc.text(printDate, this.margins.left, footerY);
+     
+     return this.doc;
+     
+    } catch (error) {
+      console.error('Error generating inventory PDF:', error);
+      console.error('Error stack:', error.stack);
+      console.error('Document state:', this.doc ? 'initialized' : 'not initialized');
+      
+      // Reset document state on error
+      this.doc = null;
+      
+      throw new Error(`PDF generation failed: ${error.message}`);
+    }
+  }
+
+  // Generate laporan umum (untuk peminjaman, kondisi, transaksi)
+   async generateGeneralReport(reportData, reportTitle, periode, columns) {
+     try {
+       console.log('Starting General PDF generation...');
+       
+       // Reset document jika sudah ada
+       this.doc = null;
+       
+       // Muat logo terlebih dahulu
+       await this.loadLogo();
+       
+       // Inisialisasi dokumen
+       await this.initDocument();
+       
+       console.log('General PDF document initialized successfully');
+       
+       // Pastikan dokumen terinisialisasi dengan benar
+       if (!this.doc) {
+         throw new Error('Failed to initialize PDF document');
+       }
+       
+       // Pastikan semua method yang diperlukan tersedia
+       if (typeof this.doc.setFont !== 'function' || 
+           typeof this.doc.setFontSize !== 'function' ||
+           typeof this.doc.text !== 'function') {
+         throw new Error('jsPDF methods not available');
+       }
+       
+       // Tambahkan kop surat
+       let currentY = this.addHeader(this.margins.top);
+       
+       // Tambahkan judul laporan
+       currentY = this.addTitle(reportTitle, null, currentY + 10);
+       
+       // Pastikan currentY valid
+       if (isNaN(currentY) || currentY < 0) {
+         currentY = this.margins.top + 60;
+       }
+    
+    // Tambahkan periode laporan
+     this.doc.setFont('times', 'normal');
+     this.doc.setFontSize(12);
+     this.doc.setTextColor(0, 0, 0);
+     
+     // Pastikan getTextWidth tersedia
+     if (typeof this.doc.getTextWidth === 'function') {
+       const periodeWidth = this.doc.getTextWidth(periode);
+       this.doc.text(periode, (this.pageWidth - periodeWidth) / 2, currentY + 5);
+     } else {
+       // Fallback jika getTextWidth tidak tersedia
+       this.doc.text(periode, this.pageWidth / 2, currentY + 5, { align: 'center' });
+     }
+     currentY += 20;
+    
+    // Siapkan data untuk tabel dengan nomor urut
+    const tableData = reportData.map((item, index) => {
+      const formattedItem = { ...item, no: index + 1 };
+      
+      // Format tanggal jika ada
+      if (item.tanggal_pinjam) {
+        formattedItem.tanggal_pinjam = new Date(item.tanggal_pinjam).toLocaleDateString('id-ID');
+      }
+      if (item.tanggal_kembali) {
+        formattedItem.tanggal_kembali = new Date(item.tanggal_kembali).toLocaleDateString('id-ID');
+      }
+      if (item.tanggal) {
+        formattedItem.tanggal = new Date(item.tanggal).toLocaleDateString('id-ID');
+      }
+      
+      return formattedItem;
+    });
+    
+    // Debug: Log data yang akan ditampilkan
+    console.log('General Report Data:', reportData);
+    console.log('Columns:', columns);
+    console.log('Table Data:', tableData);
+    
+    // Tambahkan tabel menggunakan autoTable
+    let tableEndY = currentY + 100; // Default fallback position
+    
+    // Pastikan this.doc tersedia dan valid
+    if (!this.doc) {
+      throw new Error('PDF document not initialized');
+    }
+    
+    // Pastikan semua method yang diperlukan tersedia
+    if (typeof this.doc.setFont !== 'function' || 
+        typeof this.doc.setFontSize !== 'function' ||
+        typeof this.doc.text !== 'function' ||
+        typeof this.doc.autoTable !== 'function') {
+      throw new Error('Required PDF methods not available');
+    }
+    
+    // Pastikan data tidak kosong
+    if (!tableData || tableData.length === 0) {
+      this.doc.setFont('times', 'normal');
+      this.doc.setFontSize(12);
+      this.doc.text('Tidak ada data untuk ditampilkan', this.margins.left, currentY);
+      tableEndY = currentY + 20;
+    } else {
+      // Buat tabel dengan autoTable
+      try {
+        console.log('About to call autoTable in general report...');
+        console.log('this.doc methods available:', {
+          autoTable: typeof this.doc.autoTable,
+          setFont: typeof this.doc.setFont,
+          setFontSize: typeof this.doc.setFontSize,
+          getFontSize: typeof this.doc.getFontSize
+        });
+        
+        this.doc.autoTable({
+        startY: currentY,
+        head: [columns.map(col => col.header)],
+        body: tableData.map(row => columns.map(col => row[col.dataKey] || '-')),
+        styles: {
+          fontSize: 9,
+          cellPadding: 3,
+          textColor: [0, 0, 0],
+          halign: 'left'
+        },
+        headStyles: {
+          fillColor: [41, 128, 185],
+          textColor: [255, 255, 255],
+          fontStyle: 'bold',
+          fontSize: 10,
+          halign: 'center'
+        },
+        alternateRowStyles: {
+          fillColor: [245, 245, 245]
+        },
+        margin: { 
+          left: this.margins.left, 
+          right: this.margins.right 
+        },
+        theme: 'grid',
+        tableWidth: 'auto',
+        columnStyles: {
+          0: { cellWidth: 10 }, // No column
+          1: { cellWidth: 'auto' }, // Other columns auto width
+        }
+      });
+      
+      console.log('autoTable call in general report completed successfully');
+      
+      // Get the actual end position of the table
+      if (this.doc.lastAutoTable && this.doc.lastAutoTable.finalY) {
+        tableEndY = this.doc.lastAutoTable.finalY;
+      }
+      
+      } catch (autoTableError) {
+        console.error('Error in autoTable call (general report):', autoTableError);
+        console.error('autoTable error stack:', autoTableError.stack);
+        
+        // Fallback: create simple text table
+        this.doc.setFont('times', 'normal');
+        this.doc.setFontSize(10);
+        this.doc.text('Error creating table. Data available but table generation failed.', this.margins.left, currentY);
+        tableEndY = currentY + 20;
+      }
+    }
+    
+    // Tambahkan footer dengan tanggal cetak
+    const footerY = tableEndY + 20;
+    
+    this.doc.setFont('times', 'italic');
+    this.doc.setFontSize(10);
+    const printDate = `Dicetak pada: ${new Date().toLocaleDateString('id-ID', {
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    })}`;
+    
+    this.doc.text(printDate, this.margins.left, footerY);
+     
+     return this.doc;
+     
+    } catch (error) {
+      console.error('Error generating general PDF:', error);
+      console.error('Error stack:', error.stack);
+      console.error('Document state:', this.doc ? 'initialized' : 'not initialized');
+      
+      // Reset document state on error
+      this.doc = null;
+      
+      throw new Error(`PDF generation failed: ${error.message}`);
     }
   }
 }
