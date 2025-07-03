@@ -198,6 +198,8 @@ export const AuthProvider = ({ children }) => {
     return user?.peran === 'kepala_lab';
   };
 
+
+
   const isToolman = () => {
     return user?.peran === 'toolman';
   };
@@ -215,7 +217,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   const isAdminToolmanOrKepalaLab = () => {
-    return user?.peran === 'admin' || user?.peran === 'toolman' || user?.peran === 'kepala_lab';
+    return user?.peran === 'admin' || user?.peran === 'toolman' || user?.peran === 'kepala_lab' || user?.peran === 'sarana';
   };
 
   // Permission functions for CRUD operations
@@ -239,6 +241,7 @@ export const AuthProvider = ({ children }) => {
     logout,
     isAdmin,
     isKepalaLab,
+
     isToolman,
     isSarana,
     isAdminOrToolman,

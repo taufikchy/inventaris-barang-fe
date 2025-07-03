@@ -33,15 +33,15 @@ import * as Yup from 'yup';
 import PageHeader from '../components/PageHeader';
 import DataTable from '../components/DataTable';
 import ConfirmDialog from '../components/ConfirmDialog';
+import { useAuth } from '../contexts/AuthContext';
 
 // Validation schema for user form
 const UserSchema = Yup.object().shape({
   nama: Yup.string().required('Nama pengguna harus diisi'),
-  username: Yup.string()
+  nama_pengguna: Yup.string()
     .min(4, 'Username minimal 4 karakter')
     .matches(/^[a-zA-Z0-9_]+$/, 'Username hanya boleh berisi huruf, angka, dan underscore')
     .required('Username harus diisi'),
-  email: Yup.string().email('Format email tidak valid').required('Email harus diisi'),
   password: Yup.string()
     .min(6, 'Password minimal 6 karakter')
     .when('$isEditing', {
@@ -49,84 +49,99 @@ const UserSchema = Yup.object().shape({
       then: (schema) => schema.required('Password harus diisi'),
       otherwise: (schema) => schema,
     }),
-  role: Yup.string().required('Role harus dipilih'),
+  peran: Yup.string().required('Role harus dipilih'),
 });
 
 const Pengguna = () => {
+  const { isAdminOrToolman, isKepalaLab, isAdmin, user } = useAuth();
   const [loading, setLoading] = useState(true);
   const [users, setUsers] = useState([]);
+  const [pagination, setPagination] = useState({
+    halaman: 1,
+    batas: 10,
+    total: 0,
+    total_halaman: 1,
+  });
+  const [searchTerm, setSearchTerm] = useState('');
   const [openForm, setOpenForm] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [selectedRole, setSelectedRole] = useState('');
 
   // Fetch users data
-  const fetchUsers = async () => {
+  const fetchUsers = async (page = pagination.halaman, limit = pagination.batas, search = searchTerm, role = null) => {
     try {
       setLoading(true);
-      // In a real application, you would fetch this data from your API
-      // For now, we'll use mock data
-      
-      // Simulate API call delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Mock data
-      const mockData = [
-        { 
-          id: 1, 
-          nama: 'Admin Sistem', 
-          username: 'admin', 
-          email: 'admin@example.com',
-          role: 'admin',
-          last_login: '2023-05-25 08:30:15'
+      const response = await axios.get('/api/pengguna', {
+        params: {
+          halaman: page,
+          batas: limit,
+          cari: search,
+          peran: role,
         },
-        { 
-          id: 2, 
-          nama: 'Budi Santoso', 
-          username: 'budi', 
-          email: 'budi@example.com',
-          role: 'user',
-          last_login: '2023-05-24 14:15:22'
-        },
-        { 
-          id: 3, 
-          nama: 'Citra Dewi', 
-          username: 'citra', 
-          email: 'citra@example.com',
-          role: 'user',
-          last_login: '2023-05-23 09:45:10'
-        },
-        { 
-          id: 4, 
-          nama: 'Deni Pratama', 
-          username: 'deni', 
-          email: 'deni@example.com',
-          role: 'admin',
-          last_login: '2023-05-22 16:20:05'
-        },
-        { 
-          id: 5, 
-          nama: 'Eka Putri', 
-          username: 'eka', 
-          email: 'eka@example.com',
-          role: 'user',
-          last_login: '2023-05-21 11:10:30'
-        },
-      ];
-      
-      setUsers(mockData);
+      });
+      if (response.data.sukses) {
+        console.log('Fetched users data:', response.data.data);
+        console.log('Pagination data:', response.data.pagination);
+        
+        // Periksa struktur data untuk debugging
+        if (response.data.data && response.data.data.length > 0) {
+          console.log('Sample user data structure:', response.data.data[0]);
+          console.log('Username:', response.data.data[0].username);
+          console.log('Role:', response.data.data[0].role);
+        }
+        
+        setUsers(response.data.data);
+        setPagination(response.data.pagination);
+      } else {
+        toast.error(response.data.pesan || 'Gagal memuat data pengguna');
+      }
       setLoading(false);
     } catch (error) {
       console.error('Error fetching users:', error);
-      toast.error('Gagal memuat data pengguna');
+      toast.error(error.response?.data?.pesan || 'Terjadi kesalahan saat memuat data pengguna');
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchUsers();
-  }, []);
+    if (user) {
+      let roleToFetch = '';
+      if (isAdmin()) {
+        roleToFetch = 'admin'; // Admin sees only admin roles by default
+      } else if (isKepalaLab()) {
+        roleToFetch = ''; // Kepala Lab sees all roles
+      } else if (user.peran === 'toolman') {
+        roleToFetch = 'toolman';
+      } else if (user.peran === 'sarana') {
+        roleToFetch = 'sarana';
+      }
+      setSelectedRole(roleToFetch);
+      fetchUsers(pagination.halaman, pagination.batas, searchTerm, roleToFetch);
+    }
+  }, [pagination.halaman, pagination.batas, searchTerm, user]);
+
+  const handlePageChange = (event, newPage) => {
+    setPagination((prev) => ({ ...prev, halaman: newPage }));
+  };
+
+  const handleRowsPerPageChange = (event) => {
+    setPagination((prev) => ({ ...prev, batas: parseInt(event.target.value, 10), halaman: 1 }));
+  };
+
+  const handleSearchChange = (event) => {
+    setSearchTerm(event.target.value);
+    setPagination((prev) => ({ ...prev, halaman: 1 })); // Reset to first page on search
+  };
+
+  const handleRoleFilterChange = (event) => {
+    const newRole = event.target.value;
+    setSelectedRole(newRole);
+    setPagination((prev) => ({ ...prev, halaman: 1 })); // Reset to first page on role filter change
+    fetchUsers(1, pagination.batas, searchTerm, newRole);
+  };
 
   // Handle form open for add/edit
   const handleOpenForm = (user = null) => {
@@ -141,38 +156,40 @@ const Pengguna = () => {
     setShowPassword(false);
   };
 
+  const handleTogglePasswordVisibility = () => {
+    setShowPassword(!showPassword);
+  };
+
   // Handle form submit (add/edit)
   const handleSubmit = async (values, { setSubmitting, resetForm }) => {
     try {
-      // In a real application, you would send this data to your API
-      console.log('Submitting user:', values);
-      
-      // Simulate API call delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
+      let response;
       if (currentUser) {
         // Update existing user
-        const updatedUsers = users.map(u =>
-          u.id === currentUser.id ? { ...u, ...values } : u
-        );
-        setUsers(updatedUsers);
-        toast.success('Pengguna berhasil diperbarui');
+        response = await axios.put(`/api/pengguna/${currentUser.id}`, values);
+        if (response.data.sukses) {
+          toast.success('Pengguna berhasil diperbarui');
+        } else {
+          toast.error(response.data.pesan || 'Gagal memperbarui pengguna');
+        }
       } else {
         // Add new user
-        const newUser = {
-          ...values,
-          id: Math.max(0, ...users.map(u => u.id)) + 1,
-          last_login: '-'
-        };
-        setUsers([...users, newUser]);
-        toast.success('Pengguna berhasil ditambahkan');
+        response = await axios.post('/api/pengguna', values);
+        if (response.data.sukses) {
+          toast.success('Pengguna berhasil ditambahkan');
+        } else {
+          toast.error(response.data.pesan || 'Gagal menambahkan pengguna');
+        }
       }
       
-      resetForm();
-      handleCloseForm();
+      if (response.data.sukses) {
+        fetchUsers(pagination.halaman, pagination.batas, searchTerm); // Refresh data
+        resetForm();
+        handleCloseForm();
+      }
     } catch (error) {
       console.error('Error submitting user:', error);
-      toast.error('Gagal menyimpan pengguna');
+      toast.error(error.response?.data?.pesan || 'Terjadi kesalahan saat menyimpan pengguna');
     } finally {
       setSubmitting(false);
     }
@@ -188,89 +205,119 @@ const Pengguna = () => {
   const handleDelete = async () => {
     try {
       setDeleteLoading(true);
-      
-      // In a real application, you would send this request to your API
-      console.log('Deleting user:', currentUser);
-      
-      // Simulate API call delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Remove from state
-      setUsers(users.filter(u => u.id !== currentUser.id));
-      toast.success('Pengguna berhasil dihapus');
-      
-      setConfirmDelete(false);
-      setCurrentUser(null);
+      const response = await axios.delete(`/api/pengguna/${currentUser.id}`);
+      if (response.data.sukses) {
+        toast.success('Pengguna berhasil dihapus');
+        fetchUsers(pagination.halaman, pagination.batas, searchTerm); // Refresh data
+      } else {
+        toast.error(response.data.pesan || 'Gagal menghapus pengguna');
+      }
     } catch (error) {
       console.error('Error deleting user:', error);
-      toast.error('Gagal menghapus pengguna');
+      toast.error(error.response?.data?.pesan || 'Terjadi kesalahan saat menghapus pengguna');
     } finally {
       setDeleteLoading(false);
+      setConfirmDelete(false);
+      setCurrentUser(null);
     }
   };
 
-  // Toggle password visibility
-  const handleTogglePasswordVisibility = () => {
-    setShowPassword(!showPassword);
-  };
-
-  // Table columns definition
   const columns = [
     { 
       id: 'no', 
       label: 'No', 
       sortable: true,
-      format: (value, row, displayIndex) => displayIndex + 1 // Menampilkan nomor urut berdasarkan posisi setelah sorting
+      format: (value, row, displayIndex) => displayIndex + 1 // Menampilkan nomor urut berdasarkan posisi setelah sorting dan paginasi
     },
     { id: 'id', label: 'ID', sortable: true },
     { id: 'nama', label: 'Nama', sortable: true },
-    { id: 'username', label: 'Username', sortable: true },
-    { id: 'email', label: 'Email', sortable: true },
+    { id: 'nama_pengguna', label: 'Username', sortable: true },
     { 
-      id: 'role', 
+      id: 'peran', 
       label: 'Role', 
       sortable: true,
-      render: (value) => (
-        <Chip 
-          icon={value === 'admin' ? <AdminIcon /> : <UserIcon />}
-          label={value === 'admin' ? 'Admin' : 'User'}
-          color={value === 'admin' ? 'primary' : 'default'}
-          size="small"
-        />
-      )
-    },
-    { id: 'last_login', label: 'Login Terakhir', sortable: true },
+      format: (value) => {
+        let label = 'User';
+        let color = 'default';
+        let icon = <UserIcon />;
+        
+        switch(value) {
+          case 'admin':
+            label = 'Admin';
+            color = 'primary';
+            icon = <AdminIcon />;
+            break;
+          case 'kepala_lab':
+            label = 'Kepala Lab';
+            color = 'secondary';
+            icon = <AdminIcon />;
+            break;
+          case 'toolman':
+            label = 'Toolman';
+            color = 'info';
+            icon = <UserIcon />;
+            break;
+          case 'sarana':
+            label = 'Sarana';
+            color = 'default';
+            icon = <UserIcon />;
+            break;
+          default:
+            break;
+        }
+        
+        return (
+          <Chip 
+            icon={icon}
+            label={label}
+            color={color}
+            size="small"
+          />
+        );
+      }
+    }
   ];
 
   // Table actions
-  const actions = (row) => (
-    <Box>
-      <Tooltip title="Edit">
-        <IconButton onClick={() => handleOpenForm(row)} size="small">
-          <EditIcon fontSize="small" />
-        </IconButton>
-      </Tooltip>
-      <Tooltip title="Hapus">
-        <IconButton 
-          onClick={() => handleDeleteConfirm(row)} 
-          size="small" 
-          color="error"
-          disabled={row.username === 'admin'} // Prevent deleting the main admin
-        >
-          <DeleteIcon fontSize="small" />
-        </IconButton>
-      </Tooltip>
-    </Box>
-  );
+  const actions = (row) => {
+    console.log('Row data in actions:', row);
+    // Log untuk debugging
+    console.log('Username in row:', row.nama_pengguna);
+    console.log('Role in row:', row.peran);
+    return (
+      <Box>
+        {(isAdmin() || isKepalaLab() || user.peran === 'toolman' || user.peran === 'sarana') && (
+          <>
+            <Tooltip title="Edit">
+              <IconButton onClick={() => handleOpenForm(row)} size="small">
+                <EditIcon fontSize="small" />
+              </IconButton>
+            </Tooltip>
+            {isKepalaLab() && (
+              <Tooltip title="Hapus">
+                <IconButton 
+                  onClick={() => handleDeleteConfirm(row)} 
+                  size="small" 
+                  color="error"
+                >
+                  <DeleteIcon fontSize="small" />
+                </IconButton>
+              </Tooltip>
+            )}
+          </>
+        )}
+      </Box>
+    );
+  };
 
   return (
     <>
       <PageHeader
         title="Manajemen Pengguna"
-        actionText="Tambah Pengguna"
-        actionIcon={<AddIcon />}
-        onActionClick={() => handleOpenForm()}
-        breadcrumbs={[{ text: 'Pengguna' }]}
+        actionText={isKepalaLab() ? "Tambah Pengguna" : undefined}
+actionIcon={isKepalaLab() ? <AddIcon /> : undefined}
+onActionClick={isKepalaLab() ? () => handleOpenForm() : undefined}
+        breadcrumbs={[{ text: 'Pengguna' }]} 
       />
 
       <DataTable
@@ -280,8 +327,35 @@ const Pengguna = () => {
         loading={loading}
         actions={actions}
         refreshable
-        onRefresh={fetchUsers}
+        onRefresh={() => fetchUsers(pagination.halaman, pagination.batas, searchTerm)}
         emptyMessage="Belum ada data pengguna"
+        page={pagination.halaman - 1} // DataTable expects 0-indexed page
+        count={pagination.total}
+        rowsPerPage={pagination.batas}
+        onPageChange={handlePageChange}
+        onRowsPerPageChange={handleRowsPerPageChange}
+        searchTerm={searchTerm}
+        onSearchChange={handleSearchChange}
+        filterComponent={
+          (isAdmin() || isKepalaLab()) && (
+            <FormControl sx={{ minWidth: 120, mr: 2 }} size="small">
+              <InputLabel id="filter-role-label">Filter Role</InputLabel>
+              <Select
+                labelId="filter-role-label"
+                id="filter-role"
+                value={selectedRole}
+                label="Filter Role"
+                onChange={handleRoleFilterChange}
+              >
+                <MenuItem value="">Semua</MenuItem>
+                <MenuItem value="admin">Admin</MenuItem>
+                <MenuItem value="kepala_lab">Kepala Lab</MenuItem>
+                <MenuItem value="toolman">Toolman</MenuItem>
+                <MenuItem value="sarana">Sarana</MenuItem>
+              </Select>
+            </FormControl>
+          )
+        }
       />
 
       {/* Add/Edit Form Dialog */}
@@ -290,10 +364,9 @@ const Pengguna = () => {
         <Formik
           initialValues={{
             nama: currentUser?.nama || '',
-            username: currentUser?.username || '',
-            email: currentUser?.email || '',
+            nama_pengguna: currentUser?.nama_pengguna || '',
             password: '',
-            role: currentUser?.role || 'user',
+            peran: currentUser?.peran || 'sarana',
           }}
           validationSchema={UserSchema}
           onSubmit={handleSubmit}
@@ -316,35 +389,24 @@ const Pengguna = () => {
                   onBlur={handleBlur}
                   error={touched.nama && Boolean(errors.nama)}
                   helperText={touched.nama && errors.nama}
+                  disabled={!(isKepalaLab() || isAdmin() || user.peran === 'toolman' || user.peran === 'sarana')} // Admin, Kepala Lab, Toolman, Sarana bisa edit nama
                 />
                 
                 <TextField
                   fullWidth
                   margin="normal"
-                  id="username"
-                  name="username"
+                  id="nama_pengguna"
+                  name="nama_pengguna"
                   label="Username"
-                  value={values.username}
+                  value={values.nama_pengguna}
                   onChange={handleChange}
                   onBlur={handleBlur}
-                  error={touched.username && Boolean(errors.username)}
-                  helperText={touched.username && errors.username}
-                  disabled={currentUser?.username === 'admin'} // Prevent changing admin username
+                  error={touched.nama_pengguna && Boolean(errors.nama_pengguna)}
+                  helperText={touched.nama_pengguna && errors.nama_pengguna}
+                  disabled={!isKepalaLab()}
                 />
                 
-                <TextField
-                  fullWidth
-                  margin="normal"
-                  id="email"
-                  name="email"
-                  label="Email"
-                  type="email"
-                  value={values.email}
-                  onChange={handleChange}
-                  onBlur={handleBlur}
-                  error={touched.email && Boolean(errors.email)}
-                  helperText={touched.email && errors.email}
-                />
+
                 
                 <TextField
                   fullWidth
@@ -358,6 +420,7 @@ const Pengguna = () => {
                   onBlur={handleBlur}
                   error={touched.password && Boolean(errors.password)}
                   helperText={touched.password && errors.password}
+                  disabled={currentUser && !isKepalaLab() && !isAdmin() && user.peran !== 'toolman' && user.peran !== 'sarana'}
                   InputProps={{
                     endAdornment: (
                       <InputAdornment position="end">
@@ -375,24 +438,26 @@ const Pengguna = () => {
                 <FormControl 
                   fullWidth 
                   margin="normal"
-                  error={touched.role && Boolean(errors.role)}
-                  disabled={currentUser?.username === 'admin'} // Prevent changing admin role
+                  error={touched.peran && Boolean(errors.peran)}
+                  disabled={!isKepalaLab()}
                 >
-                  <InputLabel id="role-label">Role</InputLabel>
+                  <InputLabel id="peran-label">Role</InputLabel>
                   <Select
-                    id="role"
-                    name="role"
-                    value={values.role}
+                    id="peran"
+                    name="peran"
+                    value={values.peran}
                     label="Role"
-                    labelId="role-label"
+                    labelId="peran-label"
                     onChange={handleChange}
                     onBlur={handleBlur}
                   >
-                    <MenuItem value="user">User</MenuItem>
                     <MenuItem value="admin">Admin</MenuItem>
+                    <MenuItem value="kepala_lab">Kepala Lab</MenuItem>
+                    <MenuItem value="toolman">Toolman</MenuItem>
+                    <MenuItem value="sarana">Sarana</MenuItem>
                   </Select>
-                  {touched.role && errors.role && (
-                    <FormHelperText>{errors.role}</FormHelperText>
+                  {touched.peran && errors.peran && (
+                    <FormHelperText>{errors.peran}</FormHelperText>
                   )}
                 </FormControl>
               </DialogContent>
