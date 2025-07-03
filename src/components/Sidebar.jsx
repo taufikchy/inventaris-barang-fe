@@ -34,8 +34,10 @@ const Sidebar = ({ open, setOpen }) => {
   const theme = useTheme();
   const navigate = useNavigate();
   const location = useLocation();
-  const { isAdmin, isAdminOrKepalaLab } = useAuth();
+  const { user, isAdmin, isAdminOrKepalaLab, isKepalaLab, isAdminToolmanOrKepalaLab } = useAuth();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+
+
 
   const handleDrawerToggle = () => {
     setOpen(!open);
@@ -145,7 +147,7 @@ const Sidebar = ({ open, setOpen }) => {
           </ListItem>
         ))}
 
-        {isAdminOrKepalaLab() && (
+        {isAdminToolmanOrKepalaLab() && (
           <>
             <Divider sx={{ my: 2 }} />
             <Typography
@@ -157,7 +159,7 @@ const Sidebar = ({ open, setOpen }) => {
                 fontSize: '0.75rem',
               }}
             >
-              ADMIN
+              {isKepalaLab() ? 'KEPALA LAB' : 'ADMIN'}
             </Typography>
             {adminMenuItems.map((item) => (
               <ListItem key={item.text} disablePadding>

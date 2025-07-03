@@ -27,9 +27,6 @@ import {
   VisibilityOff as VisibilityOffIcon,
   AdminPanelSettings as AdminIcon,
   Person as UserIcon,
-  Build as BuildIcon,
-  Inventory as InventoryIcon,
-  Science as ScienceIcon,
 } from '@mui/icons-material';
 import { Formik, Form, Field } from 'formik';
 import * as Yup from 'yup';
@@ -38,22 +35,13 @@ import DataTable from '../components/DataTable';
 import ConfirmDialog from '../components/ConfirmDialog';
 import { useAuth } from '../contexts/AuthContext';
 
-// Define user roles as a constant for better maintainability
-const USER_ROLES = {
-  ADMIN: 'admin',
-  TOOLMAN: 'toolman',
-  SARANA: 'sarana',
-  KEPALA_LAB: 'kepala_lab',
-};
-
 // Validation schema for user form
 const UserSchema = Yup.object().shape({
   nama: Yup.string().required('Nama pengguna harus diisi'),
-  username: Yup.string()
+  nama_pengguna: Yup.string()
     .min(4, 'Username minimal 4 karakter')
     .matches(/^[a-zA-Z0-9_]+$/, 'Username hanya boleh berisi huruf, angka, dan underscore')
     .required('Username harus diisi'),
-
   password: Yup.string()
     .min(6, 'Password minimal 6 karakter')
     .when('$isEditing', {
@@ -61,11 +49,11 @@ const UserSchema = Yup.object().shape({
       then: (schema) => schema.required('Password harus diisi'),
       otherwise: (schema) => schema,
     }),
-  role: Yup.string().required('Role harus dipilih'),
+  peran: Yup.string().required('Role harus dipilih'),
 });
 
 const Pengguna = () => {
-  const { isAdminOrToolman, isKepalaLab } = useAuth();
+  const { isAdminOrToolman, isKepalaLab, isAdmin } = useAuth();
   const [loading, setLoading] = useState(true);
   const [users, setUsers] = useState([]);
   const [pagination, setPagination] = useState({
@@ -81,10 +69,6 @@ const Pengguna = () => {
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
-  const handleTogglePasswordVisibility = () => {
-    setShowPassword((prev) => !prev);
-  };
-
   // Fetch users data
   const fetchUsers = async (page = pagination.halaman, limit = pagination.batas, search = searchTerm) => {
     try {
@@ -97,6 +81,16 @@ const Pengguna = () => {
         },
       });
       if (response.data.sukses) {
+        console.log('Fetched users data:', response.data.data);
+        console.log('Pagination data:', response.data.pagination);
+        
+        // Periksa struktur data untuk debugging
+        if (response.data.data && response.data.data.length > 0) {
+          console.log('Sample user data structure:', response.data.data[0]);
+          console.log('Username:', response.data.data[0].username);
+          console.log('Role:', response.data.data[0].role);
+        }
+        
         setUsers(response.data.data);
         setPagination(response.data.pagination);
       } else {
@@ -140,21 +134,17 @@ const Pengguna = () => {
     setShowPassword(false);
   };
 
+  const handleTogglePasswordVisibility = () => {
+    setShowPassword(!showPassword);
+  };
+
   // Handle form submit (add/edit)
   const handleSubmit = async (values, { setSubmitting, resetForm }) => {
     try {
-      // Map frontend field names to backend field names
-      const dataToSend = {
-        nama: values.nama,
-        nama_pengguna: values.username, // Map username to nama_pengguna
-        kata_sandi: values.password,
-        peran: values.role, // Map role to peran
-      };
-
       let response;
       if (currentUser) {
         // Update existing user
-        response = await axios.put(`/api/pengguna/${currentUser.id}`, dataToSend);
+        response = await axios.put(`/api/pengguna/${currentUser.id}`, values);
         if (response.data.sukses) {
           toast.success('Pengguna berhasil diperbarui');
         } else {
@@ -162,7 +152,7 @@ const Pengguna = () => {
         }
       } else {
         // Add new user
-        response = await axios.post('/api/pengguna', dataToSend);
+        response = await axios.post('/api/pengguna', values);
         if (response.data.sukses) {
           toast.success('Pengguna berhasil ditambahkan');
         } else {
@@ -219,72 +209,90 @@ const Pengguna = () => {
     },
     { id: 'id', label: 'ID', sortable: true },
     { id: 'nama', label: 'Nama', sortable: true },
-    { 
-      id: 'nama_pengguna', 
-      label: 'Username', 
-      sortable: true,
-      render: (value) => (
-        <Box fontWeight="bold">
-          {value}
-        </Box>
-      )
-    },
+    { id: 'nama_pengguna', label: 'Username', sortable: true },
     { 
       id: 'peran', 
       label: 'Role', 
       sortable: true,
-      render: (value) => (
-        <Chip 
-          icon={value === USER_ROLES.ADMIN ? <AdminIcon /> :
-                value === USER_ROLES.TOOLMAN ? <BuildIcon /> :
-                value === USER_ROLES.SARANA ? <InventoryIcon /> :
-                value === USER_ROLES.KEPALA_LAB ? <ScienceIcon /> : <AdminIcon />} 
-          label={value === USER_ROLES.ADMIN ? 'Admin' :
-                value === USER_ROLES.TOOLMAN ? 'Toolman' :
-                value === USER_ROLES.SARANA ? 'Sarana' :
-                value === USER_ROLES.KEPALA_LAB ? 'Kepala Lab' : 'Admin'}
-          color={value === USER_ROLES.ADMIN ? 'primary' :
-                 value === USER_ROLES.TOOLMAN ? 'secondary' :
-                 value === USER_ROLES.SARANA ? 'success' :
-                 value === USER_ROLES.KEPALA_LAB ? 'warning' : 'default'}
-          size="small"
-        />
-      )
-    },
+      format: (value) => {
+        let label = 'User';
+        let color = 'default';
+        let icon = <UserIcon />;
+        
+        switch(value) {
+          case 'admin':
+            label = 'Admin';
+            color = 'primary';
+            icon = <AdminIcon />;
+            break;
+          case 'kepala_lab':
+            label = 'Kepala Lab';
+            color = 'secondary';
+            icon = <AdminIcon />;
+            break;
+          case 'toolman':
+            label = 'Toolman';
+            color = 'info';
+            icon = <UserIcon />;
+            break;
+          case 'sarana':
+            label = 'Sarana';
+            color = 'default';
+            icon = <UserIcon />;
+            break;
+          default:
+            break;
+        }
+        
+        return (
+          <Chip 
+            icon={icon}
+            label={label}
+            color={color}
+            size="small"
+          />
+        );
+      }
+    }
   ];
 
   // Table actions
-  const actions = (row) => (
-    <Box>
-      {isKepalaLab() && (
-        <>
-          <Tooltip title="Edit">
-            <IconButton onClick={() => handleOpenForm(row)} size="small">
-              <EditIcon fontSize="small" />
-            </IconButton>
-          </Tooltip>
-          <Tooltip title="Hapus">
-            <IconButton 
-              onClick={() => handleDeleteConfirm(row)} 
-              size="small" 
-              color="error"
-            >
-              <DeleteIcon fontSize="small" />
-            </IconButton>
-          </Tooltip>
-        </>
-      )}
-    </Box>
-  );
-
+  const actions = (row) => {
+    console.log('Row data in actions:', row);
+    // Log untuk debugging
+    console.log('Username in row:', row.nama_pengguna);
+    console.log('Role in row:', row.peran);
+    return (
+      <Box>
+        {(isAdmin() || isKepalaLab()) && (
+          <>
+            <Tooltip title="Edit">
+              <IconButton onClick={() => handleOpenForm(row)} size="small">
+                <EditIcon fontSize="small" />
+              </IconButton>
+            </Tooltip>
+            <Tooltip title="Hapus">
+              <IconButton 
+                onClick={() => handleDeleteConfirm(row)} 
+                size="small" 
+                color="error"
+              >
+                <DeleteIcon fontSize="small" />
+              </IconButton>
+            </Tooltip>
+          </>
+        )}
+      </Box>
+    );
+  };
 
   return (
     <>
       <PageHeader
         title="Manajemen Pengguna"
-        actionText={isKepalaLab() ? "Tambah Pengguna" : undefined}
-        actionIcon={isKepalaLab() ? <AddIcon /> : undefined}
-        onActionClick={isKepalaLab() ? () => handleOpenForm() : undefined}
+        actionText={(isAdmin() || isKepalaLab()) ? "Tambah Pengguna" : undefined}
+        actionIcon={(isAdmin() || isKepalaLab()) ? <AddIcon /> : undefined}
+        onActionClick={(isAdmin() || isKepalaLab()) ? () => handleOpenForm() : undefined}
         breadcrumbs={[{ text: 'Pengguna' }]} 
       />
 
@@ -311,10 +319,10 @@ const Pengguna = () => {
         <DialogTitle>{currentUser ? 'Edit Pengguna' : 'Tambah Pengguna'}</DialogTitle>
         <Formik
           initialValues={{
-            nama: currentUser ? currentUser.nama : '',
-            username: currentUser ? currentUser.nama_pengguna : '',
+            nama: currentUser?.nama || '',
+            nama_pengguna: currentUser?.nama_pengguna || '',
             password: '',
-            role: currentUser ? currentUser.peran : USER_ROLES.ADMIN,
+            peran: currentUser?.peran || 'sarana',
           }}
           validationSchema={UserSchema}
           onSubmit={handleSubmit}
@@ -334,7 +342,6 @@ const Pengguna = () => {
                   label="Nama Lengkap"
                   value={values.nama}
                   onChange={handleChange}
-                  autoComplete="name"
                   onBlur={handleBlur}
                   error={touched.nama && Boolean(errors.nama)}
                   helperText={touched.nama && errors.nama}
@@ -343,16 +350,15 @@ const Pengguna = () => {
                 <TextField
                   fullWidth
                   margin="normal"
-                  id="username"
-                  name="username"
+                  id="nama_pengguna"
+                  name="nama_pengguna"
                   label="Username"
-                  value={values.username}
+                  value={values.nama_pengguna}
                   onChange={handleChange}
-                  autoComplete="username"
                   onBlur={handleBlur}
-                  error={touched.username && Boolean(errors.username)}
-                  helperText={touched.username && errors.username}
-                  disabled={!isKepalaLab() || (currentUser && currentUser.username === 'admin')} // Prevent changing admin username unless kalab
+                  error={touched.nama_pengguna && Boolean(errors.nama_pengguna)}
+                  helperText={touched.nama_pengguna && errors.nama_pengguna}
+                  disabled={!isKepalaLab()} // Allow kalab to change admin username
                 />
                 
 
@@ -365,7 +371,6 @@ const Pengguna = () => {
                   label={currentUser ? 'Password (Kosongkan jika tidak diubah)' : 'Password'}
                   type={showPassword ? 'text' : 'password'}
                   value={values.password}
-                  autoComplete={currentUser ? 'off' : 'new-password'}
                   onChange={handleChange}
                   onBlur={handleBlur}
                   error={touched.password && Boolean(errors.password)}
@@ -387,27 +392,26 @@ const Pengguna = () => {
                 <FormControl 
                   fullWidth 
                   margin="normal"
-                  error={touched.role && Boolean(errors.role)}
-                  disabled={!isKepalaLab() || (currentUser && currentUser.username === 'admin')} // Prevent changing admin role unless kalab
+                  error={touched.peran && Boolean(errors.peran)}
+                  disabled={!isKepalaLab()} // Prevent changing admin role unless kalab
                 >
-                  <InputLabel id="role-label">Role</InputLabel>
+                  <InputLabel id="peran-label">Role</InputLabel>
                   <Select
-                    id="role"
-                    name="role"
-                    value={values.role}
+                    id="peran"
+                    name="peran"
+                    value={values.peran}
                     label="Role"
-                    labelId="role-label"
+                    labelId="peran-label"
                     onChange={handleChange}
                     onBlur={handleBlur}
                   >
-                    {Object.values(USER_ROLES).map((role) => (
-                      <MenuItem key={role} value={role}>
-                        {role.replace(/_/g, ' ').replace(/\b\w/g, (char) => char.toUpperCase())}
-                      </MenuItem>
-                    ))}
+                    <MenuItem value="admin">Admin</MenuItem>
+                    <MenuItem value="kepala_lab">Kepala Lab</MenuItem>
+                    <MenuItem value="toolman">Toolman</MenuItem>
+                    <MenuItem value="sarana">Sarana</MenuItem>
                   </Select>
-                  {touched.role && errors.role && (
-                    <FormHelperText>{errors.role}</FormHelperText>
+                  {touched.peran && errors.peran && (
+                    <FormHelperText>{errors.peran}</FormHelperText>
                   )}
                 </FormControl>
               </DialogContent>

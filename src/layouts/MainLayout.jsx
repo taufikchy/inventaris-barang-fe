@@ -3,6 +3,7 @@ import { Outlet } from 'react-router-dom';
 import { Box, Toolbar, Container, useMediaQuery, useTheme } from '@mui/material';
 import Header from '../components/Header';
 import Sidebar from '../components/Sidebar';
+import ErrorBoundary from '../components/ErrorBoundary';
 
 const drawerWidth = 240;
 
@@ -14,7 +15,9 @@ const MainLayout = () => {
   return (
     <Box sx={{ display: 'flex', minHeight: '100vh' }}>
       <Header open={open} setOpen={setOpen} />
-      <Sidebar open={open} setOpen={setOpen} />
+      <ErrorBoundary>
+        <Sidebar open={open} setOpen={setOpen} />
+      </ErrorBoundary>
       <Box
         component="main"
         sx={{
@@ -45,7 +48,9 @@ const MainLayout = () => {
             maxWidth: '100% !important'
           }}
         >
-          <Outlet />
+          <ErrorBoundary>
+            <Outlet />
+          </ErrorBoundary>
         </Container>
       </Box>
     </Box>

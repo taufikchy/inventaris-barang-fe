@@ -3,7 +3,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { Box, CircularProgress } from '@mui/material';
 
 const AdminRoute = () => {
-  const { user, loading, isKepalaLab } = useAuth();
+  const { user, loading, isAdminToolmanOrKepalaLab } = useAuth();
 
   if (loading) {
     return (
@@ -24,8 +24,8 @@ const AdminRoute = () => {
     return <Navigate to="/login" replace />;
   }
 
-  // Hanya Kepala Lab yang memiliki akses penuh
-  return isKepalaLab() ? <Outlet /> : <Navigate to="/dashboard" replace />;
+  // Hanya Admin, Toolman, dan Kepala Lab yang memiliki akses penuh
+  return isAdminToolmanOrKepalaLab() ? <Outlet /> : <Navigate to="/dashboard" replace />;
 };
 
 export default AdminRoute;
