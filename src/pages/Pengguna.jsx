@@ -53,7 +53,7 @@ const UserSchema = Yup.object().shape({
 });
 
 const Pengguna = () => {
-  const { isAdminOrToolman, isKepalaLab, isAdmin } = useAuth();
+  const { isAdminOrToolman, isKepalaLab, isAdmin, user } = useAuth();
   const [loading, setLoading] = useState(true);
   const [users, setUsers] = useState([]);
   const [pagination, setPagination] = useState({
@@ -68,9 +68,10 @@ const Pengguna = () => {
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [selectedRole, setSelectedRole] = useState('');
 
   // Fetch users data
-  const fetchUsers = async (page = pagination.halaman, limit = pagination.batas, search = searchTerm) => {
+  const fetchUsers = async (page = pagination.halaman, limit = pagination.batas, search = searchTerm, role = null) => {
     try {
       setLoading(true);
       const response = await axios.get('/api/pengguna', {
@@ -78,6 +79,7 @@ const Pengguna = () => {
           halaman: page,
           batas: limit,
           cari: search,
+          peran: role,
         },
       });
       if (response.data.sukses) {
@@ -105,8 +107,21 @@ const Pengguna = () => {
   };
 
   useEffect(() => {
-    fetchUsers(pagination.halaman, pagination.batas, searchTerm);
-  }, [pagination.halaman, pagination.batas, searchTerm]);
+    if (user) {
+      let roleToFetch = '';
+      if (isAdmin()) {
+        roleToFetch = 'admin'; // Admin sees only admin roles by default
+      } else if (isKepalaLab()) {
+        roleToFetch = ''; // Kepala Lab sees all roles
+      } else if (user.peran === 'toolman') {
+        roleToFetch = 'toolman';
+      } else if (user.peran === 'sarana') {
+        roleToFetch = 'sarana';
+      }
+      setSelectedRole(roleToFetch);
+      fetchUsers(pagination.halaman, pagination.batas, searchTerm, roleToFetch);
+    }
+  }, [pagination.halaman, pagination.batas, searchTerm, user]);
 
   const handlePageChange = (event, newPage) => {
     setPagination((prev) => ({ ...prev, halaman: newPage }));
@@ -119,6 +134,13 @@ const Pengguna = () => {
   const handleSearchChange = (event) => {
     setSearchTerm(event.target.value);
     setPagination((prev) => ({ ...prev, halaman: 1 })); // Reset to first page on search
+  };
+
+  const handleRoleFilterChange = (event) => {
+    const newRole = event.target.value;
+    setSelectedRole(newRole);
+    setPagination((prev) => ({ ...prev, halaman: 1 })); // Reset to first page on role filter change
+    fetchUsers(1, pagination.batas, searchTerm, newRole);
   };
 
   // Handle form open for add/edit
@@ -264,22 +286,24 @@ const Pengguna = () => {
     console.log('Role in row:', row.peran);
     return (
       <Box>
-        {(isAdmin() || isKepalaLab()) && (
+        {(isAdmin() || isKepalaLab() || user.peran === 'toolman' || user.peran === 'sarana') && (
           <>
             <Tooltip title="Edit">
               <IconButton onClick={() => handleOpenForm(row)} size="small">
                 <EditIcon fontSize="small" />
               </IconButton>
             </Tooltip>
-            <Tooltip title="Hapus">
-              <IconButton 
-                onClick={() => handleDeleteConfirm(row)} 
-                size="small" 
-                color="error"
-              >
-                <DeleteIcon fontSize="small" />
-              </IconButton>
-            </Tooltip>
+            {isKepalaLab() && (
+              <Tooltip title="Hapus">
+                <IconButton 
+                  onClick={() => handleDeleteConfirm(row)} 
+                  size="small" 
+                  color="error"
+                >
+                  <DeleteIcon fontSize="small" />
+                </IconButton>
+              </Tooltip>
+            )}
           </>
         )}
       </Box>
@@ -290,9 +314,9 @@ const Pengguna = () => {
     <>
       <PageHeader
         title="Manajemen Pengguna"
-        actionText={(isAdmin() || isKepalaLab()) ? "Tambah Pengguna" : undefined}
-        actionIcon={(isAdmin() || isKepalaLab()) ? <AddIcon /> : undefined}
-        onActionClick={(isAdmin() || isKepalaLab()) ? () => handleOpenForm() : undefined}
+        actionText={isKepalaLab() ? "Tambah Pengguna" : undefined}
+actionIcon={isKepalaLab() ? <AddIcon /> : undefined}
+onActionClick={isKepalaLab() ? () => handleOpenForm() : undefined}
         breadcrumbs={[{ text: 'Pengguna' }]} 
       />
 
@@ -312,6 +336,26 @@ const Pengguna = () => {
         onRowsPerPageChange={handleRowsPerPageChange}
         searchTerm={searchTerm}
         onSearchChange={handleSearchChange}
+        filterComponent={
+          (isAdmin() || isKepalaLab()) && (
+            <FormControl sx={{ minWidth: 120, mr: 2 }} size="small">
+              <InputLabel id="filter-role-label">Filter Role</InputLabel>
+              <Select
+                labelId="filter-role-label"
+                id="filter-role"
+                value={selectedRole}
+                label="Filter Role"
+                onChange={handleRoleFilterChange}
+              >
+                <MenuItem value="">Semua</MenuItem>
+                <MenuItem value="admin">Admin</MenuItem>
+                <MenuItem value="kepala_lab">Kepala Lab</MenuItem>
+                <MenuItem value="toolman">Toolman</MenuItem>
+                <MenuItem value="sarana">Sarana</MenuItem>
+              </Select>
+            </FormControl>
+          )
+        }
       />
 
       {/* Add/Edit Form Dialog */}
@@ -345,6 +389,7 @@ const Pengguna = () => {
                   onBlur={handleBlur}
                   error={touched.nama && Boolean(errors.nama)}
                   helperText={touched.nama && errors.nama}
+                  disabled={!(isKepalaLab() || isAdmin() || user.peran === 'toolman' || user.peran === 'sarana')} // Admin, Kepala Lab, Toolman, Sarana bisa edit nama
                 />
                 
                 <TextField
@@ -358,7 +403,7 @@ const Pengguna = () => {
                   onBlur={handleBlur}
                   error={touched.nama_pengguna && Boolean(errors.nama_pengguna)}
                   helperText={touched.nama_pengguna && errors.nama_pengguna}
-                  disabled={!isKepalaLab()} // Allow kalab to change admin username
+                  disabled={!isKepalaLab()}
                 />
                 
 
@@ -375,6 +420,7 @@ const Pengguna = () => {
                   onBlur={handleBlur}
                   error={touched.password && Boolean(errors.password)}
                   helperText={touched.password && errors.password}
+                  disabled={currentUser && !isKepalaLab() && !isAdmin() && user.peran !== 'toolman' && user.peran !== 'sarana'}
                   InputProps={{
                     endAdornment: (
                       <InputAdornment position="end">
@@ -393,7 +439,7 @@ const Pengguna = () => {
                   fullWidth 
                   margin="normal"
                   error={touched.peran && Boolean(errors.peran)}
-                  disabled={!isKepalaLab()} // Prevent changing admin role unless kalab
+                  disabled={!isKepalaLab()}
                 >
                   <InputLabel id="peran-label">Role</InputLabel>
                   <Select
