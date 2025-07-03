@@ -34,7 +34,7 @@ const Sidebar = ({ open, setOpen }) => {
   const theme = useTheme();
   const navigate = useNavigate();
   const location = useLocation();
-  const { isAdmin } = useAuth();
+  const { isAdmin, isAdminOrKepalaLab } = useAuth();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
 
   const handleDrawerToggle = () => {
@@ -145,7 +145,7 @@ const Sidebar = ({ open, setOpen }) => {
           </ListItem>
         ))}
 
-        {isAdmin() && (
+        {isAdminOrKepalaLab() && (
           <>
             <Divider sx={{ my: 2 }} />
             <Typography

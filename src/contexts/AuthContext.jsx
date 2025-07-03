@@ -198,6 +198,8 @@ export const AuthProvider = ({ children }) => {
     return user?.peran === 'kepala_lab';
   };
 
+
+
   const isToolman = () => {
     return user?.peran === 'toolman';
   };
@@ -239,6 +241,7 @@ export const AuthProvider = ({ children }) => {
     logout,
     isAdmin,
     isKepalaLab,
+
     isToolman,
     isSarana,
     isAdminOrToolman,
