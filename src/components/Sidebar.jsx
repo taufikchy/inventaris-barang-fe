@@ -26,6 +26,8 @@ import {
   People as PeopleIcon,
   ChevronLeft as ChevronLeftIcon,
   Menu as MenuIcon,
+  History as HistoryIcon,
+  Visibility as VisibilityIcon,
 } from '@mui/icons-material';
 
 const drawerWidth = 240;
@@ -70,9 +72,14 @@ const Sidebar = ({ open, setOpen }) => {
       path: '/peminjaman',
     },
     {
-      text: 'Histori Aktivitas',
+      text: 'Histori Transaksi',
       icon: <ReceiptIcon />,
       path: '/transaksi',
+    },
+    {
+      text: 'Histori Aktivitas',
+      icon: <HistoryIcon />,
+      path: '/histori-aktivitas',
     },
     {
       text: 'Laporan',
