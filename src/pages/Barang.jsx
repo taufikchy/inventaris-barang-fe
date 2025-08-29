@@ -98,6 +98,9 @@ const Barang = () => {
       if (apiFilters.status) params.append('status', apiFilters.status);
       if (apiFilters.kondisi) params.append('kondisi', apiFilters.kondisi);
       
+      // Tambahkan parameter batas untuk menampilkan lebih banyak data
+      params.append('batas', 100);
+      
       // Fetch data from API
       const response = await axios.get(`/api/barang?${params.toString()}`);
       
