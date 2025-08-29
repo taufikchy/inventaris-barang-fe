@@ -388,7 +388,7 @@ const BarangDetail = () => {
                         <CardMedia
                           component="img"
                           height="250"
-                          image={imagePreview || barang.gambar || 'https://via.placeholder.com/400x300?text=No+Image'}
+                          image={imagePreview || (barang.gambar ? `http://localhost:5000${barang.gambar}` : 'https://via.placeholder.com/400x300?text=No+Image')}
                           alt={values.nama}
                           sx={{ objectFit: 'contain', bgcolor: 'grey.100', p: 2 }}
                         />
@@ -654,7 +654,7 @@ const BarangDetail = () => {
                       <CardMedia
                         component="img"
                         height="250"
-                        image={barang?.gambar || 'https://via.placeholder.com/400x300?text=No+Image'}
+                        image={barang?.gambar ? `http://localhost:5000${barang?.gambar}` : 'https://via.placeholder.com/400x300?text=No+Image'}
                         alt={barang?.nama || 'Barang'}
                         sx={{ objectFit: 'contain', bgcolor: 'grey.100', p: 2 }}
                       />
