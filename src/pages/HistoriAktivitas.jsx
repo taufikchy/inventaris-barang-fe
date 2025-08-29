@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Box, Typography, Chip, IconButton, Tooltip, TextField, MenuItem, Grid } from '@mui/material';
+import { Box, Typography, Chip, IconButton, Tooltip, TextField, MenuItem, Grid, Dialog, DialogTitle, DialogContent, DialogActions, Button, Divider } from '@mui/material';
 import { DatePicker } from '@mui/x-date-pickers';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
@@ -28,6 +28,10 @@ const HistoriAktivitas = () => {
   const [tanggalAkhir, setTanggalAkhir] = useState(null);
   const [idPengguna, setIdPengguna] = useState('');
   const [pengguna, setPengguna] = useState([]);
+  
+  // Detail dialog states
+  const [detailOpen, setDetailOpen] = useState(false);
+  const [selectedActivity, setSelectedActivity] = useState(null);
 
   const fetchPengguna = async () => {
     try {
@@ -178,15 +182,22 @@ const HistoriAktivitas = () => {
     }
   ];
 
+  const handleViewDetail = (activity) => {
+    setSelectedActivity(activity);
+    setDetailOpen(true);
+  };
+
+  const handleCloseDetail = () => {
+    setDetailOpen(false);
+    setSelectedActivity(null);
+  };
+
   const actions = (row) => {
     return (
       <Tooltip title="Lihat Detail">
         <IconButton
           size="small"
-          onClick={() => {
-            // Implementasi detail view jika diperlukan
-            console.log('View detail for:', row);
-          }}
+          onClick={() => handleViewDetail(row)}
         >
           <VisibilityIcon />
         </IconButton>
@@ -326,6 +337,147 @@ const HistoriAktivitas = () => {
         onPageChange={handlePageChange}
         onRowsPerPageChange={handleRowsPerPageChange}
       />
+      
+      {/* Detail Dialog */}
+      <Dialog
+        open={detailOpen}
+        onClose={handleCloseDetail}
+        maxWidth="md"
+        fullWidth
+      >
+        <DialogTitle>
+          Detail Aktivitas
+        </DialogTitle>
+        <DialogContent>
+          {selectedActivity && (
+            <Box sx={{ pt: 1 }}>
+              <Grid container spacing={2}>
+                <Grid item xs={12} sm={6}>
+                  <Typography variant="subtitle2" color="text.secondary">
+                    Tanggal & Waktu
+                  </Typography>
+                  <Typography variant="body1" sx={{ mb: 2 }}>
+                    {dayjs(selectedActivity.waktu_aktivitas).locale('id').format('DD MMMM YYYY, HH:mm:ss')}
+                  </Typography>
+                </Grid>
+                <Grid item xs={12} sm={6}>
+                  <Typography variant="subtitle2" color="text.secondary">
+                    Pengguna
+                  </Typography>
+                  <Typography variant="body1" sx={{ mb: 2 }}>
+                    {selectedActivity.pengguna?.nama || 'Sistem'}
+                  </Typography>
+                </Grid>
+                <Grid item xs={12} sm={6}>
+                  <Typography variant="subtitle2" color="text.secondary">
+                    Jenis Aktivitas
+                  </Typography>
+                  <Box sx={{ mb: 2 }}>
+                    <Chip 
+                      label={getJenisAktivitasLabel(selectedActivity.jenis_aktivitas)} 
+                      color={getJenisAktivitasColor(selectedActivity.jenis_aktivitas)} 
+                      size="small" 
+                    />
+                  </Box>
+                </Grid>
+                <Grid item xs={12} sm={6}>
+                  <Typography variant="subtitle2" color="text.secondary">
+                    Modul
+                  </Typography>
+                  <Typography variant="body1" sx={{ mb: 2 }}>
+                    {getModulLabel(selectedActivity.modul)}
+                  </Typography>
+                </Grid>
+                <Grid item xs={12}>
+                  <Typography variant="subtitle2" color="text.secondary">
+                    Deskripsi
+                  </Typography>
+                  <Typography variant="body1" sx={{ mb: 2 }}>
+                    {selectedActivity.deskripsi}
+                  </Typography>
+                </Grid>
+                <Grid item xs={12} sm={6}>
+                  <Typography variant="subtitle2" color="text.secondary">
+                    IP Address
+                  </Typography>
+                  <Typography variant="body1" sx={{ mb: 2 }}>
+                    {selectedActivity.ip_address || 'Tidak tersedia'}
+                  </Typography>
+                </Grid>
+                <Grid item xs={12} sm={6}>
+                  <Typography variant="subtitle2" color="text.secondary">
+                    User Agent
+                  </Typography>
+                  <Typography variant="body1" sx={{ mb: 2, wordBreak: 'break-all' }}>
+                    {selectedActivity.user_agent || 'Tidak tersedia'}
+                  </Typography>
+                </Grid>
+                
+                {/* Data Sebelum */}
+                {selectedActivity.data_sebelum && (
+                  <Grid item xs={12}>
+                    <Divider sx={{ my: 2 }} />
+                    <Typography variant="subtitle2" color="text.secondary">
+                      Data Sebelum Perubahan
+                    </Typography>
+                    <Box sx={{ 
+                      mt: 1, 
+                      p: 2, 
+                      bgcolor: 'grey.50', 
+                      borderRadius: 1,
+                      border: '1px solid',
+                      borderColor: 'grey.200'
+                    }}>
+                      <pre style={{ 
+                        margin: 0, 
+                        fontSize: '12px', 
+                        fontFamily: 'monospace',
+                        whiteSpace: 'pre-wrap',
+                        wordBreak: 'break-word'
+                      }}>
+                        {JSON.stringify(JSON.parse(selectedActivity.data_sebelum), null, 2)}
+                      </pre>
+                    </Box>
+                  </Grid>
+                )}
+                
+                {/* Data Sesudah */}
+                {selectedActivity.data_sesudah && (
+                  <Grid item xs={12}>
+                    <Divider sx={{ my: 2 }} />
+                    <Typography variant="subtitle2" color="text.secondary">
+                      Data Sesudah Perubahan
+                    </Typography>
+                    <Box sx={{ 
+                      mt: 1, 
+                      p: 2, 
+                      bgcolor: 'grey.50', 
+                      borderRadius: 1,
+                      border: '1px solid',
+                      borderColor: 'grey.200'
+                    }}>
+                      <pre style={{ 
+                        margin: 0, 
+                        fontSize: '12px', 
+                        fontFamily: 'monospace',
+                        whiteSpace: 'pre-wrap',
+                        wordBreak: 'break-word'
+                      }}>
+                        {JSON.stringify(JSON.parse(selectedActivity.data_sesudah), null, 2)}
+                      </pre>
+                    </Box>
+                  </Grid>
+                )}
+              </Grid>
+            </Box>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseDetail}>
+            Tutup
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 };
