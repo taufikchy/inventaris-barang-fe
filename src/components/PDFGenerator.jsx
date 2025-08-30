@@ -1,12 +1,8 @@
 import React from 'react';
 import jsPDF from 'jspdf';
-import autoTable from 'jspdf-autotable';
+import 'jspdf-autotable';
 
-// Extend jsPDF with autoTable
-jsPDF.autoTableSetDefaults = autoTable.setDefaults || function() {};
-if (typeof jsPDF.API.autoTable === 'undefined') {
-  jsPDF.API.autoTable = autoTable;
-}
+// Tidak perlu extend jsPDF dengan autoTable karena jspdf-autotable sudah melakukannya secara otomatis
 
 class PDFGenerator {
   constructor() {
@@ -89,11 +85,6 @@ class PDFGenerator {
       format: 'a4',
       filters: ['ASCIIHexEncode']
     });
-    
-    // Ensure autoTable is available on this instance
-    if (typeof this.doc.autoTable === 'undefined') {
-      this.doc.autoTable = autoTable;
-    }
     
     // Set font default Times New Roman
     this.doc.setFont('times', 'normal');
@@ -349,17 +340,17 @@ class PDFGenerator {
       margin: { top: 10 }
     };
     
-    // Data tabel
-    const tableData = items.map((item, index) => [
+    // Data tabel - pastikan items adalah array
+    const tableData = Array.isArray(items) ? items.map((item, index) => [
       (index + 1).toString(),
       item.nama_barang || item.nama || '-',
       item.jumlah || item.qty || '1',
       item.satuan || item.unit || 'pcs',
       item.kondisi || item.status || 'Baik'
-    ]);
+    ]) : [['1', 'Tidak ada data', '-', '-', '-']];
     
     // Tambahkan tabel ke dokumen
-    autoTable(doc, {
+    doc.autoTable({
       ...tableConfig,
       body: tableData
     });

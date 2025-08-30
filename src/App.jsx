@@ -22,6 +22,7 @@ import DetailPeminjaman from './pages/DetailPeminjaman';
 import HistoriTransaksi from './pages/Transaksi';
 import Pengguna from './pages/Pengguna';
 import Laporan from './pages/Laporan';
+import HistoriAktivitas from './pages/HistoriAktivitas';
 import NotFound from './pages/NotFound';
 
 // Guards
@@ -135,6 +136,7 @@ function App() {
               <Route path="/peminjaman/:id" element={<DetailPeminjaman />} />
               <Route path="/peminjaman/:id/edit" element={<DetailPeminjaman />} />
               <Route path="/transaksi" element={<HistoriTransaksi />} />
+              <Route path="/histori-aktivitas" element={<HistoriAktivitas />} />
               <Route path="/laporan" element={<Laporan />} />
               
               {/* Admin Only Routes */}

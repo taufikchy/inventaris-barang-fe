@@ -34,7 +34,6 @@ import {
   Inventory as InventoryIcon,
   SwapHoriz as SwapHorizIcon,
   Assessment as AssessmentIcon,
-  Receipt as ReceiptIcon,
 } from '@mui/icons-material';
 import dayjs from 'dayjs';
 import PageHeader from '../components/PageHeader';
@@ -63,26 +62,23 @@ const Laporan = () => {
   const [exportMenu, setExportMenu] = useState(null);
   
   // Filter states
-  const [startDate, setStartDate] = useState(dayjs().subtract(30, 'day'));
-  const [endDate, setEndDate] = useState(dayjs());
+  const [startDate, setStartDate] = useState(null);
+  const [endDate, setEndDate] = useState(null);
   const [kategoriFilter, setKategoriFilter] = useState('');
   const [lokasiFilter, setLokasiFilter] = useState('');
   const [kondisiFilter, setKondisiFilter] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
-  const [jenisTransaksiFilter, setJenisTransaksiFilter] = useState('');
   
   // Data states
   const [inventoryData, setInventoryData] = useState([]);
   const [loanData, setLoanData] = useState([]);
   const [conditionData, setConditionData] = useState([]);
-  const [transactionData, setTransactionData] = useState([]);
   
   // Filter dropdown data states
   const [categories, setCategories] = useState([]);
   const [locations, setLocations] = useState([]);
   const [conditions, setConditions] = useState([]);
   const [statuses, setStatuses] = useState([]);
-  const [transactionTypes, setTransactionTypes] = useState([]);
 
   // Handle tab change
   const handleTabChange = (event, newValue) => {
@@ -167,20 +163,7 @@ const Laporan = () => {
     }
   };
 
-  // Fetch transaction types for filter dropdown
-  const fetchTransactionTypes = async () => {
-    try {
-      // Set static transaction types based on backend enum values
-      setTransactionTypes([
-        { value: 'masuk', label: 'Masuk' },
-        { value: 'keluar', label: 'Keluar' },
-        { value: 'rusak', label: 'Rusak' },
-        { value: 'hilang', label: 'Hilang' }
-      ]);
-    } catch (error) {
-      console.error('Error setting transaction types:', error);
-    }
-  };
+
 
   // Fetch inventory report data
   const fetchInventoryData = async () => {
@@ -248,88 +231,7 @@ const Laporan = () => {
     }
   };
 
-  // Fetch transaction report data
-  const fetchTransactionData = async () => {
-    try {
-      setLoading(true);
-      // In a real application, you would fetch this data from your API
-      // For now, we'll use mock data
-      
-      // Simulate API call delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Mock data
-      const mockData = [
-        { 
-          id: 1, 
-          kode: 'TRX001', 
-          barang: 'Laptop Dell XPS 13', 
-          jenis_transaksi: 'masuk',
-          jumlah: 5,
-          tanggal_transaksi: '2023-05-01',
-          harga_satuan: 15000000,
-          total_harga: 75000000,
-          supplier: 'PT. Tech Solutions',
-          keterangan: 'Pembelian laptop baru'
-        },
-        { 
-          id: 2, 
-          kode: 'TRX002', 
-          barang: 'Mouse Wireless', 
-          jenis_transaksi: 'keluar',
-          jumlah: 2,
-          tanggal_transaksi: '2023-05-05',
-          harga_satuan: 150000,
-          total_harga: 300000,
-          supplier: '-',
-          keterangan: 'Distribusi ke lab'
-        },
-        { 
-          id: 3, 
-          kode: 'TRX003', 
-          barang: 'Keyboard Mechanical', 
-          jenis_transaksi: 'rusak',
-          jumlah: 1,
-          tanggal_transaksi: '2023-05-10',
-          harga_satuan: 850000,
-          total_harga: 850000,
-          supplier: '-',
-          keterangan: 'Kerusakan akibat tumpahan air'
-        },
-        { 
-          id: 4, 
-          kode: 'TRX004', 
-          barang: 'Monitor LG 24"', 
-          jenis_transaksi: 'hilang',
-          jumlah: 1,
-          tanggal_transaksi: '2023-05-15',
-          harga_satuan: 2500000,
-          total_harga: 2500000,
-          supplier: '-',
-          keterangan: 'Hilang dari ruang penyimpanan'
-        },
-        { 
-          id: 5, 
-          kode: 'TRX005', 
-          barang: 'Proyektor Epson', 
-          jenis_transaksi: 'masuk',
-          jumlah: 3,
-          tanggal_transaksi: '2023-05-20',
-          harga_satuan: 7500000,
-          total_harga: 22500000,
-          supplier: 'CV. Media Edukasi',
-          keterangan: 'Pengadaan proyektor untuk lab'
-        },
-      ];
-      
-      setTransactionData(mockData);
-      setLoading(false);
-    } catch (error) {
-      console.error('Error fetching transaction data:', error);
-      toast.error('Gagal memuat data transaksi');
-      setLoading(false);
-    }
-  };
+
 
   // Load initial data
   useEffect(() => {
@@ -338,7 +240,6 @@ const Laporan = () => {
     fetchLocations();
     fetchConditions();
     fetchStatuses();
-    fetchTransactionTypes();
   }, []);
 
   // Load data when tab changes
@@ -349,8 +250,6 @@ const Laporan = () => {
       fetchLoanData();
     } else if (activeTab === 2) {
       fetchConditionData();
-    } else if (activeTab === 3) {
-      fetchTransactionData();
     }
   }, [activeTab]);
 
@@ -385,13 +284,7 @@ const Laporan = () => {
     return kategoriMatch && lokasiMatch && kondisiMatch;
   });
 
-  const filteredTransactionData = transactionData.filter(item => {
-    const itemDate = dayjs(item.tanggal_transaksi);
-    const dateMatch = (!startDate || !endDate) ? true : itemDate.isBetween(startDate, endDate, 'day', '[]');
-    const jenisMatch = !jenisTransaksiFilter || item.jenis_transaksi === jenisTransaksiFilter;
-    
-    return dateMatch && jenisMatch;
-  });
+
 
   // Table columns definition
   const inventoryColumns = [
@@ -520,43 +413,7 @@ const Laporan = () => {
     { id: 'keterangan', label: 'Keterangan', sortable: true },
   ];
 
-  const transactionColumns = [
-    { 
-      id: 'no', 
-      label: 'No', 
-      sortable: true,
-      format: (value, row, displayIndex) => displayIndex + 1 // Menampilkan nomor urut berdasarkan posisi setelah sorting
-    },
-    { id: 'kode', label: 'Kode', sortable: true },
-    { id: 'barang', label: 'Nama Barang', sortable: true },
-    { id: 'jenis_transaksi', label: 'Jenis', sortable: true, format: (value) => {
-      const labels = {
-        'masuk': 'Masuk',
-        'keluar': 'Keluar', 
-        'rusak': 'Rusak',
-        'hilang': 'Hilang'
-      };
-      return labels[value] || value;
-    }},
-    { id: 'jumlah', label: 'Jumlah', sortable: true },
-    { id: 'tanggal_transaksi', label: 'Tanggal', sortable: true, format: (value) => {
-      if (!value) return '-';
-      const date = new Date(value);
-      return date.toLocaleDateString('id-ID', {
-        day: '2-digit',
-        month: 'long',
-        year: 'numeric'
-      });
-    }},
-    { id: 'harga_satuan', label: 'Harga Satuan', sortable: true, format: (value) => 
-      new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR' }).format(value)
-    },
-    { id: 'total_harga', label: 'Total Harga', sortable: true, format: (value) => 
-      new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR' }).format(value)
-    },
-    { id: 'supplier', label: 'Supplier', sortable: true },
-    { id: 'keterangan', label: 'Keterangan', sortable: true },
-  ];
+
 
   return (
     <>
@@ -675,23 +532,7 @@ const Laporan = () => {
                 </Select>
               </FormControl>
             </Grid>
-            <Grid item xs={12} md={6} lg={3}>
-              <FormControl fullWidth size="small">
-                <InputLabel>Jenis Transaksi</InputLabel>
-                <Select
-                  value={jenisTransaksiFilter}
-                  label="Jenis Transaksi"
-                  onChange={(e) => setJenisTransaksiFilter(e.target.value)}
-                >
-                  <MenuItem value="">Semua</MenuItem>
-                  {transactionTypes.map((type) => (
-                    <MenuItem key={type.value} value={type.value}>
-                      {type.label}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            </Grid>
+
             <Grid item xs={12} md={6} lg={3}>
               <Button 
                 variant="outlined" 
@@ -703,7 +544,6 @@ const Laporan = () => {
                   setLokasiFilter('');
                   setKondisiFilter('');
                   setStatusFilter('');
-                  setJenisTransaksiFilter('');
                 }}
               >
                 Reset Filter
@@ -737,13 +577,7 @@ const Laporan = () => {
             id="report-tab-2" 
             aria-controls="report-tabpanel-2" 
           />
-          <Tab 
-            icon={<ReceiptIcon />} 
-            iconPosition="start" 
-            label="Laporan Transaksi" 
-            id="report-tab-3" 
-            aria-controls="report-tabpanel-3" 
-          />
+
         </Tabs>
       </Box>
 
@@ -784,17 +618,7 @@ const Laporan = () => {
         />
       </TabPanel>
 
-      <TabPanel value={activeTab} index={3}>
-        <DataTable
-          title="Laporan Transaksi Barang"
-          columns={transactionColumns}
-          rows={filteredTransactionData}
-          loading={loading}
-          refreshable
-          onRefresh={fetchTransactionData}
-          emptyMessage="Tidak ada data transaksi"
-        />
-      </TabPanel>
+
     </>
   );
 };
