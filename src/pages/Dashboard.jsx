@@ -53,7 +53,7 @@ const Dashboard = () => {
     totalTransaksiHariIni: 0
   });
   const [recentPeminjaman, setRecentPeminjaman] = useState([]);
-  const [recentTransaksi, setRecentTransaksi] = useState([]);
+  const [recentAktivitas, setRecentAktivitas] = useState([]);
   const [transaksiPerJenis, setTransaksiPerJenis] = useState([]);
   const [distribusiPerKondisi, setDistribusiPerKondisi] = useState([]);
   const [barangPerLokasi, setBarangPerLokasi] = useState([]);
@@ -91,8 +91,8 @@ const Dashboard = () => {
           
           setRecentPeminjaman(formattedPeminjaman);
           
-          // Set recent transactions and transaction stats
-          setRecentTransaksi(response.data.data.recentTransaksi || []);
+          // Set recent activities and transaction stats
+          setRecentAktivitas(response.data.data.recentAktivitas || []);
           setTransaksiPerJenis(response.data.data.transaksiPerJenis || []);
           setDistribusiPerKondisi(distribusiPerKondisi);
           setBarangPerLokasi(barangPerLokasi);
@@ -470,7 +470,7 @@ const Dashboard = () => {
           </Card>
         </Grid>
         
-        {/* Recent Transactions Table */}
+        {/* Recent Activities Table */}
         <Grid item xs={12} md={6}>
           <Card>
             <CardContent>
@@ -482,11 +482,11 @@ const Dashboard = () => {
                 flexDirection: { xs: 'column', sm: 'row' },
                 gap: { xs: 1, sm: 0 }
               }}>
-                <Typography variant="h6">Transaksi Terbaru</Typography>
+                <Typography variant="h6">Aktivitas Terbaru</Typography>
                 <Button
                   size="small"
                   endIcon={<ArrowForwardIcon />}
-                  onClick={() => navigate('/transaksi')}
+                  onClick={() => navigate('/histori-aktivitas')}
                 >
                   Lihat Semua
                 </Button>
@@ -498,48 +498,61 @@ const Dashboard = () => {
                   <Table size="small">
                     <TableHead>
                       <TableRow>
-                        <TableCell>Barang</TableCell>
-                        <TableCell>Jenis</TableCell>
-                        <TableCell sx={{ display: { xs: 'none', sm: 'table-cell' } }}>Jumlah</TableCell>
-                        <TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}>Tanggal</TableCell>
+                        <TableCell>Pengguna</TableCell>
+                        <TableCell>Aktivitas</TableCell>
+                        <TableCell sx={{ display: { xs: 'none', sm: 'table-cell' } }}>Modul</TableCell>
+                        <TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}>Waktu</TableCell>
                       </TableRow>
                     </TableHead>
                     <TableBody>
-                      {recentTransaksi.length === 0 ? (
+                      {recentAktivitas.length === 0 ? (
                         <TableRow>
                           <TableCell colSpan={{ xs: 2, sm: 3, md: 4 }} align="center">
                             <Typography variant="body2" color="text.secondary">
-                              Tidak ada data transaksi
+                              Tidak ada data aktivitas
                             </Typography>
                           </TableCell>
                         </TableRow>
                       ) : (
-                        recentTransaksi.map((transaksi) => (
-                          <TableRow key={transaksi.id}>
+                        recentAktivitas.map((aktivitas) => (
+                          <TableRow key={aktivitas.id}>
                             <TableCell>
                               <Typography variant="body2" noWrap>
-                                {transaksi.barang?.nama || 'N/A'}
+                                {aktivitas.pengguna?.nama || 'N/A'}
                               </Typography>
                             </TableCell>
                             <TableCell>
                               <Chip
-                                label={transaksi.jenis_transaksi === 'masuk' ? 'Masuk' :
-                                       transaksi.jenis_transaksi === 'keluar' ? 'Keluar' :
-                                       transaksi.jenis_transaksi === 'rusak' ? 'Rusak' : 'Hilang'}
-                                color={transaksi.jenis_transaksi === 'masuk' ? 'success' :
-                                       transaksi.jenis_transaksi === 'keluar' ? 'primary' :
-                                       transaksi.jenis_transaksi === 'rusak' ? 'warning' : 'error'}
+                                label={aktivitas.jenis_aktivitas === 'create' ? 'Tambah' :
+                                       aktivitas.jenis_aktivitas === 'update' ? 'Ubah' :
+                                       aktivitas.jenis_aktivitas === 'delete' ? 'Hapus' :
+                                       aktivitas.jenis_aktivitas === 'login' ? 'Login' : 'Logout'}
+                                color={aktivitas.jenis_aktivitas === 'create' ? 'success' :
+                                       aktivitas.jenis_aktivitas === 'update' ? 'primary' :
+                                       aktivitas.jenis_aktivitas === 'delete' ? 'error' :
+                                       aktivitas.jenis_aktivitas === 'login' ? 'info' : 'default'}
                                 size="small"
+                                sx={{
+                                  '& .MuiChip-label': {
+                                    color: 'white'
+                                  }
+                                }}
                               />
                             </TableCell>
                             <TableCell sx={{ display: { xs: 'none', sm: 'table-cell' } }}>
                               <Typography variant="body2">
-                                {transaksi.jumlah}
+                                {aktivitas.modul}
                               </Typography>
                             </TableCell>
                             <TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}>
                               <Typography variant="body2">
-                                {formatDate(transaksi.tanggal_transaksi)}
+                                {new Date(aktivitas.waktu_aktivitas).toLocaleString('id-ID', {
+                                  year: 'numeric',
+                                  month: '2-digit',
+                                  day: '2-digit',
+                                  hour: '2-digit',
+                                  minute: '2-digit'
+                                })}
                               </Typography>
                             </TableCell>
                           </TableRow>

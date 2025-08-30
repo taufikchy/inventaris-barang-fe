@@ -41,9 +41,9 @@ const Header = ({ open, setOpen }) => {
     setAnchorEl(null);
   };
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
     handleClose();
-    logout();
+    await logout();
     navigate('/login');
   };
 

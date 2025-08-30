@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { Box, Typography, Chip, IconButton, Tooltip, TextField, MenuItem, Grid, Dialog, DialogTitle, DialogContent, DialogActions, Button, Divider } from '@mui/material';
+import { Box, Typography, Chip, IconButton, Tooltip, TextField, MenuItem, Grid, Dialog, DialogTitle, DialogContent, DialogActions, Button, Divider, Card, CardContent } from '@mui/material';
 import { DatePicker } from '@mui/x-date-pickers';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import dayjs from 'dayjs';
 import 'dayjs/locale/id';
-import { Visibility as VisibilityIcon, FilterList as FilterListIcon } from '@mui/icons-material';
+import { Visibility as VisibilityIcon, FilterList as FilterListIcon, FilterAlt as FilterAltIcon } from '@mui/icons-material';
 import DataTable from '../components/DataTable';
 import PageHeader from '../components/PageHeader';
 import axios from '../utils/axios';
@@ -26,23 +26,13 @@ const HistoriAktivitas = () => {
   const [modul, setModul] = useState('');
   const [tanggalMulai, setTanggalMulai] = useState(null);
   const [tanggalAkhir, setTanggalAkhir] = useState(null);
-  const [idPengguna, setIdPengguna] = useState('');
-  const [pengguna, setPengguna] = useState([]);
+  const [rolePengguna, setRolePengguna] = useState('');
   
   // Detail dialog states
   const [detailOpen, setDetailOpen] = useState(false);
   const [selectedActivity, setSelectedActivity] = useState(null);
 
-  const fetchPengguna = async () => {
-    try {
-      const response = await axios.get('/api/pengguna');
-      if (response.data.success) {
-        setPengguna(response.data.data);
-      }
-    } catch (error) {
-      console.error('Error fetching users:', error);
-    }
-  };
+
 
   const fetchHistoriAktivitas = async () => {
     setLoading(true);
@@ -54,7 +44,8 @@ const HistoriAktivitas = () => {
       if (searchTerm) params.append('search', searchTerm);
       if (jenisAktivitas) params.append('jenis_aktivitas', jenisAktivitas);
       if (modul) params.append('modul', modul);
-      if (idPengguna) params.append('id_pengguna', idPengguna);
+
+      if (rolePengguna) params.append('role_pengguna', rolePengguna);
       
       if (tanggalMulai) {
         params.append('tanggal_mulai', dayjs(tanggalMulai).format('YYYY-MM-DD'));
@@ -78,12 +69,8 @@ const HistoriAktivitas = () => {
   };
 
   useEffect(() => {
-    fetchPengguna();
-  }, []);
-
-  useEffect(() => {
     fetchHistoriAktivitas();
-  }, [page, rowsPerPage, searchTerm, jenisAktivitas, modul, tanggalMulai, tanggalAkhir, idPengguna]);
+  }, [page, rowsPerPage, searchTerm, jenisAktivitas, modul, tanggalMulai, tanggalAkhir, rolePengguna]);
 
   const handlePageChange = (event, newPage) => {
     setPage(newPage + 1);
@@ -104,7 +91,7 @@ const HistoriAktivitas = () => {
     setModul('');
     setTanggalMulai(null);
     setTanggalAkhir(null);
-    setIdPengguna('');
+    setRolePengguna('');
     setPage(1);
   };
 
@@ -205,119 +192,127 @@ const HistoriAktivitas = () => {
     );
   };
 
-  const filterComponent = (
-    <Box sx={{ p: 2, display: showFilters ? 'block' : 'none' }}>
-      <Grid container spacing={2}>
-        <Grid item xs={12} sm={6} md={4} lg={2}>
-          <TextField
-            select
-            fullWidth
-            label="Jenis Aktivitas"
-            value={jenisAktivitas}
-            onChange={(e) => setJenisAktivitas(e.target.value)}
-            variant="outlined"
-            size="small"
-          >
-            <MenuItem value="">Semua</MenuItem>
-            <MenuItem value="create">Tambah</MenuItem>
-            <MenuItem value="update">Ubah</MenuItem>
-            <MenuItem value="delete">Hapus</MenuItem>
-            <MenuItem value="login">Login</MenuItem>
-            <MenuItem value="logout">Logout</MenuItem>
-          </TextField>
-        </Grid>
-        
-        <Grid item xs={12} sm={6} md={4} lg={2}>
-          <TextField
-            select
-            fullWidth
-            label="Modul"
-            value={modul}
-            onChange={(e) => setModul(e.target.value)}
-            variant="outlined"
-            size="small"
-          >
-            <MenuItem value="">Semua</MenuItem>
-            <MenuItem value="barang">Barang</MenuItem>
-            <MenuItem value="kategori">Kategori</MenuItem>
-            <MenuItem value="lokasi">Lokasi</MenuItem>
-            <MenuItem value="pengguna">Pengguna</MenuItem>
-            <MenuItem value="peminjaman">Peminjaman</MenuItem>
-            <MenuItem value="transaksi">Transaksi</MenuItem>
-            <MenuItem value="auth">Autentikasi</MenuItem>
-          </TextField>
-        </Grid>
-        
-        <Grid item xs={12} sm={6} md={4} lg={2}>
-          <TextField
-            select
-            fullWidth
-            label="Pengguna"
-            value={idPengguna}
-            onChange={(e) => setIdPengguna(e.target.value)}
-            variant="outlined"
-            size="small"
-          >
-            <MenuItem value="">Semua</MenuItem>
-            {pengguna.map((user) => (
-              <MenuItem key={user.id} value={user.id}>{user.nama}</MenuItem>
-            ))}
-          </TextField>
-        </Grid>
-        
-        <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale="id">
-          <Grid item xs={12} sm={6} md={4} lg={2}>
-            <DatePicker
-              label="Tanggal Mulai"
-              value={tanggalMulai}
-              onChange={setTanggalMulai}
-              format="DD/MM/YYYY"
-              slotProps={{
-                textField: { size: 'small', fullWidth: true }
-              }}
-            />
-          </Grid>
-          
-          <Grid item xs={12} sm={6} md={4} lg={2}>
-            <DatePicker
-              label="Tanggal Akhir"
-              value={tanggalAkhir}
-              onChange={setTanggalAkhir}
-              format="DD/MM/YYYY"
-              slotProps={{
-                textField: { size: 'small', fullWidth: true }
-              }}
-            />
-          </Grid>
-        </LocalizationProvider>
-        
-        <Grid item xs={12} sm={6} md={4} lg={2}>
-          <Box sx={{ display: 'flex', alignItems: 'center', height: '100%' }}>
-            <Tooltip title="Reset Filter">
-              <IconButton onClick={handleResetFilters} color="primary">
-                <FilterListIcon />
-              </IconButton>
-            </Tooltip>
-            <Typography variant="body2">Reset Filter</Typography>
-          </Box>
-        </Grid>
-      </Grid>
-    </Box>
-  );
+
 
   return (
     <Box>
       <PageHeader 
         title="Histori Aktivitas" 
         subtitle="Daftar aktivitas pengguna dalam sistem"
-        action={{
-          label: showFilters ? 'Sembunyikan Filter' : 'Tampilkan Filter',
-          icon: <FilterListIcon />,
-          onClick: () => setShowFilters(!showFilters)
-        }}
       />
       
-      {filterComponent}
+      {/* Filters */}
+      <Card sx={{ mb: 3, display: showFilters ? 'block' : 'none' }}>
+        <CardContent>
+          <Typography variant="h6" gutterBottom>
+            Filter Aktivitas
+          </Typography>
+          <Grid container spacing={2}>
+            <Grid item xs={12} sm={6} md={3}>
+              <TextField
+                select
+                fullWidth
+                label="Jenis Aktivitas"
+                value={jenisAktivitas}
+                onChange={(e) => setJenisAktivitas(e.target.value)}
+                size="small"
+              >
+                <MenuItem value="">Semua</MenuItem>
+                <MenuItem value="create">Tambah</MenuItem>
+                <MenuItem value="update">Ubah</MenuItem>
+                <MenuItem value="delete">Hapus</MenuItem>
+                <MenuItem value="login">Login</MenuItem>
+                <MenuItem value="logout">Logout</MenuItem>
+              </TextField>
+            </Grid>
+            <Grid item xs={12} sm={6} md={3}>
+              <TextField
+                select
+                fullWidth
+                label="Modul"
+                value={modul}
+                onChange={(e) => setModul(e.target.value)}
+                size="small"
+              >
+                <MenuItem value="">Semua</MenuItem>
+                <MenuItem value="barang">Barang</MenuItem>
+                <MenuItem value="kategori">Kategori</MenuItem>
+                <MenuItem value="lokasi">Lokasi</MenuItem>
+                <MenuItem value="pengguna">Pengguna</MenuItem>
+                <MenuItem value="peminjaman">Peminjaman</MenuItem>
+
+                <MenuItem value="auth">Autentikasi</MenuItem>
+              </TextField>
+            </Grid>
+            <Grid item xs={12} sm={6} md={3}>
+              <TextField
+                select
+                fullWidth
+                label="Pengguna"
+                value={rolePengguna}
+                onChange={(e) => setRolePengguna(e.target.value)}
+                size="small"
+              >
+                <MenuItem value="">Semua Role</MenuItem>
+                <MenuItem value="admin">Admin</MenuItem>
+                <MenuItem value="kepala_lab">Kepala Lab</MenuItem>
+                <MenuItem value="toolman">Toolman</MenuItem>
+                <MenuItem value="sarana">Sarana</MenuItem>
+              </TextField>
+            </Grid>
+            <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale="id">
+              <Grid item xs={12} sm={6} md={3}>
+                <DatePicker
+                  label="Tanggal Mulai"
+                  value={tanggalMulai}
+                  onChange={(newValue) => setTanggalMulai(newValue)}
+                  format="DD/MM/YYYY"
+                  slotProps={{
+                    textField: {
+                      fullWidth: true,
+                      size: 'small',
+                    },
+                  }}
+                />
+              </Grid>
+              <Grid item xs={12} sm={6} md={3}>
+                <DatePicker
+                  label="Tanggal Akhir"
+                  value={tanggalAkhir}
+                  onChange={(newValue) => setTanggalAkhir(newValue)}
+                  format="DD/MM/YYYY"
+                  slotProps={{
+                    textField: {
+                      fullWidth: true,
+                      size: 'small',
+                    },
+                  }}
+                />
+              </Grid>
+            </LocalizationProvider>
+            <Grid item xs={12} sm={6} md={3}>
+              <Button
+                variant="outlined"
+                onClick={handleResetFilters}
+                fullWidth
+                sx={{ height: '40px' }}
+              >
+                Reset Filter
+              </Button>
+            </Grid>
+          </Grid>
+        </CardContent>
+      </Card>
+
+      <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 2 }}>
+        <Button
+          variant="outlined"
+          startIcon={<FilterAltIcon />}
+          onClick={() => setShowFilters(!showFilters)}
+        >
+          {showFilters ? 'Sembunyikan Filter' : 'Tampilkan Filter'}
+        </Button>
+      </Box>
       
       <DataTable
         title="Daftar Aktivitas"

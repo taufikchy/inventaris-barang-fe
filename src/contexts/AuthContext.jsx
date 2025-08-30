@@ -28,7 +28,7 @@ export const AuthProvider = ({ children }) => {
       (error) => {
         if (error.response && error.response.status === 401) {
           // Token expired or invalid
-          logout();
+          logout(true); // Skip API call to prevent 401 loop
           toast.error('Sesi Anda telah berakhir. Silakan login kembali.');
           navigate('/login');
         }
@@ -64,7 +64,7 @@ export const AuthProvider = ({ children }) => {
           if (decoded.exp < currentTime) {
             // Token expired
             console.log('Token expired, logging out');
-            logout();
+            logout(true); // Skip API call since token is expired
           } else {
             try {
               // Verify token with backend and get user data
@@ -177,8 +177,20 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  const logout = () => {
+  const logout = async (skipApiCall = false) => {
     console.log('Logging out, removing token');
+    
+    // Only call logout API if we have a valid token and not skipping
+    if (!skipApiCall && token) {
+      try {
+        // Call logout API to log the activity
+        await axios.post('/api/auth/logout');
+      } catch (error) {
+        console.error('Error during logout API call:', error);
+        // Continue with logout even if API call fails
+      }
+    }
+    
     // Remove token from localStorage
     localStorage.removeItem('token');
     
