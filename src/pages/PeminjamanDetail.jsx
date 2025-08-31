@@ -1293,58 +1293,59 @@ const PeminjamanDetail = () => {
                   </Typography>
                   <Divider sx={{ mb: 2 }} />
                   
-                  <TableContainer component={Paper} sx={{ overflowX: 'auto' }}>
-                    <Table sx={{ width: '100%', tableLayout: 'auto', minWidth: '650px' }}>
+                  <TableContainer component={Paper} sx={{ mt: 1 }}>
+                    <Table sx={{ width: '100%', tableLayout: 'fixed' }}>
                       <TableHead>
                         <TableRow sx={{ '& th': { backgroundColor: 'var(--primary-color)', color: 'white' } }}>
                           <TableCell sx={{ 
                             fontWeight: 600, 
                             backgroundColor: 'var(--primary-color)', 
                             color: 'white', 
-                            minWidth: '80px',
-                            whiteSpace: 'nowrap',
-                            padding: '12px 8px'
+                            width: '12%',
+                            padding: '16px 12px',
+                            fontSize: '0.875rem'
                           }}>Kode</TableCell>
                           <TableCell sx={{ 
                             fontWeight: 600, 
                             backgroundColor: 'var(--primary-light)', 
                             color: 'white', 
-                            minWidth: '200px',
-                            padding: '12px 8px'
+                            width: peminjaman.status === 'dikembalikan' ? '28%' : '35%',
+                            padding: '16px 12px',
+                            fontSize: '0.875rem'
                           }}>Nama Barang</TableCell>
                           <TableCell sx={{ 
                             fontWeight: 600, 
                             backgroundColor: 'var(--primary-color)', 
                             color: 'white', 
-                            minWidth: '120px',
-                            whiteSpace: 'nowrap',
-                            padding: '12px 8px'
+                            width: '18%',
+                            padding: '16px 12px',
+                            fontSize: '0.875rem'
                           }}>Lokasi</TableCell>
                           <TableCell align="center" sx={{ 
                             fontWeight: 600, 
                             backgroundColor: 'var(--primary-light)', 
                             color: 'white', 
-                            minWidth: '70px',
-                            whiteSpace: 'nowrap',
-                            padding: '12px 8px'
+                            width: '10%',
+                            padding: '16px 12px',
+                            fontSize: '0.875rem'
                           }}>Jumlah</TableCell>
-                          <TableCell sx={{ 
+                          <TableCell align="center" sx={{ 
                             fontWeight: 600, 
                             backgroundColor: 'var(--primary-color)', 
                             color: 'white', 
-                            minWidth: '120px',
-                            whiteSpace: 'nowrap',
-                            padding: '12px 8px'
-                          }}>Kondisi Saat Pinjam</TableCell>
+                            width: peminjaman.status === 'dikembalikan' ? '16%' : '25%',
+                            padding: '16px 12px',
+                            fontSize: '0.875rem'
+                          }}>Kondisi Pinjam</TableCell>
                           {peminjaman.status === 'dikembalikan' && (
-                            <TableCell sx={{ 
+                            <TableCell align="center" sx={{ 
                               fontWeight: 600, 
                               backgroundColor: 'var(--primary-light)', 
                               color: 'white',
-                              minWidth: '120px',
-                              whiteSpace: 'nowrap',
-                              padding: '12px 8px'
-                            }}>Kondisi Saat Kembali</TableCell>
+                              width: '16%',
+                              padding: '16px 12px',
+                              fontSize: '0.875rem'
+                            }}>Kondisi Kembali</TableCell>
                           )}
                         </TableRow>
                       </TableHead>
@@ -1355,68 +1356,82 @@ const PeminjamanDetail = () => {
                             '&:hover': { backgroundColor: '#f0f8ff !important' }
                           }}>
                             <TableCell sx={{ 
-                              padding: '12px 8px',
-                              minWidth: '80px'
+                              padding: '14px 12px',
+                              borderRight: '1px solid #e0e0e0'
                             }}>
                               <Typography variant="body2" sx={{ 
                                 fontWeight: 500,
                                 fontSize: '0.875rem',
                                 lineHeight: 1.3,
-                                whiteSpace: 'nowrap'
+                                color: 'text.primary'
                               }}>
                                 {item.kode_barang}
                               </Typography>
                             </TableCell>
                             <TableCell sx={{ 
-                              padding: '12px 8px',
-                              minWidth: '200px'
+                              padding: '14px 12px',
+                              borderRight: '1px solid #e0e0e0'
                             }}>
                               <Typography variant="body2" sx={{ 
                                 fontWeight: 500,
                                 fontSize: '0.875rem',
                                 lineHeight: 1.4,
-                                wordBreak: 'break-word'
+                                wordBreak: 'break-word',
+                                overflow: 'hidden',
+                                textOverflow: 'ellipsis',
+                                display: '-webkit-box',
+                                WebkitLineClamp: 2,
+                                WebkitBoxOrient: 'vertical'
                               }}>
                                 {item.nama_barang}
                               </Typography>
                             </TableCell>
-                            <TableCell align="center" sx={{ 
-                              padding: '12px 8px',
-                              minWidth: '120px'
+                            <TableCell sx={{ 
+                              padding: '14px 12px',
+                              borderRight: '1px solid #e0e0e0'
                             }}>
                               <Typography variant="body2" sx={{
                                 color: item.lokasi_ruangan ? 'text.primary' : 'text.secondary',
                                 fontSize: '0.875rem',
                                 lineHeight: 1.3,
+                                textAlign: 'center',
+                                overflow: 'hidden',
+                                textOverflow: 'ellipsis',
                                 whiteSpace: 'nowrap'
                               }}>
                                 {item.lokasi_ruangan || '-'}
                               </Typography>
                             </TableCell>
                             <TableCell align="center" sx={{ 
-                              padding: '12px 8px',
-                              minWidth: '70px'
+                              padding: '14px 12px',
+                              borderRight: '1px solid #e0e0e0'
                             }}>
                               <Typography variant="body2" sx={{ 
-                                fontWeight: 500,
-                                fontSize: '0.875rem'
+                                fontWeight: 600,
+                                fontSize: '0.875rem',
+                                color: 'primary.main'
                               }}>
                                 {item.jumlah}
                               </Typography>
                             </TableCell>
-                            <TableCell align="center" sx={{ padding: '12px 8px' }}>
+                            <TableCell align="center" sx={{ 
+                              padding: '14px 12px',
+                              borderRight: peminjaman.status === 'dikembalikan' ? '1px solid #e0e0e0' : 'none'
+                            }}>
                                <Chip
                                  label={formatKondisiLabel(item.kondisi_saat_pinjam)}
                                  size="small"
                                  color={getKondisiColor(item.kondisi_saat_pinjam)}
                                  sx={{
                                    color: 'white',
-                                   fontWeight: 'bold'
+                                   fontWeight: 'bold',
+                                   fontSize: '0.75rem',
+                                   height: '24px'
                                  }}
                                />
                              </TableCell>
                              {peminjaman.status === 'dikembalikan' && (
-                               <TableCell align="center" sx={{ padding: '12px 8px' }}>
+                               <TableCell align="center" sx={{ padding: '14px 12px' }}>
                                  {item.kondisi_saat_kembali ? (
                                    <Chip
                                      label={formatKondisiLabel(item.kondisi_saat_kembali)}
@@ -1424,7 +1439,9 @@ const PeminjamanDetail = () => {
                                      color={getKondisiColor(item.kondisi_saat_kembali)}
                                      sx={{
                                        color: 'white',
-                                       fontWeight: 'bold'
+                                       fontWeight: 'bold',
+                                       fontSize: '0.75rem',
+                                       height: '24px'
                                      }}
                                    />
                                  ) : (
