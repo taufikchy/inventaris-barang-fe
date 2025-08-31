@@ -135,7 +135,7 @@ const PeminjamanDetail = () => {
   const handlePrintPDF = async () => {
     try {
       const pdfGenerator = new PDFGenerator();
-      const doc = await pdfGenerator.generateBorrowingLetter(peminjaman);
+      await pdfGenerator.generateBorrowingLetter(peminjaman);
       pdfGenerator.openPDF();
     } catch (error) {
       console.error('Error generating PDF:', error);

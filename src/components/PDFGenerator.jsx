@@ -1,8 +1,8 @@
 import React from 'react';
 import jsPDF from 'jspdf';
-import 'jspdf-autotable';
+import autoTable from 'jspdf-autotable';
 
-// Tidak perlu extend jsPDF dengan autoTable karena jspdf-autotable sudah melakukannya secara otomatis
+// Import autoTable sebagai named import untuk memastikan plugin ter-load dengan benar
 
 class PDFGenerator {
   constructor() {
@@ -350,13 +350,16 @@ class PDFGenerator {
     ]) : [['1', 'Tidak ada data', '-', '-', '-']];
     
     // Tambahkan tabel ke dokumen
-    doc.autoTable({
+    autoTable(doc, {
       ...tableConfig,
       body: tableData
     });
     
-    // Update posisi Y setelah tabel
-    currentY = doc.lastAutoTable.finalY + 10;
+    // Update posisi Y setelah tabel - estimasi berdasarkan jumlah baris
+    const estimatedRowHeight = 8; // mm per baris
+    const headerHeight = 10;
+    const tableHeight = headerHeight + (tableData.length * estimatedRowHeight);
+    currentY = currentY + tableHeight + 10;
     
     return currentY;
   }
