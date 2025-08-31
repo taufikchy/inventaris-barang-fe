@@ -2,6 +2,8 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "../utils/axios";
 import { toast } from "react-toastify";
+import dayjs from 'dayjs';
+import 'dayjs/locale/id';
 import {
   Grid,
   Card,
@@ -301,7 +303,7 @@ const Dashboard = () => {
         {/* Distribusi Barang per Ruangan Chart */}
         <Grid item xs={12} lg={7}>
           <Card sx={{ height: '100%' }}>
-            <CardContent>
+            <CardContent sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
               <Typography variant="h6" gutterBottom>
                 Distribusi Barang per Ruangan
               </Typography>
@@ -336,7 +338,7 @@ const Dashboard = () => {
         {/* Distribusi Barang per Kondisi Chart */}
         <Grid item xs={12} lg={5}>
           <Card sx={{ height: '100%' }}>
-            <CardContent>
+            <CardContent sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
               <Typography variant="h6" gutterBottom>
                 Distribusi Barang per Kondisi
               </Typography>
@@ -386,8 +388,8 @@ const Dashboard = () => {
 
         {/* Recent Peminjaman Table */}
         <Grid item xs={12} md={6}>
-          <Card>
-            <CardContent>
+          <Card sx={{ height: '100%' }}>
+            <CardContent sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
               <Box sx={{ 
                 display: 'flex', 
                 justifyContent: 'space-between', 
@@ -408,7 +410,7 @@ const Dashboard = () => {
               {loading ? (
                 <Skeleton variant="rectangular" height={200} />
               ) : (
-                <TableContainer component={Paper} sx={{ boxShadow: 'none', overflowX: 'auto' }}>
+                <TableContainer component={Paper} sx={{ boxShadow: 'none', overflowX: 'auto', flex: 1 }}>
                   <Table size="small">
                     <TableHead>
                       <TableRow>
@@ -472,8 +474,8 @@ const Dashboard = () => {
         
         {/* Recent Activities Table */}
         <Grid item xs={12} md={6}>
-          <Card>
-            <CardContent>
+          <Card sx={{ height: '100%' }}>
+            <CardContent sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
               <Box sx={{ 
                 display: 'flex', 
                 justifyContent: 'space-between', 
@@ -494,7 +496,7 @@ const Dashboard = () => {
               {loading ? (
                 <Skeleton variant="rectangular" height={200} />
               ) : (
-                <TableContainer component={Paper} sx={{ boxShadow: 'none', overflowX: 'auto' }}>
+                <TableContainer component={Paper} sx={{ boxShadow: 'none', overflowX: 'auto', flex: 1 }}>
                   <Table size="small">
                     <TableHead>
                       <TableRow>
@@ -530,12 +532,19 @@ const Dashboard = () => {
                                 color={aktivitas.jenis_aktivitas === 'create' ? 'success' :
                                        aktivitas.jenis_aktivitas === 'update' ? 'primary' :
                                        aktivitas.jenis_aktivitas === 'delete' ? 'error' :
-                                       aktivitas.jenis_aktivitas === 'login' ? 'info' : 'default'}
+                                       aktivitas.jenis_aktivitas === 'login' ? 'info' : 'secondary'}
                                 size="small"
                                 sx={{
                                   '& .MuiChip-label': {
                                     color: 'white'
-                                  }
+                                  },
+                                  ...(aktivitas.jenis_aktivitas === 'logout' && {
+                                    backgroundColor: '#424242',
+                                    '& .MuiChip-label': {
+                                      color: 'white',
+                                      fontWeight: 'bold'
+                                    }
+                                  })
                                 }}
                               />
                             </TableCell>
@@ -545,15 +554,10 @@ const Dashboard = () => {
                               </Typography>
                             </TableCell>
                             <TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}>
-                              <Typography variant="body2">
-                                {new Date(aktivitas.waktu_aktivitas).toLocaleString('id-ID', {
-                                  year: 'numeric',
-                                  month: '2-digit',
-                                  day: '2-digit',
-                                  hour: '2-digit',
-                                  minute: '2-digit'
-                                })}
-                              </Typography>
+                              <Box>
+                                <Typography variant="body2">{dayjs(aktivitas.waktu_aktivitas).locale('id').format('DD MMMM YYYY')}</Typography>
+                                <Typography variant="body2" color="text.secondary">{dayjs(aktivitas.waktu_aktivitas).locale('id').format('HH:mm')}</Typography>
+                              </Box>
                             </TableCell>
                           </TableRow>
                         ))

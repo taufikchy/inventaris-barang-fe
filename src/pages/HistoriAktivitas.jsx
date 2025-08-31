@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { Box, Typography, Chip, IconButton, Tooltip, TextField, MenuItem, Grid, Dialog, DialogTitle, DialogContent, DialogActions, Button, Divider, Card, CardContent } from '@mui/material';
+import { Box, Typography, Chip, IconButton, Tooltip, TextField, MenuItem, Grid, Dialog, DialogTitle, DialogContent, DialogActions, Button, Divider, Card, CardContent, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper } from '@mui/material';
 import { DatePicker } from '@mui/x-date-pickers';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import dayjs from 'dayjs';
 import 'dayjs/locale/id';
-import { Visibility as VisibilityIcon, FilterList as FilterListIcon, FilterAlt as FilterAltIcon } from '@mui/icons-material';
+import { Visibility as VisibilityIcon, FilterAlt as FilterAltIcon } from '@mui/icons-material';
 import DataTable from '../components/DataTable';
 import PageHeader from '../components/PageHeader';
 import axios from '../utils/axios';
@@ -134,7 +134,12 @@ const HistoriAktivitas = () => {
     {
       id: 'waktu_aktivitas',
       label: 'Tanggal',
-      format: (value) => dayjs(value).locale('id').format('DD MMM YYYY HH:mm')
+      format: (value) => (
+        <div>
+          <div>{dayjs(value).locale('id').format('DD MMMM YYYY')}</div>
+          <div style={{ fontSize: '0.875rem', color: '#666' }}>{dayjs(value).locale('id').format('HH:mm')}</div>
+        </div>
+      )
     },
     {
       id: 'pengguna',
@@ -177,6 +182,90 @@ const HistoriAktivitas = () => {
   const handleCloseDetail = () => {
     setDetailOpen(false);
     setSelectedActivity(null);
+  };
+
+  // Helper function untuk menyederhanakan tampilan data perubahan
+  const formatDataChanges = (dataBefore, dataAfter) => {
+    if (!dataBefore && !dataAfter) return null;
+    
+    try {
+      const before = dataBefore ? JSON.parse(dataBefore) : {};
+      const after = dataAfter ? JSON.parse(dataAfter) : {};
+      
+      const changes = [];
+      
+      // Helper function untuk mengkonversi value menjadi string yang bisa ditampilkan
+      const formatValue = (value) => {
+        if (value === null || value === undefined) return '-';
+        if (typeof value === 'object') {
+          // Handle kategori dan lokasi objects
+          if (value.nama) return value.nama;
+          if (value.id && value.nama) return value.nama;
+          // Handle array of objects
+          if (Array.isArray(value)) {
+            return value.map(item => {
+              if (typeof item === 'object' && item.nama) return item.nama;
+              return String(item);
+            }).join(', ');
+          }
+          return JSON.stringify(value);
+        }
+        
+        // Format status peminjaman dengan kapitalisasi yang konsisten
+        const statusMapping = {
+          'menunggu_persetujuan': 'Menunggu Persetujuan',
+          'disetujui': 'Disetujui',
+          'ditolak': 'Ditolak',
+          'dipinjam': 'Dipinjam',
+          'dikembalikan': 'Dikembalikan',
+          'terlambat': 'Terlambat'
+        };
+        
+        const stringValue = String(value);
+        return statusMapping[stringValue] || stringValue;
+      };
+      
+      // Daftar field yang penting untuk ditampilkan
+      const importantFields = {
+        'nama': 'Nama',
+        'nama_barang': 'Nama Barang',
+        'nama_peminjam': 'Nama Peminjam',
+        'kode': 'Kode',
+        'jumlah': 'Jumlah',
+        'status': 'Status',
+        'kondisi': 'Kondisi',
+        'nama_lokasi': 'Lokasi',
+        'nama_kategori': 'Kategori',
+        'id_kategori': 'ID Kategori',
+        'id_lokasi': 'ID Lokasi',
+        'harga_perolehan': 'Harga Perolehan',
+        'deskripsi': 'Deskripsi',
+        'tanggal_pinjam': 'Tanggal Pinjam',
+        'tanggal_kembali_harapan': 'Tanggal Kembali Harapan',
+        'kontak_peminjam': 'Kontak Peminjam',
+        'kelas_peminjam': 'Kelas Peminjam',
+        'catatan': 'Catatan'
+      };
+      
+      // Bandingkan field yang penting
+      Object.keys(importantFields).forEach(field => {
+        const beforeValue = before[field];
+        const afterValue = after[field];
+        
+        if (JSON.stringify(beforeValue) !== JSON.stringify(afterValue) && (beforeValue !== undefined || afterValue !== undefined)) {
+          changes.push({
+            field: importantFields[field],
+            before: formatValue(beforeValue),
+            after: formatValue(afterValue)
+          });
+        }
+      });
+      
+      return changes;
+    } catch (error) {
+      console.error('Error parsing data changes:', error);
+      return null;
+    }
   };
 
   const actions = (row) => {
@@ -351,9 +440,14 @@ const HistoriAktivitas = () => {
                   <Typography variant="subtitle2" color="text.secondary">
                     Tanggal & Waktu
                   </Typography>
-                  <Typography variant="body1" sx={{ mb: 2 }}>
-                    {dayjs(selectedActivity.waktu_aktivitas).locale('id').format('DD MMMM YYYY, HH:mm:ss')}
-                  </Typography>
+                  <Box sx={{ mb: 2 }}>
+                    <Typography variant="body1">
+                      {dayjs(selectedActivity.waktu_aktivitas).locale('id').format('DD MMMM YYYY')}
+                    </Typography>
+                    <Typography variant="body1" color="text.secondary">
+                      {dayjs(selectedActivity.waktu_aktivitas).locale('id').format('HH:mm')}
+                    </Typography>
+                  </Box>
                 </Grid>
                 <Grid item xs={12} sm={6}>
                   <Typography variant="subtitle2" color="text.secondary">
@@ -408,61 +502,53 @@ const HistoriAktivitas = () => {
                   </Typography>
                 </Grid>
                 
-                {/* Data Sebelum */}
-                {selectedActivity.data_sebelum && (
-                  <Grid item xs={12}>
-                    <Divider sx={{ my: 2 }} />
-                    <Typography variant="subtitle2" color="text.secondary">
-                      Data Sebelum Perubahan
-                    </Typography>
-                    <Box sx={{ 
-                      mt: 1, 
-                      p: 2, 
-                      bgcolor: 'grey.50', 
-                      borderRadius: 1,
-                      border: '1px solid',
-                      borderColor: 'grey.200'
-                    }}>
-                      <pre style={{ 
-                        margin: 0, 
-                        fontSize: '12px', 
-                        fontFamily: 'monospace',
-                        whiteSpace: 'pre-wrap',
-                        wordBreak: 'break-word'
-                      }}>
-                        {JSON.stringify(JSON.parse(selectedActivity.data_sebelum), null, 2)}
-                      </pre>
-                    </Box>
-                  </Grid>
-                )}
-                
-                {/* Data Sesudah */}
-                {selectedActivity.data_sesudah && (
-                  <Grid item xs={12}>
-                    <Divider sx={{ my: 2 }} />
-                    <Typography variant="subtitle2" color="text.secondary">
-                      Data Sesudah Perubahan
-                    </Typography>
-                    <Box sx={{ 
-                      mt: 1, 
-                      p: 2, 
-                      bgcolor: 'grey.50', 
-                      borderRadius: 1,
-                      border: '1px solid',
-                      borderColor: 'grey.200'
-                    }}>
-                      <pre style={{ 
-                        margin: 0, 
-                        fontSize: '12px', 
-                        fontFamily: 'monospace',
-                        whiteSpace: 'pre-wrap',
-                        wordBreak: 'break-word'
-                      }}>
-                        {JSON.stringify(JSON.parse(selectedActivity.data_sesudah), null, 2)}
-                      </pre>
-                    </Box>
-                  </Grid>
-                )}
+                {/* Data Perubahan */}
+                {(selectedActivity.data_sebelum || selectedActivity.data_sesudah) && (() => {
+                  const changes = formatDataChanges(selectedActivity.data_sebelum, selectedActivity.data_sesudah);
+                  
+                  if (!changes || changes.length === 0) {
+                    return (
+                      <Grid item xs={12}>
+                        <Divider sx={{ my: 2 }} />
+                        <Typography variant="subtitle2" color="text.secondary">
+                          Detail Perubahan
+                        </Typography>
+                        <Typography variant="body2" sx={{ mt: 1, fontStyle: 'italic' }}>
+                          Tidak ada perubahan data yang dapat ditampilkan
+                        </Typography>
+                      </Grid>
+                    );
+                  }
+                  
+                  return (
+                    <Grid item xs={12}>
+                      <Divider sx={{ my: 2 }} />
+                      <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 2 }}>
+                        Detail Perubahan
+                      </Typography>
+                      <TableContainer component={Paper} variant="outlined">
+                        <Table size="small">
+                          <TableHead>
+                            <TableRow>
+                              <TableCell><strong>Field</strong></TableCell>
+                              <TableCell><strong>Sebelum</strong></TableCell>
+                              <TableCell><strong>Sesudah</strong></TableCell>
+                            </TableRow>
+                          </TableHead>
+                          <TableBody>
+                            {changes.map((change, index) => (
+                              <TableRow key={index}>
+                                <TableCell>{change.field}</TableCell>
+                                <TableCell sx={{ color: 'error.main' }}>{change.before}</TableCell>
+                                <TableCell sx={{ color: 'success.main' }}>{change.after}</TableCell>
+                              </TableRow>
+                            ))}
+                          </TableBody>
+                        </Table>
+                      </TableContainer>
+                    </Grid>
+                  );
+                })()}
               </Grid>
             </Box>
           )}
