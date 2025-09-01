@@ -238,7 +238,6 @@ const HistoriAktivitas = () => {
         'nama_kategori': 'Kategori',
         'id_kategori': 'ID Kategori',
         'id_lokasi': 'ID Lokasi',
-        'harga_perolehan': 'Harga Perolehan',
         'deskripsi': 'Deskripsi',
         'tanggal_pinjam': 'Tanggal Pinjam',
         'tanggal_kembali_harapan': 'Tanggal Kembali Harapan',
