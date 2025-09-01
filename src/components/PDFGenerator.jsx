@@ -622,6 +622,362 @@ class PDFGenerator {
       URL.revokeObjectURL(url);
     }, 30000);
   }
+
+  // ===== Generate Laporan Inventaris =====
+  async generateInventoryReport(data, filters = {}) {
+    await this.initDocument();
+    await this.loadLogo();
+    
+    let y = this.addHeader(15);
+    y = this.addTitle("LAPORAN INVENTARIS BARANG", null, y);
+    y += 5;
+
+    // Calculate statistics for summary
+    const totalBarang = data.length;
+    const kondisiBaik = data.filter(item => item.kondisi === 'baik').length;
+    const kondisiRusakRingan = data.filter(item => item.kondisi === 'rusak_ringan').length;
+    const kondisiRusakBerat = data.filter(item => item.kondisi === 'rusak_berat').length;
+
+    // Add summary after title
+    this.doc.setFont(this.fontFamily, "normal");
+    this.doc.setFontSize(12);
+    
+    // Use fixed positioning for alignment
+    const bulletX = this.margins.left + 5;
+    const colonX = this.margins.left + 35; // Fixed position for colons
+    
+    // Tahun section (moved to top)
+    if (filters.tahun) {
+      this.doc.setFont(this.fontFamily, "bold");
+      this.doc.text("Tahun", this.margins.left, y);
+      this.doc.text(":", colonX, y);
+      this.doc.text(`${filters.tahun}`, colonX + 5, y);
+      this.doc.setFont(this.fontFamily, "normal");
+      y += 8;
+    }
+    
+    // Lokasi section (moved to top)
+    if (filters.lokasi) {
+      this.doc.setFont(this.fontFamily, "bold");
+      this.doc.text("Lokasi", this.margins.left, y);
+      this.doc.text(":", colonX, y);
+      this.doc.text(`${filters.lokasi}`, colonX + 5, y);
+      this.doc.setFont(this.fontFamily, "normal");
+      y += 8;
+    }
+    
+    // Kondisi Barang section (without colon)
+    this.doc.setFont(this.fontFamily, "bold");
+    this.doc.text("Kondisi Barang", this.margins.left, y);
+    this.doc.setFont(this.fontFamily, "normal");
+    y += 6;
+    
+    this.doc.text("• Baik", bulletX, y);
+    this.doc.text(":", colonX, y);
+    this.doc.text(`${kondisiBaik} unit`, colonX + 5, y);
+    y += 5;
+    
+    this.doc.text("• Rusak Ringan", bulletX, y);
+    this.doc.text(":", colonX, y);
+    this.doc.text(`${kondisiRusakRingan} unit`, colonX + 5, y);
+    y += 5;
+    
+    this.doc.text("• Rusak Berat", bulletX, y);
+    this.doc.text(":", colonX, y);
+    this.doc.text(`${kondisiRusakBerat} unit`, colonX + 5, y);
+    y += 6;
+
+    // Total Barang
+    this.doc.setFont(this.fontFamily, "bold");
+    this.doc.setFontSize(12);
+    this.doc.text("Total Barang", this.margins.left, y);
+    this.doc.text(":", colonX, y);
+    this.doc.text(`${totalBarang} unit`, colonX + 5, y);
+    y += 10;
+
+    // Add filter info (excluding tahun and lokasi as they're moved to top)
+    if (filters.kategori) {
+      this.doc.setFont(this.fontFamily, "normal");
+      this.doc.setFontSize(10);
+      this.doc.text(`Kategori: ${filters.kategori}`, this.margins.left, y);
+      y += 6;
+    }
+    y += 5;
+
+    // Table data
+    const tableData = data.map((item, index) => [
+      String(index + 1),
+      item.kode || '-',
+      item.nama || '-',
+      item.kategori?.nama || item.kategori || '-',
+      item.lokasi?.nama || item.lokasi || '-',
+      this.getKondisiLabel(item.kondisi),
+      item.tahun_pengadaan || '-',
+      this.formatDate(item.tanggal_perolehan) || '-'
+    ]);
+
+    autoTable(this.doc, {
+      startY: y,
+      head: [['No.', 'Kode', 'Nama Barang', 'Kategori', 'Lokasi', 'Kondisi', 'Tahun Pengadaan', 'Tanggal Pencatatan Barang']],
+      body: tableData,
+      styles: {
+        font: this.fontFamily,
+        fontSize: 8,
+        lineWidth: 0.2,
+        textColor: [0, 0, 0],
+        cellPadding: 2,
+        valign: 'middle'
+      },
+      headStyles: {
+        fillColor: [220, 220, 220],
+        fontStyle: "bold",
+        halign: "center",
+        valign: 'middle',
+        fontSize: 8,
+        textColor: [0, 0, 0]
+      },
+      columnStyles: {
+        0: { cellWidth: 'auto', halign: "center", minCellWidth: 8 },
+        1: { cellWidth: 'auto', halign: "center", minCellWidth: 15 },
+        2: { cellWidth: 'auto', halign: "left", minCellWidth: 35 },
+        3: { cellWidth: 'auto', halign: "center", minCellWidth: 20 },
+        4: { cellWidth: 'auto', halign: "center", minCellWidth: 20 },
+        5: { cellWidth: 'auto', halign: "center", minCellWidth: 15 },
+        6: { cellWidth: 'auto', halign: "center", minCellWidth: 12 },
+        7: { cellWidth: 'auto', halign: "left", minCellWidth: 25 }
+      },
+      margin: { left: this.margins.left, right: this.margins.right },
+      tableWidth: 'auto',
+      theme: "grid",
+      tableLineColor: [0, 0, 0],
+      tableLineWidth: 0.2,
+    });
+
+
+
+    return this.doc;
+  }
+
+  // ===== Generate Laporan Peminjaman =====
+  async generateLoanReport(data, filters = {}) {
+    await this.initDocument();
+    await this.loadLogo();
+    
+    let y = this.addHeader(15);
+    y = this.addTitle("LAPORAN PEMINJAMAN BARANG", null, y);
+    y += 10;
+
+    // Add filter info
+    if (filters.tahun) {
+      this.doc.setFont(this.fontFamily, "normal");
+      this.doc.setFontSize(10);
+      this.doc.text(`Tahun: ${filters.tahun}`, this.margins.left, y);
+      y += 6;
+    }
+    if (filters.startDate && filters.endDate) {
+      this.doc.text(`Periode: ${this.formatDate(filters.startDate)} - ${this.formatDate(filters.endDate)}`, this.margins.left, y);
+      y += 6;
+    }
+    y += 5;
+
+    // Table data
+    const tableData = data.map((item, index) => [
+      String(index + 1),
+      item.id ? `PJM-${item.id.toString().padStart(3, '0')}` : (item.kode || '-'),
+      item.nama_peminjam || item.peminjam || '-',
+      item.kelas_peminjam || item.kelas || '-',
+      this.formatDate(item.tanggal_pinjam),
+      this.formatDate(item.tanggal_kembali_harapan || item.rencana_kembali),
+      this.getStatusLabel(item.status),
+      item.catatan || '-'
+    ]);
+
+    autoTable(this.doc, {
+      startY: y,
+      head: [['No.', 'Kode', 'Peminjam', 'Kelas', 'Tgl Pinjam', 'Tgl Kembali', 'Status', 'Catatan']],
+      body: tableData,
+      styles: {
+        font: this.fontFamily,
+        fontSize: 8,
+        lineWidth: 0.2,
+        textColor: [0, 0, 0],
+        cellPadding: 2,
+        valign: 'middle'
+      },
+      headStyles: {
+        fillColor: [220, 220, 220],
+        fontStyle: "bold",
+        halign: "center",
+        valign: 'middle',
+        fontSize: 8,
+        textColor: [0, 0, 0]
+      },
+      columnStyles: {
+        0: { cellWidth: 'auto', halign: "center", minCellWidth: 8 },
+        1: { cellWidth: 'auto', halign: "center", minCellWidth: 15 },
+        2: { cellWidth: 'auto', halign: "left", minCellWidth: 25 },
+        3: { cellWidth: 'auto', halign: "center", minCellWidth: 15 },
+        4: { cellWidth: 'auto', halign: "center", minCellWidth: 18 },
+        5: { cellWidth: 'auto', halign: "center", minCellWidth: 18 },
+        6: { cellWidth: 'auto', halign: "center", minCellWidth: 15 },
+        7: { cellWidth: 'auto', halign: "left", minCellWidth: 30 }
+      },
+      margin: { left: this.margins.left, right: this.margins.right },
+      tableWidth: 'auto',
+      theme: "grid",
+      tableLineColor: [0, 0, 0],
+      tableLineWidth: 0.2,
+    });
+
+    return this.doc;
+  }
+
+  // ===== Generate Laporan Kondisi =====
+  async generateConditionReport(data, filters = {}) {
+    await this.initDocument();
+    await this.loadLogo();
+    
+    let y = this.addHeader(15);
+    y = this.addTitle("LAPORAN KONDISI BARANG", null, y);
+    y += 10;
+
+    // Add filter info
+    if (filters.tahun) {
+      this.doc.setFont(this.fontFamily, "normal");
+      this.doc.setFontSize(10);
+      this.doc.text(`Tahun: ${filters.tahun}`, this.margins.left, y);
+      y += 6;
+    }
+    if (filters.kondisi) {
+      this.doc.text(`Kondisi: ${filters.kondisi}`, this.margins.left, y);
+      y += 6;
+    }
+    y += 5;
+
+    // Table data
+    const tableData = data.map((item, index) => [
+      String(index + 1),
+      item.kode || '-',
+      item.nama || '-',
+      item.kategori?.nama || item.kategori || '-',
+      item.lokasi?.nama || item.lokasi || '-',
+      this.getKondisiLabel(item.kondisi),
+      item.keterangan || '-'
+    ]);
+
+    autoTable(this.doc, {
+      startY: y,
+      head: [['No.', 'Kode', 'Nama Barang', 'Kategori', 'Lokasi', 'Kondisi', 'Keterangan']],
+      body: tableData,
+      styles: {
+        font: this.fontFamily,
+        fontSize: 8,
+        lineWidth: 0.2,
+        textColor: [0, 0, 0],
+        cellPadding: 2,
+        valign: 'middle'
+      },
+      headStyles: {
+        fillColor: [220, 220, 220],
+        fontStyle: "bold",
+        halign: "center",
+        valign: 'middle',
+        fontSize: 8,
+        textColor: [0, 0, 0]
+      },
+      columnStyles: {
+        0: { cellWidth: 'auto', halign: "center", minCellWidth: 8 },
+        1: { cellWidth: 'auto', halign: "center", minCellWidth: 15 },
+        2: { cellWidth: 'auto', halign: "left", minCellWidth: 40 },
+        3: { cellWidth: 'auto', halign: "center", minCellWidth: 20 },
+        4: { cellWidth: 'auto', halign: "center", minCellWidth: 20 },
+        5: { cellWidth: 'auto', halign: "center", minCellWidth: 18 },
+        6: { cellWidth: 'auto', halign: "left", minCellWidth: 25 }
+      },
+      margin: { left: this.margins.left, right: this.margins.right },
+      tableWidth: 'auto',
+      theme: "grid",
+      tableLineColor: [0, 0, 0],
+      tableLineWidth: 0.2,
+    });
+
+    return this.doc;
+  }
+
+  // Helper function untuk kondisi label
+  getKondisiLabel(kondisi) {
+    const kondisiLabels = {
+      'baik': 'Baik',
+      'rusak_ringan': 'Rusak Ringan',
+      'rusak_berat': 'Rusak Berat'
+    };
+    return kondisiLabels[kondisi] || kondisi || '-';
+  }
+
+  getStatusLabel(status) {
+    const statusLabels = {
+      'menunggu_persetujuan': 'Menunggu Persetujuan',
+      'disetujui': 'Disetujui',
+      'ditolak': 'Ditolak',
+      'dipinjam': 'Dipinjam',
+      'dikembalikan': 'Dikembalikan',
+      'terlambat': 'Terlambat'
+    };
+    return statusLabels[status] || status || '-';
+  }
+
+  // Save PDF untuk laporan
+  saveReportPDF(reportType, filename = null) {
+    if (!filename) {
+      const today = new Date();
+      const dd = String(today.getDate()).padStart(2, '0');
+      const mm = String(today.getMonth() + 1).padStart(2, '0');
+      const yyyy = String(today.getFullYear());
+      const tanggal = `${dd}-${mm}-${yyyy}`;
+      filename = `${tanggal}-Laporan-${reportType}.pdf`;
+    }
+    
+    if (this.doc) {
+      const pdfBlob = this.doc.output('blob', { compress: true });
+      const url = URL.createObjectURL(pdfBlob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    }
+  }
+
+  // Preview PDF untuk laporan
+  previewReportPDF(reportType, filename = null) {
+    if (!this.doc) return;
+    
+    if (!filename) {
+      const today = new Date();
+      const dd = String(today.getDate()).padStart(2, '0');
+      const mm = String(today.getMonth() + 1).padStart(2, '0');
+      const yyyy = String(today.getFullYear());
+      const tanggal = `${dd}-${mm}-${yyyy}`;
+      filename = `${tanggal}-Laporan-${reportType}.pdf`;
+    }
+    
+    const pdfBlob = this.doc.output('blob', { compress: true });
+    const file = new File([pdfBlob], filename, { type: 'application/pdf' });
+    const url = URL.createObjectURL(file);
+    
+    const newWindow = window.open(url, '_blank');
+    if (newWindow) {
+      setTimeout(() => {
+        newWindow.document.title = filename;
+      }, 100);
+    }
+    
+    setTimeout(() => {
+      URL.revokeObjectURL(url);
+    }, 30000);
+  }
 }
 
 export default PDFGenerator;

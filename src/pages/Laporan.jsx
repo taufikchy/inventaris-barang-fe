@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { toast } from 'react-toastify';
 import axios from '../utils/axios';
+import PDFGenerator from '../components/PDFGenerator';
 import {
   Box,
   Card,
@@ -21,6 +22,7 @@ import {
   Select,
   Chip,
   Divider,
+  Autocomplete,
 } from '@mui/material';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import {
@@ -96,19 +98,61 @@ const Laporan = () => {
     setExportMenu(null);
   };
 
-  const handleExport = (action) => {
-    if (action === 'download') {
-      toast.info('Mengunduh laporan PDF...');
-      // In a real application, you would implement the PDF download functionality here
-      setTimeout(() => {
-        toast.success('Laporan PDF berhasil diunduh');
-      }, 1500);
-    } else if (action === 'preview') {
-      toast.info('Membuka preview laporan PDF...');
-      // In a real application, you would implement the PDF preview functionality here
-      setTimeout(() => {
-        toast.success('Preview laporan PDF dibuka');
-      }, 1500);
+  const handleExport = async (action) => {
+    try {
+      const pdfGenerator = new PDFGenerator();
+      let reportType = '';
+      let data = [];
+      let filters = {};
+
+      // Prepare filters
+      if (tahunFilter && tahunFilter !== 'all') {
+        filters.tahun = tahunFilter;
+      }
+      if (kategoriFilter) {
+        const selectedCategory = categories.find(cat => cat.id === kategoriFilter);
+        filters.kategori = selectedCategory?.nama || kategoriFilter;
+      }
+      if (lokasiFilter) {
+        const selectedLocation = locations.find(loc => loc.id === lokasiFilter);
+        filters.lokasi = selectedLocation?.nama || lokasiFilter;
+      }
+      if (kondisiFilter) {
+        filters.kondisi = kondisiFilter;
+      }
+      if (startDate && endDate) {
+        filters.startDate = startDate.format('YYYY-MM-DD');
+        filters.endDate = endDate.format('YYYY-MM-DD');
+      }
+
+      // Generate PDF based on active tab
+      if (activeTab === 0) {
+        // Laporan Inventaris
+        reportType = 'Inventaris';
+        data = filteredInventoryData;
+        await pdfGenerator.generateInventoryReport(data, filters);
+      } else if (activeTab === 1) {
+        // Laporan Peminjaman
+        reportType = 'Peminjaman';
+        data = filteredLoanData;
+        await pdfGenerator.generateLoanReport(data, filters);
+      } else if (activeTab === 2) {
+        // Laporan Kondisi
+        reportType = 'Kondisi';
+        data = filteredConditionData;
+        await pdfGenerator.generateConditionReport(data, filters);
+      }
+
+      if (action === 'download') {
+        pdfGenerator.saveReportPDF(reportType);
+        toast.success(`Laporan ${reportType} berhasil diunduh`);
+      } else if (action === 'preview') {
+        pdfGenerator.previewReportPDF(reportType);
+        toast.success(`Preview laporan ${reportType} dibuka`);
+      }
+    } catch (error) {
+      console.error(`Error generating ${activeTab === 0 ? 'Inventory' : activeTab === 1 ? 'Loan' : 'Condition'} PDF:`, error);
+      toast.error('Gagal membuat PDF. Silakan coba lagi.');
     }
     handleExportClose();
   };
@@ -460,24 +504,37 @@ const Laporan = () => {
           </Typography>
           <Grid container spacing={2}>
             <Grid item xs={12} md={6} lg={3}>
-              <FormControl fullWidth size="small">
-                <InputLabel>Tahun</InputLabel>
-                <Select
-                  value={tahunFilter}
-                  label="Tahun"
-                  onChange={(e) => setTahunFilter(e.target.value)}
-                >
-                  <MenuItem value="">Semua</MenuItem>
-                  {Array.from({ length: 10 }, (_, i) => {
-                    const year = new Date().getFullYear() - i;
-                    return (
-                      <MenuItem key={year} value={year}>
-                        {year}
-                      </MenuItem>
-                    );
-                  })}
-                </Select>
-              </FormControl>
+              <Autocomplete
+                freeSolo
+                size="small"
+                options={Array.from({ length: new Date().getFullYear() - 2007 + 1 }, (_, i) => {
+                   const year = new Date().getFullYear() - i;
+                   return year.toString();
+                 })}
+                value={tahunFilter}
+                onChange={(event, newValue) => {
+                  setTahunFilter(newValue || '');
+                }}
+                onInputChange={(event, newInputValue) => {
+                  setTahunFilter(newInputValue);
+                }}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    label="Tahun"
+                    placeholder="Ketik atau pilih tahun"
+                    type="number"
+                    InputProps={{
+                      ...params.InputProps,
+                      inputProps: {
+                        ...params.inputProps,
+                        min: 1900,
+                        max: new Date().getFullYear() + 10
+                      }
+                    }}
+                  />
+                )}
+              />
             </Grid>
             <Grid item xs={12} md={6} lg={3}>
               <DatePicker
@@ -635,6 +692,8 @@ const Laporan = () => {
           refreshable
           onRefresh={fetchLoanData}
           emptyMessage="Tidak ada data peminjaman"
+          initialOrderBy="tanggal_pinjam"
+          initialOrder="desc"
         />
       </TabPanel>
 
