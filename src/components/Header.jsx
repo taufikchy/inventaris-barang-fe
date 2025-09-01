@@ -41,10 +41,25 @@ const Header = ({ open, setOpen }) => {
     setAnchorEl(null);
   };
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
     handleClose();
-    logout();
+    await logout();
     navigate('/login');
+  };
+
+  const getRoleDisplayName = (peran) => {
+    switch (peran) {
+      case 'kepala_lab':
+        return 'Kepala Laboratorium';
+      case 'admin':
+        return 'Administrator';
+      case 'toolman':
+        return 'Toolman';
+      case 'sarana':
+        return 'Staff Sarana';
+      default:
+        return 'Pengguna';
+    }
   };
 
   return (
@@ -80,9 +95,14 @@ const Header = ({ open, setOpen }) => {
         <Box sx={{ flexGrow: 1 }} />
 
         <Box sx={{ display: 'flex', alignItems: 'center' }}>
-          <Typography variant="body2" sx={{ mr: 2, display: { xs: 'none', sm: 'block' } }}>
-            {user?.nama || ''}
-          </Typography>
+          <Box sx={{ mr: 2, display: { xs: 'none', sm: 'block' }, textAlign: 'right' }}>
+            <Typography variant="subtitle1" sx={{ display: 'block', lineHeight: 1, fontWeight: 600 }}>
+              {user?.nama || ''}
+            </Typography>
+            <Typography variant="body1" color="text.secondary" sx={{ display: 'block' }}>
+              {getRoleDisplayName(user?.peran)}
+            </Typography>
+          </Box>
 
           <Tooltip title="Pengaturan Akun">
             <IconButton
@@ -126,7 +146,7 @@ const Header = ({ open, setOpen }) => {
                 {user?.nama || ''}
               </Typography>
               <Typography variant="body2" color="text.secondary">
-                {user?.peran === 'admin' ? 'Administrator' : 'Pengguna'}
+                {getRoleDisplayName(user?.peran)}
               </Typography>
             </Box>
             <Divider />

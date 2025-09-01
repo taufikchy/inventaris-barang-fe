@@ -2,6 +2,8 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "../utils/axios";
 import { toast } from "react-toastify";
+import dayjs from 'dayjs';
+import 'dayjs/locale/id';
 import {
   Grid,
   Card,
@@ -34,7 +36,6 @@ import { Chart as ChartJS, ArcElement, Tooltip, Legend, CategoryScale, LinearSca
 import { Pie, Bar } from 'react-chartjs-2';
 import PageHeader from '../components/PageHeader';
 import InfoCard from '../components/InfoCard';
-import PDFTestButton from '../components/PDFTestButton';
 
 // Register ChartJS components
 ChartJS.register(ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement, Title);
@@ -53,10 +54,24 @@ const Dashboard = () => {
     totalTransaksiHariIni: 0
   });
   const [recentPeminjaman, setRecentPeminjaman] = useState([]);
-  const [recentTransaksi, setRecentTransaksi] = useState([]);
+  const [recentAktivitas, setRecentAktivitas] = useState([]);
   const [transaksiPerJenis, setTransaksiPerJenis] = useState([]);
   const [distribusiPerKondisi, setDistribusiPerKondisi] = useState([]);
   const [barangPerLokasi, setBarangPerLokasi] = useState([]);
+
+  // Function to format module names
+  const getModulLabel = (modulName) => {
+    switch (modulName) {
+      case 'barang': return 'Barang';
+      case 'kategori': return 'Kategori';
+      case 'lokasi': return 'Lokasi';
+      case 'pengguna': return 'Pengguna';
+      case 'peminjaman': return 'Peminjaman';
+      case 'transaksi': return 'Transaksi';
+      case 'auth': return 'Autentikasi';
+      default: return modulName;
+    }
+  };
 
   useEffect(() => {
     const fetchDashboardData = async () => {
@@ -91,8 +106,8 @@ const Dashboard = () => {
           
           setRecentPeminjaman(formattedPeminjaman);
           
-          // Set recent transactions and transaction stats
-          setRecentTransaksi(response.data.data.recentTransaksi || []);
+          // Set recent activities and transaction stats
+          setRecentAktivitas(response.data.data.recentAktivitas || []);
           setTransaksiPerJenis(response.data.data.transaksiPerJenis || []);
           setDistribusiPerKondisi(distribusiPerKondisi);
           setBarangPerLokasi(barangPerLokasi);
@@ -301,7 +316,7 @@ const Dashboard = () => {
         {/* Distribusi Barang per Ruangan Chart */}
         <Grid item xs={12} lg={7}>
           <Card sx={{ height: '100%' }}>
-            <CardContent>
+            <CardContent sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
               <Typography variant="h6" gutterBottom>
                 Distribusi Barang per Ruangan
               </Typography>
@@ -336,7 +351,7 @@ const Dashboard = () => {
         {/* Distribusi Barang per Kondisi Chart */}
         <Grid item xs={12} lg={5}>
           <Card sx={{ height: '100%' }}>
-            <CardContent>
+            <CardContent sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
               <Typography variant="h6" gutterBottom>
                 Distribusi Barang per Kondisi
               </Typography>
@@ -386,8 +401,8 @@ const Dashboard = () => {
 
         {/* Recent Peminjaman Table */}
         <Grid item xs={12} md={6}>
-          <Card>
-            <CardContent>
+          <Card sx={{ height: '100%' }}>
+            <CardContent sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
               <Box sx={{ 
                 display: 'flex', 
                 justifyContent: 'space-between', 
@@ -408,7 +423,7 @@ const Dashboard = () => {
               {loading ? (
                 <Skeleton variant="rectangular" height={200} />
               ) : (
-                <TableContainer component={Paper} sx={{ boxShadow: 'none', overflowX: 'auto' }}>
+                <TableContainer component={Paper} sx={{ boxShadow: 'none', overflowX: 'auto', flex: 1 }}>
                   <Table size="small">
                     <TableHead>
                       <TableRow>
@@ -470,10 +485,10 @@ const Dashboard = () => {
           </Card>
         </Grid>
         
-        {/* Recent Transactions Table */}
+        {/* Recent Activities Table */}
         <Grid item xs={12} md={6}>
-          <Card>
-            <CardContent>
+          <Card sx={{ height: '100%' }}>
+            <CardContent sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
               <Box sx={{ 
                 display: 'flex', 
                 justifyContent: 'space-between', 
@@ -482,11 +497,11 @@ const Dashboard = () => {
                 flexDirection: { xs: 'column', sm: 'row' },
                 gap: { xs: 1, sm: 0 }
               }}>
-                <Typography variant="h6">Transaksi Terbaru</Typography>
+                <Typography variant="h6">Aktivitas Terbaru</Typography>
                 <Button
                   size="small"
                   endIcon={<ArrowForwardIcon />}
-                  onClick={() => navigate('/transaksi')}
+                  onClick={() => navigate('/histori-aktivitas')}
                 >
                   Lihat Semua
                 </Button>
@@ -494,53 +509,68 @@ const Dashboard = () => {
               {loading ? (
                 <Skeleton variant="rectangular" height={200} />
               ) : (
-                <TableContainer component={Paper} sx={{ boxShadow: 'none', overflowX: 'auto' }}>
+                <TableContainer component={Paper} sx={{ boxShadow: 'none', overflowX: 'auto', flex: 1 }}>
                   <Table size="small">
                     <TableHead>
                       <TableRow>
-                        <TableCell>Barang</TableCell>
-                        <TableCell>Jenis</TableCell>
-                        <TableCell sx={{ display: { xs: 'none', sm: 'table-cell' } }}>Jumlah</TableCell>
-                        <TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}>Tanggal</TableCell>
+                        <TableCell>Pengguna</TableCell>
+                        <TableCell>Aktivitas</TableCell>
+                        <TableCell sx={{ display: { xs: 'none', sm: 'table-cell' } }}>Modul</TableCell>
+                        <TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}>Waktu</TableCell>
                       </TableRow>
                     </TableHead>
                     <TableBody>
-                      {recentTransaksi.length === 0 ? (
+                      {recentAktivitas.length === 0 ? (
                         <TableRow>
                           <TableCell colSpan={{ xs: 2, sm: 3, md: 4 }} align="center">
                             <Typography variant="body2" color="text.secondary">
-                              Tidak ada data transaksi
+                              Tidak ada data aktivitas
                             </Typography>
                           </TableCell>
                         </TableRow>
                       ) : (
-                        recentTransaksi.map((transaksi) => (
-                          <TableRow key={transaksi.id}>
+                        recentAktivitas.map((aktivitas) => (
+                          <TableRow key={aktivitas.id}>
                             <TableCell>
                               <Typography variant="body2" noWrap>
-                                {transaksi.barang?.nama || 'N/A'}
+                                {aktivitas.pengguna?.nama || 'N/A'}
                               </Typography>
                             </TableCell>
                             <TableCell>
                               <Chip
-                                label={transaksi.jenis_transaksi === 'masuk' ? 'Masuk' :
-                                       transaksi.jenis_transaksi === 'keluar' ? 'Keluar' :
-                                       transaksi.jenis_transaksi === 'rusak' ? 'Rusak' : 'Hilang'}
-                                color={transaksi.jenis_transaksi === 'masuk' ? 'success' :
-                                       transaksi.jenis_transaksi === 'keluar' ? 'primary' :
-                                       transaksi.jenis_transaksi === 'rusak' ? 'warning' : 'error'}
+                                label={aktivitas.jenis_aktivitas === 'create' ? 'Tambah' :
+                                       aktivitas.jenis_aktivitas === 'update' ? 'Ubah' :
+                                       aktivitas.jenis_aktivitas === 'delete' ? 'Hapus' :
+                                       aktivitas.jenis_aktivitas === 'login' ? 'Login' : 'Logout'}
+                                color={aktivitas.jenis_aktivitas === 'create' ? 'success' :
+                                       aktivitas.jenis_aktivitas === 'update' ? 'primary' :
+                                       aktivitas.jenis_aktivitas === 'delete' ? 'error' :
+                                       aktivitas.jenis_aktivitas === 'login' ? 'info' : 'secondary'}
                                 size="small"
+                                sx={{
+                                  '& .MuiChip-label': {
+                                    color: 'white'
+                                  },
+                                  ...(aktivitas.jenis_aktivitas === 'logout' && {
+                                    backgroundColor: '#424242',
+                                    '& .MuiChip-label': {
+                                      color: 'white',
+                                      fontWeight: 'bold'
+                                    }
+                                  })
+                                }}
                               />
                             </TableCell>
                             <TableCell sx={{ display: { xs: 'none', sm: 'table-cell' } }}>
                               <Typography variant="body2">
-                                {transaksi.jumlah}
+                                {getModulLabel(aktivitas.modul)}
                               </Typography>
                             </TableCell>
                             <TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}>
-                              <Typography variant="body2">
-                                {formatDate(transaksi.tanggal_transaksi)}
-                              </Typography>
+                              <Box>
+                                <Typography variant="body2">{dayjs(aktivitas.waktu_aktivitas).locale('id').format('DD MMMM YYYY')}</Typography>
+                                <Typography variant="body2" color="text.secondary">{dayjs(aktivitas.waktu_aktivitas).locale('id').format('HH:mm')}</Typography>
+                              </Box>
                             </TableCell>
                           </TableRow>
                         ))
@@ -554,10 +584,7 @@ const Dashboard = () => {
         </Grid>
       </Grid>
 
-      {/* PDF Test Button - for development */}
-      <Box sx={{ mt: 3, display: 'flex', justifyContent: 'center' }}>
-        <PDFTestButton />
-      </Box>
+
     </>
   );
 };

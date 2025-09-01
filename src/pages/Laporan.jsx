@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { toast } from 'react-toastify';
 import axios from '../utils/axios';
+import PDFGenerator from '../components/PDFGenerator';
 import {
   Box,
   Card,
@@ -21,6 +22,7 @@ import {
   Select,
   Chip,
   Divider,
+  Autocomplete,
 } from '@mui/material';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import {
@@ -34,6 +36,7 @@ import {
   Inventory as InventoryIcon,
   SwapHoriz as SwapHorizIcon,
   Assessment as AssessmentIcon,
+  Visibility as VisibilityIcon,
 } from '@mui/icons-material';
 import dayjs from 'dayjs';
 import PageHeader from '../components/PageHeader';
@@ -64,6 +67,7 @@ const Laporan = () => {
   // Filter states
   const [startDate, setStartDate] = useState(null);
   const [endDate, setEndDate] = useState(null);
+  const [tahunFilter, setTahunFilter] = useState('');
   const [kategoriFilter, setKategoriFilter] = useState('');
   const [lokasiFilter, setLokasiFilter] = useState('');
   const [kondisiFilter, setKondisiFilter] = useState('');
@@ -71,6 +75,7 @@ const Laporan = () => {
   
   // Data states
   const [inventoryData, setInventoryData] = useState([]);
+  const [inventorySummary, setInventorySummary] = useState(null);
   const [loanData, setLoanData] = useState([]);
   const [conditionData, setConditionData] = useState([]);
   
@@ -94,12 +99,73 @@ const Laporan = () => {
     setExportMenu(null);
   };
 
-  const handleExport = (format) => {
-    toast.info(`Mengekspor laporan dalam format ${format}...`);
-    // In a real application, you would implement the export functionality here
-    setTimeout(() => {
-      toast.success(`Laporan berhasil diekspor dalam format ${format}`);
-    }, 1500);
+  const handleExport = async (action) => {
+    try {
+      const pdfGenerator = new PDFGenerator();
+      let reportType = '';
+      let data = [];
+      let filters = {};
+
+      // Prepare filters
+      if (tahunFilter && tahunFilter !== 'all') {
+        filters.tahun = tahunFilter;
+      }
+      if (kategoriFilter) {
+        const selectedCategory = categories.find(cat => cat.id === kategoriFilter);
+        filters.kategori = selectedCategory?.nama || kategoriFilter;
+      }
+      if (lokasiFilter) {
+        const selectedLocation = locations.find(loc => loc.id === lokasiFilter);
+        filters.lokasi = selectedLocation?.nama || lokasiFilter;
+      }
+      if (kondisiFilter) {
+        filters.kondisi = kondisiFilter;
+      }
+      if (startDate && endDate) {
+        filters.startDate = startDate.format('YYYY-MM-DD');
+        filters.endDate = endDate.format('YYYY-MM-DD');
+      }
+
+      // Generate PDF based on active tab
+      if (activeTab === 0) {
+        // Laporan Inventaris
+        reportType = 'Inventaris';
+        data = filteredInventoryData;
+        await pdfGenerator.generateInventoryReport(data, filters, inventorySummary);
+      } else if (activeTab === 1) {
+        // Laporan Peminjaman
+        reportType = 'Peminjaman';
+        data = filteredLoanData;
+        await pdfGenerator.generateLoanReport(data, filters);
+      } else if (activeTab === 2) {
+        // Laporan Kondisi
+        reportType = 'Kondisi';
+        data = filteredConditionData;
+        
+        // Calculate summary for condition report
+        const conditionSummary = {
+          total_barang: data.length,
+          jumlah_per_kondisi: {
+            baik: data.filter(item => item.kondisi === 'baik').length,
+            rusak_ringan: data.filter(item => item.kondisi === 'rusak_ringan').length,
+            rusak_berat: data.filter(item => item.kondisi === 'rusak_berat').length
+          }
+        };
+        
+        await pdfGenerator.generateConditionReport(data, filters, conditionSummary);
+      }
+
+      if (action === 'download') {
+        pdfGenerator.saveReportPDF(reportType);
+        toast.success(`Laporan ${reportType} berhasil diunduh`);
+      } else if (action === 'preview') {
+        pdfGenerator.previewReportPDF(reportType);
+        toast.success(`Preview laporan ${reportType} dibuka`);
+      }
+    } catch (error) {
+      console.error(`Error generating ${activeTab === 0 ? 'Inventory' : activeTab === 1 ? 'Loan' : 'Condition'} PDF:`, error);
+      toast.error('Gagal membuat PDF. Silakan coba lagi.');
+    }
     handleExportClose();
   };
 
@@ -156,7 +222,7 @@ const Laporan = () => {
       setStatuses([
         { value: 'tersedia', label: 'Tersedia' },
         { value: 'dipinjam', label: 'Dipinjam' },
-        { value: 'dalam_perbaikan', label: 'Dalam Perbaikan' }
+        { value: 'perbaikan', label: 'Perbaikan' }
       ]);
     } catch (error) {
       console.error('Error setting statuses:', error);
@@ -176,6 +242,7 @@ const Laporan = () => {
       
       if (response.data.sukses) {
         setInventoryData(response.data.data.inventaris);
+        setInventorySummary(response.data.data.ringkasan);
       } else {
         toast.error(response.data.pesan || 'Gagal memuat data inventaris');
       }
@@ -260,28 +327,32 @@ const Laporan = () => {
   const filteredInventoryData = inventoryData.filter(item => {
     const itemDate = dayjs(item.tanggal_perolehan);
     const dateMatch = (!startDate || !endDate) ? true : itemDate.isBetween(startDate, endDate, 'day', '[]');
+    const tahunMatch = !tahunFilter || (item.tahun_pengadaan && item.tahun_pengadaan.toString() === tahunFilter.toString()) || (itemDate.year() === parseInt(tahunFilter));
     const kategoriMatch = !kategoriFilter || (item.kategori?.nama || item.kategori) === kategoriFilter;
     const lokasiMatch = !lokasiFilter || (item.lokasi?.nama || item.lokasi) === lokasiFilter;
     const kondisiMatch = !kondisiFilter || item.kondisi === kondisiFilter;
     const statusMatch = !statusFilter || item.status === statusFilter;
     
-    return dateMatch && kategoriMatch && lokasiMatch && kondisiMatch && statusMatch;
+    return dateMatch && tahunMatch && kategoriMatch && lokasiMatch && kondisiMatch && statusMatch;
   });
 
   const filteredLoanData = loanData.filter(item => {
     const itemDate = dayjs(item.tanggal_pinjam);
     const dateMatch = (!startDate || !endDate) ? true : itemDate.isBetween(startDate, endDate, 'day', '[]');
+    const tahunMatch = !tahunFilter || itemDate.year() === parseInt(tahunFilter);
     const statusMatch = !statusFilter || item.status === statusFilter;
     
-    return dateMatch && statusMatch;
+    return dateMatch && tahunMatch && statusMatch;
   });
 
   const filteredConditionData = conditionData.filter(item => {
+    const itemDate = dayjs(item.tanggal_perolehan);
+    const tahunMatch = !tahunFilter || (item.tahun_pengadaan && item.tahun_pengadaan.toString() === tahunFilter.toString()) || (itemDate.year() === parseInt(tahunFilter));
     const kategoriMatch = !kategoriFilter || (item.kategori?.nama || item.kategori) === kategoriFilter;
     const lokasiMatch = !lokasiFilter || (item.lokasi?.nama || item.lokasi) === lokasiFilter;
     const kondisiMatch = !kondisiFilter || item.kondisi === kondisiFilter;
     
-    return kategoriMatch && lokasiMatch && kondisiMatch;
+    return tahunMatch && kategoriMatch && lokasiMatch && kondisiMatch;
   });
 
 
@@ -322,7 +393,7 @@ const Laporan = () => {
       const statusLabels = {
         'tersedia': 'Tersedia',
         'dipinjam': 'Dipinjam',
-        'dalam_perbaikan': 'Dalam Perbaikan'
+        'perbaikan': 'Perbaikan'
       };
       return statusLabels[value] || value || '-';
     }},
@@ -430,14 +501,11 @@ const Laporan = () => {
         open={Boolean(exportMenu)}
         onClose={handleExportClose}
       >
-        <MenuItem onClick={() => handleExport('PDF')}>
-          <PdfIcon sx={{ mr: 1 }} /> Ekspor PDF
+        <MenuItem onClick={() => handleExport('download')}>
+          <FileDownloadIcon sx={{ mr: 1 }} /> Download PDF
         </MenuItem>
-        <MenuItem onClick={() => handleExport('Excel')}>
-          <ExcelIcon sx={{ mr: 1 }} /> Ekspor Excel
-        </MenuItem>
-        <MenuItem onClick={() => handleExport('Print')}>
-          <PrintIcon sx={{ mr: 1 }} /> Cetak
+        <MenuItem onClick={() => handleExport('preview')}>
+          <VisibilityIcon sx={{ mr: 1 }} /> Preview PDF
         </MenuItem>
       </Menu>
 
@@ -448,6 +516,39 @@ const Laporan = () => {
             Filter Laporan
           </Typography>
           <Grid container spacing={2}>
+            <Grid item xs={12} md={6} lg={3}>
+              <Autocomplete
+                freeSolo
+                size="small"
+                options={Array.from({ length: new Date().getFullYear() - 2007 + 1 }, (_, i) => {
+                   const year = new Date().getFullYear() - i;
+                   return year.toString();
+                 })}
+                value={tahunFilter}
+                onChange={(event, newValue) => {
+                  setTahunFilter(newValue || '');
+                }}
+                onInputChange={(event, newInputValue) => {
+                  setTahunFilter(newInputValue);
+                }}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    label="Tahun"
+                    placeholder="Ketik atau pilih tahun"
+                    type="number"
+                    InputProps={{
+                      ...params.InputProps,
+                      inputProps: {
+                        ...params.inputProps,
+                        min: 1900,
+                        max: new Date().getFullYear() + 10
+                      }
+                    }}
+                  />
+                )}
+              />
+            </Grid>
             <Grid item xs={12} md={6} lg={3}>
               <DatePicker
                 label="Dari Tanggal"
@@ -538,8 +639,9 @@ const Laporan = () => {
                 variant="outlined" 
                 startIcon={<FilterListIcon />}
                 onClick={() => {
-                  setStartDate(dayjs().subtract(30, 'day'));
-                  setEndDate(dayjs());
+                  setTahunFilter('');
+                  setStartDate(null);
+                  setEndDate(null);
                   setKategoriFilter('');
                   setLokasiFilter('');
                   setKondisiFilter('');
@@ -603,6 +705,8 @@ const Laporan = () => {
           refreshable
           onRefresh={fetchLoanData}
           emptyMessage="Tidak ada data peminjaman"
+          initialOrderBy="tanggal_pinjam"
+          initialOrder="desc"
         />
       </TabPanel>
 

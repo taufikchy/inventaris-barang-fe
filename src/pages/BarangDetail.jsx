@@ -308,8 +308,6 @@ const BarangDetail = () => {
         return 'primary';
       case 'Perbaikan':
         return 'warning';
-      case 'Rusak':
-        return 'error';
       default:
         return 'default';
     }
@@ -317,15 +315,33 @@ const BarangDetail = () => {
 
   // Get kondisi chip color
   const getKondisiColor = (kondisi) => {
-    switch (kondisi) {
-      case 'Baik':
+    // Normalize kondisi to handle both database format and display format
+    const normalizedKondisi = kondisi?.toLowerCase().replace(/\s+/g, '_');
+    switch (normalizedKondisi) {
+      case 'baik':
         return 'success';
-      case 'Rusak Ringan':
+      case 'rusak_ringan':
         return 'warning';
-      case 'Rusak Berat':
+      case 'rusak_berat':
         return 'error';
       default:
         return 'default';
+    }
+  };
+
+  // Format kondisi label for display
+  const formatKondisiLabel = (kondisi) => {
+    if (!kondisi) return 'Baik';
+    const normalizedKondisi = kondisi.toLowerCase().replace(/\s+/g, '_');
+    switch (normalizedKondisi) {
+      case 'baik':
+        return 'Baik';
+      case 'rusak_ringan':
+        return 'Rusak Ringan';
+      case 'rusak_berat':
+        return 'Rusak Berat';
+      default:
+        return kondisi;
     }
   };
 
@@ -562,7 +578,6 @@ const BarangDetail = () => {
                           <MenuItem value="Tersedia">Tersedia</MenuItem>
                           <MenuItem value="Dipinjam">Dipinjam</MenuItem>
                           <MenuItem value="Perbaikan">Perbaikan</MenuItem>
-                          <MenuItem value="Rusak">Rusak</MenuItem>
                         </Field>
                       </Grid>
                       <Grid item xs={12} sm={6}>
@@ -679,9 +694,9 @@ const BarangDetail = () => {
                         }}
                       />
                       <Chip
-                        label={barang?.kondisi || 'Baik'}
+                        label={formatKondisiLabel(barang?.kondisi || 'baik')}
                         size="small"
-                        color={getKondisiColor(barang?.kondisi || 'Baik')}
+                        color={getKondisiColor(barang?.kondisi || 'baik')}
                         sx={{
                           color: 'white',
                           fontWeight: 'bold'
@@ -769,7 +784,7 @@ const BarangDetail = () => {
                         <TableCell>{barang.kode}</TableCell>
                         <TableCell>
                           <Chip
-                            label={barang.kondisi}
+                            label={formatKondisiLabel(barang.kondisi)}
                             size="small"
                             color={getKondisiColor(barang.kondisi)}
                             sx={{
@@ -803,7 +818,7 @@ const BarangDetail = () => {
                           <TableCell>{unit.kode}</TableCell>
                           <TableCell>
                             <Chip
-                              label={unit.kondisi}
+                              label={formatKondisiLabel(unit.kondisi)}
                               size="small"
                               color={getKondisiColor(unit.kondisi)}
                               sx={{

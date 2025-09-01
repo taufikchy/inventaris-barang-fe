@@ -27,6 +27,8 @@ import {
   VisibilityOff as VisibilityOffIcon,
   AdminPanelSettings as AdminIcon,
   Person as UserIcon,
+  PersonOff as PersonOffIcon,
+  PersonAdd as PersonAddIcon,
 } from '@mui/icons-material';
 import { Formik, Form, Field } from 'formik';
 import * as Yup from 'yup';
@@ -43,7 +45,6 @@ const UserSchema = Yup.object().shape({
     .matches(/^[a-zA-Z0-9_]+$/, 'Username hanya boleh berisi huruf, angka, dan underscore')
     .required('Username harus diisi'),
   password: Yup.string()
-    .min(6, 'Password minimal 6 karakter')
     .when('$isEditing', {
       is: false,
       then: (schema) => schema.required('Password harus diisi'),
@@ -222,6 +223,38 @@ const Pengguna = () => {
     }
   };
 
+  // Handle deactivate user
+  const handleDeactivate = async (user) => {
+    try {
+      const response = await axios.patch(`/api/pengguna/${user.id}/nonaktifkan`);
+      if (response.data.sukses) {
+        toast.success('Pengguna berhasil dinonaktifkan');
+        fetchUsers(pagination.halaman, pagination.batas, searchTerm); // Refresh data
+      } else {
+        toast.error(response.data.pesan || 'Gagal menonaktifkan pengguna');
+      }
+    } catch (error) {
+      console.error('Error deactivating user:', error);
+      toast.error(error.response?.data?.pesan || 'Terjadi kesalahan saat menonaktifkan pengguna');
+    }
+  };
+
+  // Handle activate user
+  const handleActivate = async (user) => {
+    try {
+      const response = await axios.patch(`/api/pengguna/${user.id}/aktifkan`);
+      if (response.data.sukses) {
+        toast.success('Pengguna berhasil diaktifkan');
+        fetchUsers(pagination.halaman, pagination.batas, searchTerm); // Refresh data
+      } else {
+        toast.error(response.data.pesan || 'Gagal mengaktifkan pengguna');
+      }
+    } catch (error) {
+      console.error('Error activating user:', error);
+      toast.error(error.response?.data?.pesan || 'Terjadi kesalahan saat mengaktifkan pengguna');
+    }
+  };
+
   const columns = [
     { 
       id: 'no', 
@@ -232,6 +265,22 @@ const Pengguna = () => {
     { id: 'id', label: 'ID', sortable: true },
     { id: 'nama', label: 'Nama', sortable: true },
     { id: 'nama_pengguna', label: 'Username', sortable: true },
+    {
+      id: 'aktif',
+      label: 'Status',
+      sortable: true,
+      format: (value) => (
+        <Chip
+          label={value ? 'Aktif' : 'Nonaktif'}
+          color={value ? 'success' : 'error'}
+          size="small"
+          sx={{
+            color: 'white',
+            fontWeight: 'bold'
+          }}
+        />
+      )
+    },
     { 
       id: 'peran', 
       label: 'Role', 
@@ -284,6 +333,7 @@ const Pengguna = () => {
     // Log untuk debugging
     console.log('Username in row:', row.nama_pengguna);
     console.log('Role in row:', row.peran);
+    console.log('Status aktif:', row.aktif);
     return (
       <Box>
         {(isAdmin() || isKepalaLab() || user.peran === 'toolman' || user.peran === 'sarana') && (
@@ -294,15 +344,41 @@ const Pengguna = () => {
               </IconButton>
             </Tooltip>
             {isKepalaLab() && (
-              <Tooltip title="Hapus">
-                <IconButton 
-                  onClick={() => handleDeleteConfirm(row)} 
-                  size="small" 
-                  color="error"
-                >
-                  <DeleteIcon fontSize="small" />
-                </IconButton>
-              </Tooltip>
+              <>
+                {row.aktif ? (
+                  // Hanya tampilkan tombol nonaktifkan jika bukan user yang sedang login
+                  row.id !== user.id && (
+                    <Tooltip title="Nonaktifkan">
+                      <IconButton 
+                        onClick={() => handleDeactivate(row)} 
+                        size="small" 
+                        color="warning"
+                      >
+                        <PersonOffIcon fontSize="small" />
+                      </IconButton>
+                    </Tooltip>
+                  )
+                ) : (
+                  <Tooltip title="Aktifkan">
+                    <IconButton 
+                      onClick={() => handleActivate(row)} 
+                      size="small" 
+                      color="success"
+                    >
+                      <PersonAddIcon fontSize="small" />
+                    </IconButton>
+                  </Tooltip>
+                )}
+                <Tooltip title="Hapus">
+                  <IconButton 
+                    onClick={() => handleDeleteConfirm(row)} 
+                    size="small" 
+                    color="error"
+                  >
+                    <DeleteIcon fontSize="small" />
+                  </IconButton>
+                </Tooltip>
+              </>
             )}
           </>
         )}

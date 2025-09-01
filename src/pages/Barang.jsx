@@ -258,8 +258,6 @@ const Barang = () => {
         return 'primary';
       case 'Perbaikan':
         return 'warning';
-      case 'Rusak':
-        return 'error';
       default:
         return 'default';
     }
@@ -267,15 +265,33 @@ const Barang = () => {
 
   // Get kondisi chip color
   const getKondisiColor = (kondisi) => {
-    switch (kondisi) {
-      case 'Baik':
+    // Normalize kondisi to handle both database format and display format
+    const normalizedKondisi = kondisi?.toLowerCase().replace(/\s+/g, '_');
+    switch (normalizedKondisi) {
+      case 'baik':
         return 'success';
-      case 'Rusak Ringan':
+      case 'rusak_ringan':
         return 'warning';
-      case 'Rusak Berat':
+      case 'rusak_berat':
         return 'error';
       default:
         return 'default';
+    }
+  };
+
+  // Format kondisi label for display
+  const formatKondisiLabel = (kondisi) => {
+    if (!kondisi) return 'Baik';
+    const normalizedKondisi = kondisi.toLowerCase().replace(/\s+/g, '_');
+    switch (normalizedKondisi) {
+      case 'baik':
+        return 'Baik';
+      case 'rusak_ringan':
+        return 'Rusak Ringan';
+      case 'rusak_berat':
+        return 'Rusak Berat';
+      default:
+        return kondisi;
     }
   };
 
@@ -446,7 +462,6 @@ const Barang = () => {
                 <MenuItem value="Tersedia">Tersedia</MenuItem>
                 <MenuItem value="Dipinjam">Dipinjam</MenuItem>
                 <MenuItem value="Perbaikan">Perbaikan</MenuItem>
-                <MenuItem value="Rusak">Rusak</MenuItem>
               </TextField>
             </Grid>
             <Grid item xs={12} sm={6} md={3}>
@@ -551,7 +566,6 @@ const Barang = () => {
                       <MenuItem value="Tersedia">Tersedia</MenuItem>
                       <MenuItem value="Dipinjam">Dipinjam</MenuItem>
                       <MenuItem value="Perbaikan">Perbaikan</MenuItem>
-                      <MenuItem value="Rusak">Rusak</MenuItem>
                     </TextField>
                   </Grid>
                 </Grid>
@@ -583,7 +597,7 @@ const Barang = () => {
                       <TableCell>{unit.kode}</TableCell>
                       <TableCell>
                         <Chip
-                          label={unit.kondisi}
+                          label={formatKondisiLabel(unit.kondisi)}
                           size="small"
                           color={getKondisiColor(unit.kondisi)}
                           sx={{

@@ -139,10 +139,8 @@ function App() {
               <Route path="/histori-aktivitas" element={<HistoriAktivitas />} />
               <Route path="/laporan" element={<Laporan />} />
               
-              {/* Admin Only Routes */}
-              <Route element={<AdminRoute />}>
-                <Route path="/pengguna" element={<Pengguna />} />
-              </Route>
+              {/* Admin, Toolman, Kepala Lab, dan Sarana Routes */}
+              <Route path="/pengguna" element={<Pengguna />} />
             </Route>
           </Route>
 
