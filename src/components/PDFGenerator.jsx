@@ -569,9 +569,6 @@ class PDFGenerator {
       filename = "surat-peminjaman.pdf";
     }
     
-    console.log('Saving PDF with filename:', filename);
-    console.log('Peminjaman data:', peminjaman);
-    
     if (this.doc) {
       // Gunakan metode download yang lebih eksplisit dengan kompresi
       const pdfBlob = this.doc.output('blob', { compress: true });
@@ -588,6 +585,42 @@ class PDFGenerator {
 
   openPDF() {
     if (this.doc) window.open(this.doc.output("bloburl"), "_blank");
+  }
+
+  // Fungsi untuk preview PDF di tab baru dengan nama file yang sesuai
+  previewPDF(peminjaman = null) {
+    if (!this.doc) return;
+    
+    // Generate filename untuk preview
+    let filename = "surat-peminjaman.pdf";
+    if (peminjaman) {
+      const kode = peminjaman.kode || "XXX";
+      const today = new Date();
+      const dd = String(today.getDate()).padStart(2, '0');
+      const mm = String(today.getMonth() + 1).padStart(2, '0');
+      const yyyy = String(today.getFullYear());
+      const tanggal = `${dd}-${mm}-${yyyy}`;
+      filename = `${tanggal}-SRT-PMJN-BRG-${kode}.pdf`;
+    }
+    
+    // Buat File object dengan nama yang benar untuk download
+    const pdfBlob = this.doc.output('blob', { compress: true });
+    const file = new File([pdfBlob], filename, { type: 'application/pdf' });
+    const url = URL.createObjectURL(file);
+    
+    // Buka PDF langsung di tab baru
+    const newWindow = window.open(url, '_blank');
+    if (newWindow) {
+      // Set title tab dengan nama file yang benar
+      setTimeout(() => {
+        newWindow.document.title = filename;
+      }, 100);
+    }
+    
+    // Cleanup URL setelah beberapa detik
+    setTimeout(() => {
+      URL.revokeObjectURL(url);
+    }, 30000);
   }
 }
 
@@ -618,6 +651,32 @@ export function BorrowingLetterButton({ peminjaman, label = "Unduh Surat Peminja
       type="button"
     >
       {loading ? "Membuat PDF..." : label}
+    </button>
+  );
+}
+
+// Komponen tombol untuk preview PDF
+export function BorrowingLetterPreviewButton({ peminjaman, label = "Preview Surat Peminjaman" }) {
+  const [loading, setLoading] = useState(false);
+  const handleClick = useCallback(async () => {
+    setLoading(true);
+    try {
+      const gen = new PDFGenerator();
+      await gen.generateBorrowingLetter(peminjaman || {});
+      gen.previewPDF(peminjaman);
+    } finally {
+      setLoading(false);
+    }
+  }, [peminjaman]);
+
+  return (
+    <button
+      onClick={handleClick}
+      disabled={loading}
+      className="px-4 py-2 rounded-md bg-green-600 text-white hover:opacity-90 disabled:opacity-60"
+      type="button"
+    >
+      {loading ? "Membuat Preview..." : label}
     </button>
   );
 }

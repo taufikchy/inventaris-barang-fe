@@ -143,6 +143,18 @@ const PeminjamanDetail = () => {
     }
   };
 
+  // Handle PDF preview
+  const handlePreviewPDF = async () => {
+    try {
+      const pdfGenerator = new PDFGenerator();
+      await pdfGenerator.generateBorrowingLetter(peminjaman);
+      pdfGenerator.previewPDF(peminjaman);
+    } catch (error) {
+      console.error('Error generating PDF preview:', error);
+      toast.error('Gagal membuat preview PDF. Silakan coba lagi.');
+    }
+  };
+
   // Fetch peminjaman data
   const fetchPeminjaman = async () => {
     if (isNewPeminjaman) {
@@ -1246,14 +1258,25 @@ const PeminjamanDetail = () => {
                     
                     {/* Tombol Cetak Surat Pengajuan - untuk Admin/Toolman */}
                     {isAdminOrToolman() && (
-                      <Button
-                        variant="outlined"
-                        color="primary"
-                        onClick={handlePrintPDF}
-                        size="small"
-                      >
-                        Cetak Surat Pengajuan (PDF)
-                      </Button>
+                      <>
+                        <Button
+                          variant="outlined"
+                          color="primary"
+                          onClick={handlePrintPDF}
+                          size="small"
+                        >
+                          Download Surat Permohonan
+                        </Button>
+                        <Button
+                          variant="outlined"
+                          color="success"
+                          onClick={handlePreviewPDF}
+                          size="small"
+                          sx={{ ml: 1 }}
+                        >
+                          Preview Surat Permohonan
+                        </Button>
+                      </>
                     )}
                     
                     {/* Tombol Approval - hanya untuk Kepala Lab dan status menunggu persetujuan */}
