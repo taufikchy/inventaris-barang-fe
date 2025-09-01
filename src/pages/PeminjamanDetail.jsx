@@ -101,14 +101,14 @@ const PeminjamanDetail = () => {
 
   // Get kondisi chip color
   const getKondisiColor = (kondisi) => {
-    // Normalize kondisi to handle both lowercase and proper case
-    const normalizedKondisi = kondisi?.toLowerCase();
+    // Normalize kondisi to handle both database format and display format
+    const normalizedKondisi = kondisi?.toLowerCase().replace(/\s+/g, '_');
     switch (normalizedKondisi) {
       case 'baik':
         return 'success';
-      case 'rusak ringan':
+      case 'rusak_ringan':
         return 'warning';
-      case 'rusak berat':
+      case 'rusak_berat':
         return 'error';
       default:
         return 'default';
@@ -118,13 +118,13 @@ const PeminjamanDetail = () => {
   // Format kondisi label for display
   const formatKondisiLabel = (kondisi) => {
     if (!kondisi) return '-';
-    const normalizedKondisi = kondisi.toLowerCase();
+    const normalizedKondisi = kondisi.toLowerCase().replace(/\s+/g, '_');
     switch (normalizedKondisi) {
       case 'baik':
         return 'Baik';
-      case 'rusak ringan':
+      case 'rusak_ringan':
         return 'Rusak Ringan';
-      case 'rusak berat':
+      case 'rusak_berat':
         return 'Rusak Berat';
       default:
         return kondisi;
@@ -542,6 +542,26 @@ const PeminjamanDetail = () => {
     setSelectedBarangIndex(null);
   };
 
+  // Convert kondisi from display format to database format
+  const convertKondisiToDatabase = (kondisi) => {
+    if (!kondisi) return 'baik';
+    const normalizedKondisi = kondisi.toLowerCase().replace(/\s+/g, '_');
+    switch (normalizedKondisi) {
+      case 'baik':
+        return 'baik';
+      case 'rusak_ringan':
+        return 'rusak_ringan';
+      case 'rusak_berat':
+        return 'rusak_berat';
+      default:
+        // If it's already in database format, return as is
+        if (['baik', 'rusak_ringan', 'rusak_berat'].includes(kondisi)) {
+          return kondisi;
+        }
+        return 'baik'; // Default fallback
+    }
+  };
+
   // Add or update barang to peminjaman
   const addOrUpdateBarang = (formikProps, barang, jumlah) => {
     const { values, setFieldValue } = formikProps;
@@ -554,22 +574,30 @@ const PeminjamanDetail = () => {
           nama_barang: barang.nama,
           kode_barang: barang.kode,
           jumlah: parseInt(jumlah),
-          kondisi_saat_pinjam: barang.kondisi,
+          kondisi_saat_pinjam: convertKondisiToDatabase(barang.kondisi),
           lokasi_ruangan: barang.lokasi?.nama || '-'
         };
       setFieldValue('detail_peminjaman', updatedDetailPeminjaman);
     } else {
+      // Check if barang already exists in the list
+      const currentDetailPeminjaman = Array.isArray(values.detail_peminjaman) ? values.detail_peminjaman : [];
+      const existingBarang = currentDetailPeminjaman.find(item => item.id_barang === barang.id);
+      
+      if (existingBarang) {
+        toast.error(`Barang "${barang.nama}" sudah ada dalam daftar peminjaman. Silakan edit jumlah jika diperlukan.`);
+        closeBarangDialog();
+        return;
+      }
+      
       // Add new barang
       const newBarang = {
         id_barang: barang.id,
         nama_barang: barang.nama,
         kode_barang: barang.kode,
         jumlah: parseInt(jumlah),
-        kondisi_saat_pinjam: barang.kondisi,
+        kondisi_saat_pinjam: convertKondisiToDatabase(barang.kondisi),
         lokasi_ruangan: barang.lokasi?.nama || '-',
       };
-      // Pastikan values.detail_peminjaman adalah array sebelum menggunakan spread operator
-      const currentDetailPeminjaman = Array.isArray(values.detail_peminjaman) ? values.detail_peminjaman : [];
       setFieldValue('detail_peminjaman', [...currentDetailPeminjaman, newBarang]);
     }
     
@@ -885,14 +913,17 @@ const PeminjamanDetail = () => {
                                     padding: '12px 8px',
                                     minWidth: '100px'
                                   }}>
-                                    <Typography variant="body2" sx={{ 
-                                      fontWeight: 500,
-                                      fontSize: '0.875rem',
-                                      lineHeight: 1.3,
-                                      whiteSpace: 'nowrap'
-                                    }}>
-                                      {item.kondisi_saat_pinjam}
-                                    </Typography>
+                                    <Chip
+                                      label={formatKondisiLabel(item.kondisi_saat_pinjam)}
+                                      size="small"
+                                      color={getKondisiColor(item.kondisi_saat_pinjam)}
+                                      sx={{
+                                        color: 'white',
+                                        fontWeight: 'bold',
+                                        fontSize: '0.75rem',
+                                        height: '24px'
+                                      }}
+                                    />
                                   </TableCell>
                                   <TableCell align="center" sx={{ padding: '12px 8px' }}>
                                     <IconButton
@@ -1077,6 +1108,32 @@ const PeminjamanDetail = () => {
                                   if (newValue) {
                                     dialogSetFieldValue('jumlah', 1);
                                   }
+                                }}
+                                renderOption={(props, option) => {
+                                  const currentDetailPeminjaman = Array.isArray(values.detail_peminjaman) ? values.detail_peminjaman : [];
+                                  const isAlreadyAdded = currentDetailPeminjaman.some(item => item.id_barang === option.id);
+                                  
+                                  return (
+                                    <Box component="li" {...props} sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                      <Box>
+                                        <Typography variant="body2">
+                                          {option.kode} - {option.nama}
+                                        </Typography>
+                                        <Typography variant="caption" color="text.secondary">
+                                          Stok: {option.jumlah_tersedia} | Kondisi: {formatKondisiLabel(option.kondisi)}
+                                        </Typography>
+                                      </Box>
+                                      {isAlreadyAdded && (
+                                        <Chip
+                                          label="Sudah Ditambahkan"
+                                          size="small"
+                                          color="primary"
+                                          variant="outlined"
+                                          sx={{ ml: 1, fontSize: '0.7rem' }}
+                                        />
+                                      )}
+                                    </Box>
+                                  );
                                 }}
                                 renderInput={(params) => (
                                   <TextField

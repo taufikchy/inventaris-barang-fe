@@ -90,11 +90,11 @@ const ReturnDialog = ({
     
     // Validate detail kondisi
     const hasInvalidKondisi = returnData.detail_kondisi.some(detail => 
-      detail.kondisi_saat_kembali === 'rusak' && !detail.catatan_kondisi.trim()
+      (detail.kondisi_saat_kembali === 'rusak_ringan' || detail.kondisi_saat_kembali === 'rusak_berat') && !detail.catatan_kondisi.trim()
     );
     
     if (hasInvalidKondisi) {
-      newErrors.detail_kondisi = 'Catatan kondisi wajib diisi untuk barang yang rusak';
+      newErrors.detail_kondisi = 'Catatan kondisi wajib diisi untuk barang yang rusak ringan atau rusak berat';
     }
     
     setErrors(newErrors);
@@ -120,7 +120,7 @@ const ReturnDialog = ({
     switch (kondisi) {
       case 'baik': return 'success';
       case 'rusak_ringan': return 'warning';
-      case 'rusak': return 'error';
+      case 'rusak_berat': return 'error';
       default: return 'default';
     }
   };
@@ -129,7 +129,7 @@ const ReturnDialog = ({
     switch (kondisi) {
       case 'baik': return 'Baik';
       case 'rusak_ringan': return 'Rusak Ringan';
-      case 'rusak': return 'Rusak';
+      case 'rusak_berat': return 'Rusak Berat';
       default: return kondisi;
     }
   };
@@ -249,7 +249,7 @@ const ReturnDialog = ({
                       >
                         <MenuItem value="baik">Baik</MenuItem>
                         <MenuItem value="rusak_ringan">Rusak Ringan</MenuItem>
-                        <MenuItem value="rusak">Rusak</MenuItem>
+                        <MenuItem value="rusak_berat">Rusak Berat</MenuItem>
                       </Select>
                     </FormControl>
                   </TableCell>
@@ -259,8 +259,8 @@ const ReturnDialog = ({
                       placeholder="Catatan kondisi..."
                       value={detail.catatan_kondisi}
                       onChange={(e) => handleDetailKondisiChange(index, 'catatan_kondisi', e.target.value)}
-                      required={detail.kondisi_saat_kembali === 'rusak'}
-                      error={detail.kondisi_saat_kembali === 'rusak' && !detail.catatan_kondisi.trim()}
+                      required={detail.kondisi_saat_kembali === 'rusak_ringan' || detail.kondisi_saat_kembali === 'rusak_berat'}
+                      error={(detail.kondisi_saat_kembali === 'rusak_ringan' || detail.kondisi_saat_kembali === 'rusak_berat') && !detail.catatan_kondisi.trim()}
                       sx={{ minWidth: 150 }}
                     />
                   </TableCell>
