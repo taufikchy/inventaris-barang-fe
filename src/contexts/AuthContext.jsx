@@ -229,6 +229,10 @@ export const AuthProvider = ({ children }) => {
   };
 
   const isAdminToolmanOrKepalaLab = () => {
+    return user?.peran === 'admin' || user?.peran === 'toolman' || user?.peran === 'kepala_lab';
+  };
+
+  const isAdminToolmanKepalaLabOrSarana = () => {
     return user?.peran === 'admin' || user?.peran === 'toolman' || user?.peran === 'kepala_lab' || user?.peran === 'sarana';
   };
 
@@ -253,12 +257,12 @@ export const AuthProvider = ({ children }) => {
     logout,
     isAdmin,
     isKepalaLab,
-
     isToolman,
     isSarana,
     isAdminOrToolman,
     isAdminOrKepalaLab,
     isAdminToolmanOrKepalaLab,
+    isAdminToolmanKepalaLabOrSarana,
     canCRUD,
     canDeleteBarang,
     canDeleteLokasiKategori,

@@ -72,7 +72,7 @@ const PeminjamanDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
-  const { user, isKepalaLab, isAdminOrToolman } = useAuth(); // Mendapatkan informasi pengguna yang login
+  const { user, isKepalaLab, isAdminOrToolman, isAdminToolmanOrKepalaLab } = useAuth(); // Mendapatkan informasi pengguna yang login
   const isNewPeminjaman = id === 'new';
   const isEditMode = location.pathname.includes('/edit') || isNewPeminjaman;
   
@@ -303,11 +303,18 @@ const PeminjamanDetail = () => {
       return;
     }
     
+    // Check if sarana role is trying to access edit mode or create new peminjaman
+    if (user && user.peran === 'sarana' && (isEditMode || isNewPeminjaman)) {
+      toast.error('Anda tidak memiliki akses untuk mengedit atau membuat peminjaman baru');
+      navigate('/peminjaman');
+      return;
+    }
+    
     fetchPeminjaman();
     fetchBarangs();
     fetchKategoris();
     fetchLokasis();
-  }, [id]);
+  }, [id, user, isEditMode, isNewPeminjaman]);
 
   // Handle filter change
   const handleFilterChange = (event) => {
@@ -591,7 +598,7 @@ const PeminjamanDetail = () => {
         title={isNewPeminjaman ? 'Tambah Peminjaman Baru' : 'Detail Peminjaman'}
         backButton
         onBackClick={() => navigate('/peminjaman')}
-        actionButton={!isNewPeminjaman && !isEditMode && peminjaman.status === 'dipinjam' ? {
+        actionButton={!isNewPeminjaman && !isEditMode && peminjaman.status === 'dipinjam' && isAdminToolmanOrKepalaLab() ? {
           icon: <CheckCircleIcon />,
           text: 'Kembalikan',
           onClick: () => setConfirmReturn(true),

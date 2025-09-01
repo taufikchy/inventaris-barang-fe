@@ -36,7 +36,6 @@ import { Chart as ChartJS, ArcElement, Tooltip, Legend, CategoryScale, LinearSca
 import { Pie, Bar } from 'react-chartjs-2';
 import PageHeader from '../components/PageHeader';
 import InfoCard from '../components/InfoCard';
-import PDFTestButton from '../components/PDFTestButton';
 
 // Register ChartJS components
 ChartJS.register(ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement, Title);
@@ -59,6 +58,20 @@ const Dashboard = () => {
   const [transaksiPerJenis, setTransaksiPerJenis] = useState([]);
   const [distribusiPerKondisi, setDistribusiPerKondisi] = useState([]);
   const [barangPerLokasi, setBarangPerLokasi] = useState([]);
+
+  // Function to format module names
+  const getModulLabel = (modulName) => {
+    switch (modulName) {
+      case 'barang': return 'Barang';
+      case 'kategori': return 'Kategori';
+      case 'lokasi': return 'Lokasi';
+      case 'pengguna': return 'Pengguna';
+      case 'peminjaman': return 'Peminjaman';
+      case 'transaksi': return 'Transaksi';
+      case 'auth': return 'Autentikasi';
+      default: return modulName;
+    }
+  };
 
   useEffect(() => {
     const fetchDashboardData = async () => {
@@ -550,7 +563,7 @@ const Dashboard = () => {
                             </TableCell>
                             <TableCell sx={{ display: { xs: 'none', sm: 'table-cell' } }}>
                               <Typography variant="body2">
-                                {aktivitas.modul}
+                                {getModulLabel(aktivitas.modul)}
                               </Typography>
                             </TableCell>
                             <TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}>
@@ -571,10 +584,7 @@ const Dashboard = () => {
         </Grid>
       </Grid>
 
-      {/* PDF Test Button - for development */}
-      <Box sx={{ mt: 3, display: 'flex', justifyContent: 'center' }}>
-        <PDFTestButton />
-      </Box>
+
     </>
   );
 };

@@ -31,7 +31,7 @@ import ConfirmDialog from '../components/ConfirmDialog';
 const Peminjaman = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const { isAdmin, isKepalaLab, isToolman, isAdminOrToolman, isAdminToolmanOrKepalaLab } = useAuth();
+  const { isAdmin, isKepalaLab, isToolman, isAdminOrToolman, isAdminToolmanOrKepalaLab, isAdminToolmanKepalaLabOrSarana } = useAuth();
   const [loading, setLoading] = useState(true);
   const [peminjamans, setPeminjamans] = useState([]);
   const [confirmDelete, setConfirmDelete] = useState(false);
