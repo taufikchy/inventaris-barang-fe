@@ -625,7 +625,7 @@ class PDFGenerator {
   }
 
   // ===== Generate Laporan Inventaris =====
-  async generateInventoryReport(data, filters = {}) {
+  async generateInventoryReport(data, filters = {}, summary = null) {
     await this.initDocument();
     await this.loadLogo();
     
@@ -633,11 +633,11 @@ class PDFGenerator {
     y = this.addTitle("LAPORAN INVENTARIS BARANG", null, y);
     y += 5;
 
-    // Calculate statistics for summary
-    const totalBarang = data.length;
-    const kondisiBaik = data.filter(item => item.kondisi === 'baik').length;
-    const kondisiRusakRingan = data.filter(item => item.kondisi === 'rusak_ringan').length;
-    const kondisiRusakBerat = data.filter(item => item.kondisi === 'rusak_berat').length;
+    // Calculate statistics for summary (fallback if summary not provided)
+    const totalBarang = summary?.total_barang || data.length;
+    const kondisiBaik = summary?.jumlah_per_kondisi?.baik || data.filter(item => item.kondisi === 'baik').length;
+    const kondisiRusakRingan = summary?.jumlah_per_kondisi?.rusak_ringan || data.filter(item => item.kondisi === 'rusak_ringan').length;
+    const kondisiRusakBerat = summary?.jumlah_per_kondisi?.rusak_berat || data.filter(item => item.kondisi === 'rusak_berat').length;
 
     // Add summary after title
     this.doc.setFont(this.fontFamily, "normal");
@@ -686,7 +686,27 @@ class PDFGenerator {
     this.doc.text("• Rusak Berat", bulletX, y);
     this.doc.text(":", colonX, y);
     this.doc.text(`${kondisiRusakBerat} unit`, colonX + 5, y);
-    y += 6;
+    y += 8;
+    
+    // Distribusi per Lokasi section
+    if (summary?.jumlah_per_lokasi && Object.keys(summary.jumlah_per_lokasi).length > 0) {
+      this.doc.setFont(this.fontFamily, "bold");
+      this.doc.text("Distribusi per Lokasi", this.margins.left, y);
+      this.doc.setFont(this.fontFamily, "normal");
+      y += 6;
+      
+      // Sort locations alphabetically
+      const sortedLocations = Object.entries(summary.jumlah_per_lokasi)
+        .sort(([a], [b]) => a.localeCompare(b));
+      
+      sortedLocations.forEach(([lokasi, jumlah]) => {
+        this.doc.text(`• ${lokasi}`, bulletX, y);
+        this.doc.text(":", colonX, y);
+        this.doc.text(`${jumlah} unit`, colonX + 5, y);
+        y += 5;
+      });
+      y += 6;
+    }
 
     // Total Barang
     this.doc.setFont(this.fontFamily, "bold");
@@ -694,7 +714,9 @@ class PDFGenerator {
     this.doc.text("Total Barang", this.margins.left, y);
     this.doc.text(":", colonX, y);
     this.doc.text(`${totalBarang} unit`, colonX + 5, y);
-    y += 10;
+    y += 8;
+    
+    y += 8;
 
     // Add filter info (excluding tahun and lokasi as they're moved to top)
     if (filters.kategori) {
@@ -766,7 +788,7 @@ class PDFGenerator {
     
     let y = this.addHeader(15);
     y = this.addTitle("LAPORAN PEMINJAMAN BARANG", null, y);
-    y += 10;
+    y += 5;
 
     // Add filter info
     if (filters.tahun) {
@@ -779,7 +801,7 @@ class PDFGenerator {
       this.doc.text(`Periode: ${this.formatDate(filters.startDate)} - ${this.formatDate(filters.endDate)}`, this.margins.left, y);
       y += 6;
     }
-    y += 5;
+    y += 2;
 
     // Table data
     const tableData = data.map((item, index) => [
@@ -834,26 +856,138 @@ class PDFGenerator {
   }
 
   // ===== Generate Laporan Kondisi =====
-  async generateConditionReport(data, filters = {}) {
+  async generateConditionReport(data, filters = {}, summary = null) {
     await this.initDocument();
     await this.loadLogo();
     
     let y = this.addHeader(15);
     y = this.addTitle("LAPORAN KONDISI BARANG", null, y);
-    y += 10;
-
-    // Add filter info
-    if (filters.tahun) {
-      this.doc.setFont(this.fontFamily, "normal");
-      this.doc.setFontSize(10);
-      this.doc.text(`Tahun: ${filters.tahun}`, this.margins.left, y);
-      y += 6;
-    }
-    if (filters.kondisi) {
-      this.doc.text(`Kondisi: ${filters.kondisi}`, this.margins.left, y);
-      y += 6;
-    }
     y += 5;
+
+    // Calculate statistics for summary (fallback if summary not provided)
+    const totalBarang = summary?.total_barang || data.length;
+    const kondisiBaik = summary?.jumlah_per_kondisi?.baik || data.filter(item => item.kondisi === 'baik').length;
+    const kondisiRusakRingan = summary?.jumlah_per_kondisi?.rusak_ringan || data.filter(item => item.kondisi === 'rusak_ringan').length;
+    const kondisiRusakBerat = summary?.jumlah_per_kondisi?.rusak_berat || data.filter(item => item.kondisi === 'rusak_berat').length;
+
+    // Add summary after title
+    this.doc.setFont(this.fontFamily, "normal");
+    this.doc.setFontSize(12);
+    
+    // Use fixed positioning for alignment
+    const bulletX = this.margins.left + 5;
+    const colonX = this.margins.left + 40; // Fixed position for colons
+    
+    // Tahun section (moved to top)
+    if (filters.tahun) {
+      this.doc.setFont(this.fontFamily, "bold");
+      this.doc.text("Tahun", this.margins.left, y);
+      this.doc.text(":", colonX, y);
+      this.doc.text(`${filters.tahun}`, colonX + 5, y);
+      this.doc.setFont(this.fontFamily, "normal");
+      y += 10;
+    }
+    
+    // Kondisi filter section
+    if (filters.kondisi) {
+      this.doc.setFont(this.fontFamily, "bold");
+      this.doc.text("Filter Kondisi", this.margins.left, y);
+      this.doc.text(":", colonX, y);
+      this.doc.text(`${this.getKondisiLabel(filters.kondisi)}`, colonX + 5, y);
+      this.doc.setFont(this.fontFamily, "normal");
+      y += 10;
+    }
+    
+    // Add spacing before kondisi section
+    y += 5;
+    
+    // Kondisi Barang section (without colon)
+    this.doc.setFont(this.fontFamily, "bold");
+    this.doc.setFontSize(12);
+    this.doc.text("Kondisi Barang", this.margins.left, y);
+    this.doc.setFont(this.fontFamily, "normal");
+    y += 8;
+    
+    this.doc.text("• Baik", bulletX, y);
+    this.doc.text(":", colonX, y);
+    this.doc.text(`${kondisiBaik} unit`, colonX + 5, y);
+    y += 6;
+    
+    // Rusak Ringan dengan detail
+    this.doc.text("• Rusak Ringan", bulletX, y);
+    this.doc.text(":", colonX, y);
+    this.doc.text(`${kondisiRusakRingan} unit`, colonX + 5, y);
+    y += 6;
+    
+    // Detail barang rusak ringan
+    const barangRusakRingan = data.filter(item => item.kondisi === 'rusak_ringan');
+    if (barangRusakRingan.length > 0) {
+      this.doc.setFontSize(9);
+      this.doc.setFont(this.fontFamily, "normal");
+      
+      barangRusakRingan.forEach((item, index) => {
+        const noText = `${index + 1}.`;
+        const kodeText = item.kode || '-';
+        const namaText = item.nama || '-';
+        
+        // Positioning yang rapi dengan alignment - nomor di bawah huruf 'R'
+        const detailStartX = bulletX + 2; // Tepat di bawah huruf 'R' pada 'Rusak'
+        const kodeStartX = detailStartX + 6; // 3 spasi setelah nomor
+        const namaStartX = kodeStartX + 20;
+        
+        this.doc.text(noText, detailStartX, y);
+        this.doc.text(kodeText, kodeStartX, y);
+        this.doc.text(`- ${namaText}`, namaStartX, y);
+        y += 4;
+      });
+      
+      this.doc.setFontSize(12);
+      this.doc.setFont(this.fontFamily, "normal");
+      y += 3;
+    }
+    
+    // Rusak Berat dengan detail
+    this.doc.text("• Rusak Berat", bulletX, y);
+    this.doc.text(":", colonX, y);
+    this.doc.text(`${kondisiRusakBerat} unit`, colonX + 5, y);
+    y += 6;
+    
+    // Detail barang rusak berat
+    const barangRusakBerat = data.filter(item => item.kondisi === 'rusak_berat');
+    if (barangRusakBerat.length > 0) {
+      this.doc.setFontSize(9);
+      this.doc.setFont(this.fontFamily, "normal");
+      
+      barangRusakBerat.forEach((item, index) => {
+        const noText = `${index + 1}.`;
+        const kodeText = item.kode || '-';
+        const namaText = item.nama || '-';
+        
+        // Positioning yang rapi dengan alignment - nomor di bawah huruf 'R'
+        const detailStartX = bulletX + 2; // Tepat di bawah huruf 'R' pada 'Rusak'
+        const kodeStartX = detailStartX + 6; // 3 spasi setelah nomor
+        const namaStartX = kodeStartX + 20;
+        
+        this.doc.text(noText, detailStartX, y);
+        this.doc.text(kodeText, kodeStartX, y);
+        this.doc.text(`- ${namaText}`, namaStartX, y);
+        y += 4;
+      });
+      
+      this.doc.setFontSize(12);
+      this.doc.setFont(this.fontFamily, "normal");
+      y += 3;
+    }
+    
+    y += 8;
+
+    // Total Barang
+    this.doc.setFont(this.fontFamily, "bold");
+    this.doc.setFontSize(12);
+    this.doc.text("Total Barang", this.margins.left, y);
+    this.doc.text(":", colonX, y);
+    this.doc.text(`${totalBarang} unit`, colonX + 5, y);
+    y += 15;
 
     // Table data
     const tableData = data.map((item, index) => [

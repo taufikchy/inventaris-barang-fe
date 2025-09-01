@@ -75,6 +75,7 @@ const Laporan = () => {
   
   // Data states
   const [inventoryData, setInventoryData] = useState([]);
+  const [inventorySummary, setInventorySummary] = useState(null);
   const [loanData, setLoanData] = useState([]);
   const [conditionData, setConditionData] = useState([]);
   
@@ -130,7 +131,7 @@ const Laporan = () => {
         // Laporan Inventaris
         reportType = 'Inventaris';
         data = filteredInventoryData;
-        await pdfGenerator.generateInventoryReport(data, filters);
+        await pdfGenerator.generateInventoryReport(data, filters, inventorySummary);
       } else if (activeTab === 1) {
         // Laporan Peminjaman
         reportType = 'Peminjaman';
@@ -140,7 +141,18 @@ const Laporan = () => {
         // Laporan Kondisi
         reportType = 'Kondisi';
         data = filteredConditionData;
-        await pdfGenerator.generateConditionReport(data, filters);
+        
+        // Calculate summary for condition report
+        const conditionSummary = {
+          total_barang: data.length,
+          jumlah_per_kondisi: {
+            baik: data.filter(item => item.kondisi === 'baik').length,
+            rusak_ringan: data.filter(item => item.kondisi === 'rusak_ringan').length,
+            rusak_berat: data.filter(item => item.kondisi === 'rusak_berat').length
+          }
+        };
+        
+        await pdfGenerator.generateConditionReport(data, filters, conditionSummary);
       }
 
       if (action === 'download') {
@@ -230,6 +242,7 @@ const Laporan = () => {
       
       if (response.data.sukses) {
         setInventoryData(response.data.data.inventaris);
+        setInventorySummary(response.data.data.ringkasan);
       } else {
         toast.error(response.data.pesan || 'Gagal memuat data inventaris');
       }
