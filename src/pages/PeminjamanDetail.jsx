@@ -136,7 +136,7 @@ const PeminjamanDetail = () => {
     try {
       const pdfGenerator = new PDFGenerator();
       await pdfGenerator.generateBorrowingLetter(peminjaman);
-      pdfGenerator.openPDF();
+      pdfGenerator.savePDF(peminjaman);
     } catch (error) {
       console.error('Error generating PDF:', error);
       toast.error('Gagal membuat PDF. Silakan coba lagi.');
@@ -203,7 +203,8 @@ const PeminjamanDetail = () => {
             ...item,
             kode_barang: item.barang?.kode || '',
             nama_barang: item.barang?.nama || '',
-            kondisi_saat_pinjam: item.kondisi_sebelum || 'baik',
+            kondisi_saat_pinjam: item.kondisi_saat_pinjam || item.kondisi_sebelum || 'baik',
+            kondisi_pinjam: item.kondisi_saat_pinjam || item.kondisi_sebelum || 'baik',
             lokasi_ruangan: item.barang?.lokasi?.nama || '-'
           })) || []
         };

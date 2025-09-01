@@ -23,26 +23,38 @@ const PDFTestButton = ({ peminjaman }) => {
           {
             Barang: {
               kode_barang: 'KB-001',
-              nama_barang: 'Laptop ASUS VivoBook'
+              nama_barang: 'Laptop ASUS VivoBook',
+              lokasi: {
+                nama: 'Lab Komputer 1'
+              }
             },
             jumlah: 2,
-            kondisi_saat_pinjam: 'Baik'
+            kondisi_saat_pinjam: 'Baik',
+            lokasi_ruangan: 'Lab Komputer 1'
           },
           {
             Barang: {
               kode_barang: 'KB-002',
-              nama_barang: 'Mouse Wireless Logitech'
+              nama_barang: 'Mouse Wireless Logitech',
+              lokasi: {
+                nama: 'Lab Komputer 2'
+              }
             },
             jumlah: 2,
-            kondisi_saat_pinjam: 'Baik'
+            kondisi_saat_pinjam: 'Baik',
+            lokasi_ruangan: 'Lab Komputer 2'
           },
           {
             Barang: {
               kode_barang: 'KB-003',
-              nama_barang: 'Kabel HDMI 2 Meter'
+              nama_barang: 'Kabel HDMI 2 Meter',
+              lokasi: {
+                nama: 'Gudang'
+              }
             },
             jumlah: 1,
-            kondisi_saat_pinjam: 'Baik'
+            kondisi_saat_pinjam: 'Baik',
+            lokasi_ruangan: 'Gudang'
           }
         ]
       };
