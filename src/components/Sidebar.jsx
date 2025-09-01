@@ -28,6 +28,7 @@ import {
   Menu as MenuIcon,
   History as HistoryIcon,
   Visibility as VisibilityIcon,
+  MoveToInbox as MoveToInboxIcon,
 } from '@mui/icons-material';
 
 const drawerWidth = 240;
@@ -70,6 +71,11 @@ const Sidebar = ({ open, setOpen }) => {
       text: 'Peminjaman',
       icon: <SwapHorizIcon />,
       path: '/peminjaman',
+    },
+    {
+      text: 'Transaksi Inventaris',
+      icon: <MoveToInboxIcon />,
+      path: '/transaksi-inventaris',
     },
     {
       text: 'Histori Aktivitas',

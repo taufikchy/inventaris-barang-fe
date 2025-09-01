@@ -230,6 +230,7 @@ const ReturnDialog = ({
                       size="small" 
                       color="primary" 
                       variant="outlined"
+                      sx={{ color: 'white' }}
                     />
                   </TableCell>
                   <TableCell align="center">
@@ -238,6 +239,7 @@ const ReturnDialog = ({
                       size="small"
                       color={getKondisiColor(detail.kondisi_saat_pinjam)}
                       variant="outlined"
+                      sx={{ color: 'white' }}
                     />
                   </TableCell>
                   <TableCell align="center">

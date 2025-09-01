@@ -184,7 +184,7 @@ const Peminjaman = () => {
   // Format date
   const formatDate = (dateString) => {
     if (!dateString) return '-';
-    const options = { year: 'numeric', month: 'long', day: 'numeric' };
+    const options = { year: 'numeric', month: 'long', day: '2-digit' };
     return new Date(dateString).toLocaleDateString('id-ID', options);
   };
 
@@ -234,32 +234,128 @@ const Peminjaman = () => {
       id: 'no', 
       label: 'No', 
       sortable: true,
-      format: (value, row, displayIndex) => displayIndex + 1 // Menampilkan nomor urut berdasarkan posisi setelah sorting
+      minWidth: 60,
+      align: 'center',
+      format: (value, row, displayIndex) => (
+        <Typography 
+          variant="body2" 
+          sx={{ 
+            fontWeight: 500,
+            margin: 0,
+            padding: 0,
+            lineHeight: 1.4
+          }}
+        >
+          {displayIndex + 1}
+        </Typography>
+      )
     },
-    { id: 'kode', label: 'Kode', sortable: true },
-    { id: 'peminjam', label: 'Peminjam', sortable: true },
+    { 
+      id: 'kode', 
+      label: 'Kode', 
+      sortable: true,
+      minWidth: 120,
+      format: (value) => (
+        <Typography 
+          variant="body2" 
+          sx={{ 
+            fontWeight: 600, 
+            color: 'primary.main',
+            margin: 0,
+            padding: 0,
+            lineHeight: 1.4
+          }}
+        >
+          {value || '-'}
+        </Typography>
+      )
+    },
+    { 
+      id: 'peminjam', 
+      label: 'Peminjam', 
+      sortable: true,
+      minWidth: 180,
+      format: (value) => (
+        <Typography 
+          variant="body2" 
+          sx={{ 
+            fontWeight: 600, 
+            color: 'text.primary',
+            margin: 0,
+            padding: 0,
+            lineHeight: 1.4
+          }}
+        >
+          {value}
+        </Typography>
+      )
+    },
     {
       id: 'tanggal_pinjam',
       label: 'Tanggal Pinjam',
       sortable: true,
-      format: (value) => formatDate(value),
+      minWidth: 150,
+      format: (value) => (
+        <Typography 
+          variant="body2" 
+          sx={{ 
+            color: 'text.primary',
+            margin: 0,
+            padding: 0,
+            lineHeight: 1.4
+          }}
+        >
+          {formatDate(value)}
+        </Typography>
+      ),
     },
     {
       id: 'tanggal_kembali',
       label: 'Tanggal Kembali',
       sortable: true,
-      format: (value) => formatDate(value),
+      minWidth: 150,
+      format: (value) => (
+        <Typography 
+          variant="body2" 
+          sx={{ 
+            color: 'text.primary',
+            margin: 0,
+            padding: 0,
+            lineHeight: 1.4
+          }}
+        >
+          {formatDate(value)}
+        </Typography>
+      ),
     },
     {
       id: 'jumlah_barang',
       label: 'Jumlah Barang',
       sortable: true,
-      align: 'right',
+      minWidth: 120,
+      align: 'center',
+      format: (value) => (
+        <Typography 
+          variant="body2" 
+          sx={{ 
+            fontWeight: 500,
+            color: 'text.primary',
+            textAlign: 'center',
+            margin: 0,
+            padding: 0,
+            lineHeight: 1.4
+          }}
+        >
+          {value}
+        </Typography>
+      ),
     },
     {
       id: 'status',
       label: 'Status',
       sortable: true,
+      minWidth: 160,
+      align: 'center',
       format: (value) => (
         <Chip
           label={getStatusLabel(value)}
@@ -267,7 +363,9 @@ const Peminjaman = () => {
           color={getStatusColor(value)}
           sx={{
             color: 'white',
-            fontWeight: 'bold'
+            fontWeight: 'bold',
+            minWidth: 140,
+            fontSize: '0.75rem'
           }}
         />
       ),
@@ -276,9 +374,16 @@ const Peminjaman = () => {
 
   // Table actions
   const actions = (row) => (
-    <Box>
+    <Box sx={{ display: 'flex', gap: 0.5, justifyContent: 'center' }}>
       <Tooltip title="Lihat Detail">
-        <IconButton onClick={() => navigate(`/peminjaman/${row.id}`)} size="small">
+        <IconButton 
+          onClick={() => navigate(`/peminjaman/${row.id}`)} 
+          size="small"
+          sx={{ 
+            color: 'info.main',
+            '&:hover': { backgroundColor: 'info.light', color: 'white' }
+          }}
+        >
           <VisibilityIcon fontSize="small" />
         </IconButton>
       </Tooltip>
@@ -286,7 +391,14 @@ const Peminjaman = () => {
       {/* Edit button - only for Admin, Toolman, and Kepala Lab, and only for peminjaman with status menunggu_persetujuan */}
       {isAdminToolmanOrKepalaLab() && row.status === 'menunggu_persetujuan' && (
         <Tooltip title="Edit">
-          <IconButton onClick={() => navigate(`/peminjaman/${row.id}/edit`)} size="small">
+          <IconButton 
+            onClick={() => navigate(`/peminjaman/${row.id}/edit`)} 
+            size="small"
+            sx={{ 
+              color: 'primary.main',
+              '&:hover': { backgroundColor: 'primary.light', color: 'white' }
+            }}
+          >
             <EditIcon fontSize="small" />
           </IconButton>
         </Tooltip>
@@ -295,7 +407,14 @@ const Peminjaman = () => {
       {/* Approval button - only for Kepala Lab and status menunggu_persetujuan */}
       {isKepalaLab() && row.status === 'menunggu_persetujuan' && (
         <Tooltip title="Proses Persetujuan">
-          <IconButton onClick={() => navigate(`/peminjaman/${row.id}`)} size="small" color="primary">
+          <IconButton 
+            onClick={() => navigate(`/peminjaman/${row.id}`)} 
+            size="small"
+            sx={{ 
+              color: 'success.main',
+              '&:hover': { backgroundColor: 'success.light', color: 'white' }
+            }}
+          >
             <CheckCircleIcon fontSize="small" />
           </IconButton>
         </Tooltip>
@@ -304,7 +423,14 @@ const Peminjaman = () => {
       {/* Delete button - only for Kepala Lab */}
       {isKepalaLab() && (
         <Tooltip title="Hapus">
-          <IconButton onClick={() => handleDeleteConfirm(row)} size="small" color="error">
+          <IconButton 
+            onClick={() => handleDeleteConfirm(row)} 
+            size="small"
+            sx={{ 
+              color: 'error.main',
+              '&:hover': { backgroundColor: 'error.light', color: 'white' }
+            }}
+          >
             <DeleteIcon fontSize="small" />
           </IconButton>
         </Tooltip>

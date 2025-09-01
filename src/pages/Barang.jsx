@@ -171,6 +171,20 @@ const Barang = () => {
     fetchBarangs();
   }, [filters]);
 
+  // Listen for inventory updates from other components
+  useEffect(() => {
+    const handleInventoryUpdate = (event) => {
+      console.log('Inventory updated, refreshing barang data...', event.detail);
+      fetchBarangs();
+    };
+
+    window.addEventListener('inventoryUpdated', handleInventoryUpdate);
+
+    return () => {
+      window.removeEventListener('inventoryUpdated', handleInventoryUpdate);
+    };
+  }, []);
+
   // Handle delete confirmation
   const handleDeleteConfirm = (barang) => {
     setCurrentBarang(barang);
@@ -195,7 +209,31 @@ const Barang = () => {
       setCurrentBarang(null);
     } catch (error) {
       console.error('Error deleting barang:', error);
-      toast.error('Gagal menghapus barang: ' + (error.response?.data?.pesan || error.message));
+      
+      let errorMessage = 'Gagal menghapus barang';
+      
+      if (error.response) {
+        const status = error.response.status;
+        const responseMessage = error.response.data?.pesan || error.response.data?.message;
+        
+        switch (status) {
+          case 400:
+            errorMessage = 'Barang tidak dapat dihapus. Kemungkinan barang memiliki riwayat peminjaman atau sedang dipinjam.';
+            break;
+          case 403:
+            errorMessage = 'Anda tidak memiliki izin untuk menghapus barang. Hanya Kepala Lab yang dapat menghapus barang.';
+            break;
+          case 404:
+            errorMessage = 'Barang tidak ditemukan.';
+            break;
+          default:
+            errorMessage = responseMessage || `Terjadi kesalahan (${status})`;
+        }
+      } else {
+        errorMessage = error.message || 'Terjadi kesalahan jaringan';
+      }
+      
+      toast.error(errorMessage);
     } finally {
       setDeleteLoading(false);
     }
@@ -245,7 +283,7 @@ const Barang = () => {
 
   // Format date
   const formatDate = (dateString) => {
-    const options = { year: 'numeric', month: 'long', day: 'numeric' };
+    const options = { year: 'numeric', month: 'long', day: '2-digit' };
     return new Date(dateString).toLocaleDateString('id-ID', options);
   };
 
@@ -301,34 +339,203 @@ const Barang = () => {
       id: 'no', 
       label: 'No', 
       sortable: true,
-      format: (value, row, displayIndex) => displayIndex + 1 // Menampilkan nomor urut berdasarkan posisi setelah sorting
+      align: 'center',
+      format: (value, row, displayIndex) => (
+        <Typography variant="body2" sx={{ fontWeight: 500, textAlign: 'center' }}>
+          {displayIndex + 1}
+        </Typography>
+      )
     },
-    { id: 'kode_grup', label: 'Kode Grup', sortable: true },
-    { id: 'nama', label: 'Nama Barang', sortable: true },
+    { 
+      id: 'kode_grup', 
+      label: 'Kode Grup', 
+      sortable: true,
+      align: 'center',
+      format: (value) => (
+        <Typography variant="body2" sx={{ fontWeight: 600, color: 'primary.main' }}>
+          {value || '-'}
+        </Typography>
+      )
+    },
+    { 
+      id: 'nama', 
+      label: 'Nama Barang', 
+      sortable: true,
+      align: 'left',
+      format: (value) => (
+        <Typography variant="body2" sx={{ fontWeight: 500, maxWidth: 200, wordWrap: 'break-word' }}>
+          {value || '-'}
+        </Typography>
+      )
+    },
     {
       id: 'kategori',
       label: 'Kategori',
       sortable: true,
-      format: (value) => value?.nama || value || '-',
+      align: 'center',
+      format: (value) => (
+        <Chip 
+          label={value?.nama || value || '-'} 
+          size="small" 
+          variant="outlined"
+          sx={{ 
+            fontWeight: 600,
+            fontSize: '0.75rem',
+            borderWidth: 1.5,
+            '& .MuiChip-label': {
+              px: 1.5,
+              py: 0.5
+            }
+          }}
+        />
+      )
     },
     {
       id: 'tahun_pengadaan',
       label: 'Tahun Pengadaan',
       sortable: true,
-      align: 'center'
+      align: 'center',
+      format: (value) => (
+        <Typography variant="body2" sx={{ fontWeight: 500 }}>
+          {value || '-'}
+        </Typography>
+      )
     },
     {
       id: 'tanggal_perolehan',
-      label: 'Tanggal Pencatatan Barang',
+      label: 'Tanggal Pencatatan',
       sortable: true,
-      format: (value) => formatDate(value),
+      align: 'center',
+      format: (value) => (
+        <Typography variant="body2" sx={{ fontWeight: 500 }}>
+          {value ? formatDate(value) : '-'}
+        </Typography>
+      )
     },
     {
       id: 'jumlah',
       label: 'Jumlah',
       sortable: true,
-      align: 'right',
-      format: (value, row) => `${value} ${row.satuan || 'unit'}` // Menampilkan jumlah dengan satuan
+      align: 'center',
+      format: (value, row) => {
+        const jumlahText = `${value} ${row.satuan || 'unit'}`;
+        // Tambahkan indikator untuk kategori bahan
+        if (row.kategori?.tipe === 'bahan') {
+          return (
+            <Box sx={{ textAlign: 'center' }}>
+              <Typography variant="body2" sx={{ fontWeight: 600, color: 'text.primary' }}>
+                {jumlahText}
+              </Typography>
+              <Typography variant="caption" color="primary" sx={{ fontStyle: 'italic', display: 'block', mt: 0.5 }}>
+                (Bahan - dapat digunakan sebagian)
+              </Typography>
+            </Box>
+          );
+        }
+        return (
+          <Typography variant="body2" sx={{ fontWeight: 600, color: 'text.primary' }}>
+            {jumlahText}
+          </Typography>
+        );
+      }
+    },
+    {
+      id: 'stok',
+      label: 'Stok Tersisa',
+      sortable: true,
+      align: 'center',
+      format: (value, row) => {
+        // Hanya tampilkan untuk kategori bahan
+        if (row.kategori?.tipe === 'bahan') {
+          const stok = row.stok || 0;
+          const jumlahAwal = row.jumlah || 0;
+          const persentaseStok = jumlahAwal > 0 ? (stok / jumlahAwal) * 100 : 0;
+          
+          // Tentukan warna berdasarkan persentase stok
+          let chipColor = 'success';
+          let chipLabel = 'Stok Aman';
+          
+          if (persentaseStok <= 10) {
+            chipColor = 'error';
+            chipLabel = 'Stok Kritis';
+          } else if (persentaseStok <= 25) {
+            chipColor = 'warning';
+            chipLabel = 'Stok Menipis';
+          } else if (persentaseStok <= 50) {
+            chipColor = 'info';
+            chipLabel = 'Stok Sedang';
+          }
+          
+          // Untuk kategori bahan dengan satuan set, tampilkan unit tersisa
+          if (row.satuan === 'set' && row.unit_per_set) {
+            const unitTersisaDalamSet = row.unit_tersisa || 0;
+            const totalUnit = jumlahAwal * row.unit_per_set;
+            
+            // Format tampilan: "0 set + 5 unit" atau "1 set" jika tidak ada sisa unit
+            let displayText;
+            if (unitTersisaDalamSet > 0) {
+              displayText = `${stok} set + ${unitTersisaDalamSet} unit`;
+            } else {
+              displayText = `${stok} set`;
+            }
+            
+            return (
+              <Box sx={{ textAlign: 'center', minWidth: 120 }}>
+                <Typography variant="body2" sx={{ fontWeight: 600, color: 'text.primary', mb: 1 }}>
+                  {displayText}
+                </Typography>
+                <Chip
+                  label={chipLabel}
+                  color={chipColor}
+                  size="small"
+                  sx={{
+                    fontSize: '0.75rem',
+                    fontWeight: 'bold',
+                    minWidth: '90px',
+                    '& .MuiChip-label': { 
+                      color: 'white',
+                      px: 1.5,
+                      py: 0.5
+                    }
+                  }}
+                />
+              </Box>
+            );
+          }
+          
+          return (
+            <Box sx={{ textAlign: 'center', minWidth: 120 }}>
+              <Typography variant="body2" sx={{ fontWeight: 600, color: 'text.primary', mb: 1 }}>
+                {stok} {row.satuan || 'unit'}
+              </Typography>
+              <Chip
+                label={chipLabel}
+                color={chipColor}
+                size="small"
+                sx={{
+                  fontSize: '0.75rem',
+                  fontWeight: 'bold',
+                  minWidth: '90px',
+                  mb: 0.5,
+                  '& .MuiChip-label': { 
+                    color: 'white',
+                    px: 1.5,
+                    py: 0.5
+                  }
+                }}
+              />
+              <Typography variant="caption" color="text.secondary" sx={{ display: 'block', fontSize: '0.7rem' }}>
+                {persentaseStok.toFixed(1)}% dari total
+              </Typography>
+            </Box>
+          );
+        }
+        return (
+          <Typography variant="body2" color="text.secondary" sx={{ fontStyle: 'italic' }}>
+            -
+          </Typography>
+        );
+      }
     },
   ];
 
@@ -602,7 +809,13 @@ const Barang = () => {
                           color={getKondisiColor(unit.kondisi)}
                           sx={{
                             color: 'white',
-                            fontWeight: 'bold'
+                            fontWeight: 'bold',
+                            fontSize: '0.75rem',
+                            minWidth: '80px',
+                            '& .MuiChip-label': {
+                              px: 1.5,
+                              py: 0.5
+                            }
                           }}
                         />
                       </TableCell>
@@ -613,7 +826,13 @@ const Barang = () => {
                           color={getStatusColor(unit.status)}
                           sx={{
                             color: 'white',
-                            fontWeight: 'bold'
+                            fontWeight: 'bold',
+                            fontSize: '0.75rem',
+                            minWidth: '80px',
+                            '& .MuiChip-label': {
+                              px: 1.5,
+                              py: 0.5
+                            }
                           }}
                         />
                       </TableCell>

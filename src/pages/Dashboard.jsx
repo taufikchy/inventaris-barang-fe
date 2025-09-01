@@ -58,6 +58,7 @@ const Dashboard = () => {
   const [transaksiPerJenis, setTransaksiPerJenis] = useState([]);
   const [distribusiPerKondisi, setDistribusiPerKondisi] = useState([]);
   const [barangPerLokasi, setBarangPerLokasi] = useState([]);
+  const [stokBahanMenupis, setStokBahanMenupis] = useState([]);
 
   // Function to format module names
   const getModulLabel = (modulName) => {
@@ -70,6 +71,27 @@ const Dashboard = () => {
       case 'transaksi': return 'Transaksi';
       case 'auth': return 'Autentikasi';
       default: return modulName;
+    }
+  };
+
+  // Function to fetch stok bahan yang menipis
+  const fetchStokBahanMenupis = async () => {
+    try {
+      const response = await axios.get('/api/barang');
+      if (response.data.sukses) {
+        const barangBahan = response.data.data.filter(barang => 
+          barang.kategori?.tipe === 'bahan' && barang.stok_tersisa !== undefined
+        );
+        
+        const bahanMenupis = barangBahan.filter(barang => {
+          const persentaseStok = (barang.stok_tersisa / barang.jumlah) * 100;
+          return persentaseStok <= 20; // Stok menipis jika <= 20%
+        });
+        
+        setStokBahanMenupis(bahanMenupis);
+      }
+    } catch (error) {
+      console.error('Error fetching stok bahan menipis:', error);
     }
   };
 
@@ -111,6 +133,9 @@ const Dashboard = () => {
           setTransaksiPerJenis(response.data.data.transaksiPerJenis || []);
           setDistribusiPerKondisi(distribusiPerKondisi);
           setBarangPerLokasi(barangPerLokasi);
+          
+          // Fetch stok bahan yang menipis
+          fetchStokBahanMenupis();
         } else {
           toast.error('Gagal memuat data dashboard');
           // Fallback to empty data
@@ -310,6 +335,85 @@ const Dashboard = () => {
           )}
         </Grid>
       </Grid>
+
+      {/* Peringatan Stok Bahan Menipis */}
+      {stokBahanMenupis.length > 0 && (
+        <Card sx={{ mb: 3, border: '2px solid #f59e0b', backgroundColor: '#fef3c7' }}>
+          <CardContent>
+            <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+              <WarningIcon sx={{ color: '#f59e0b', mr: 1 }} />
+              <Typography variant="h6" sx={{ color: '#92400e' }}>
+                Peringatan: Stok Bahan Menipis!
+              </Typography>
+            </Box>
+            <Typography variant="body2" sx={{ mb: 2, color: '#92400e' }}>
+              Beberapa bahan memiliki stok yang menipis dan perlu segera diisi ulang:
+            </Typography>
+            <Grid container spacing={1}>
+              {stokBahanMenupis.map((barang) => {
+                const persentaseStok = ((barang.stok_tersisa || 0) / barang.jumlah) * 100;
+                return (
+                  <Grid item xs={12} sm={6} md={4} key={barang.id}>
+                    <Box 
+                      sx={{ 
+                        p: 2, 
+                        border: '1px solid #f59e0b', 
+                        borderRadius: 1, 
+                        backgroundColor: '#ffffff',
+                        cursor: 'pointer',
+                        '&:hover': {
+                          backgroundColor: '#fef3c7'
+                        }
+                      }}
+                      onClick={() => navigate(`/barang?search=${encodeURIComponent(barang.nama)}`)}
+                    >
+                      <Typography variant="subtitle2" sx={{ fontWeight: 'bold', color: '#92400e' }}>
+                        {barang.nama}
+                      </Typography>
+                      {/* Tampilkan unit tersisa untuk satuan set */}
+                      {barang.satuan === 'set' && barang.unit_per_set ? (
+                        <>
+                          <Typography variant="body2" sx={{ color: '#92400e' }}>
+                            Stok tersisa: {barang.stok_tersisa || 0} set ({(barang.stok_tersisa || 0) * barang.unit_per_set} unit)
+                          </Typography>
+                          <Typography variant="body2" sx={{ color: '#92400e' }}>
+                            Dari total: {barang.jumlah} set ({barang.jumlah * barang.unit_per_set} unit)
+                          </Typography>
+                        </>
+                      ) : (
+                        <>
+                          <Typography variant="body2" sx={{ color: '#92400e' }}>
+                            Stok tersisa: {barang.stok_tersisa || 0} {barang.satuan}
+                          </Typography>
+                          <Typography variant="body2" sx={{ color: '#92400e' }}>
+                            Dari total: {barang.jumlah} {barang.satuan}
+                          </Typography>
+                        </>
+                      )}
+                      <Chip 
+                        label={`${persentaseStok.toFixed(1)}% tersisa`}
+                        size="small"
+                        color={persentaseStok <= 10 ? 'error' : 'warning'}
+                        sx={{ mt: 1, color: 'white' }}
+                      />
+                    </Box>
+                  </Grid>
+                );
+              })}
+            </Grid>
+            <Box sx={{ mt: 2, textAlign: 'right' }}>
+              <Button
+                variant="outlined"
+                color="warning"
+                onClick={() => navigate('/barang?kategori_tipe=bahan')}
+                endIcon={<ArrowForwardIcon />}
+              >
+                Lihat Semua Bahan
+              </Button>
+            </Box>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Charts and Tables */}
       <Grid container spacing={{ xs: 2, sm: 3 }}>

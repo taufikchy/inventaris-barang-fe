@@ -12,6 +12,7 @@ import {
   TextField,
   IconButton,
   Tooltip,
+  Typography,
 } from '@mui/material';
 import {
   Add as AddIcon,
@@ -150,26 +151,116 @@ const Lokasi = () => {
       id: 'no', 
       label: 'No', 
       sortable: true,
-      format: (value, row, displayIndex) => displayIndex + 1 // Menampilkan nomor urut berdasarkan posisi setelah sorting
+      minWidth: 60,
+      align: 'center',
+      format: (value, row, displayIndex) => (
+        <Typography 
+          variant="body2" 
+          sx={{ 
+            fontWeight: 500,
+            margin: 0,
+            padding: 0,
+            lineHeight: 1.4
+          }}
+        >
+          {displayIndex + 1}
+        </Typography>
+      )
     },
-    { id: 'id', label: 'ID', sortable: true },
-    { id: 'nama', label: 'Nama Lokasi', sortable: true },
-    { id: 'deskripsi', label: 'Deskripsi', sortable: true },
+    { 
+      id: 'id', 
+      label: 'ID', 
+      sortable: true,
+      minWidth: 80,
+      align: 'center',
+      format: (value) => (
+        <Typography 
+          variant="body2" 
+          sx={{ 
+            fontWeight: 500, 
+            color: 'text.secondary',
+            margin: 0,
+            padding: 0,
+            lineHeight: 1.4
+          }}
+        >
+          {value}
+        </Typography>
+      )
+    },
+    { 
+      id: 'nama', 
+      label: 'Nama Lokasi', 
+      sortable: true,
+      minWidth: 200,
+      format: (value) => (
+        <Typography 
+          variant="body2" 
+          sx={{ 
+            fontWeight: 600, 
+            color: 'text.primary',
+            margin: 0,
+            padding: 0,
+            lineHeight: 1.4
+          }}
+        >
+          {value}
+        </Typography>
+      )
+    },
+    { 
+      id: 'deskripsi', 
+      label: 'Deskripsi', 
+      sortable: true,
+      minWidth: 300,
+      format: (value) => (
+        <Typography 
+          variant="body2" 
+          sx={{ 
+            color: 'text.secondary',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            whiteSpace: 'nowrap',
+            maxWidth: 250,
+            margin: 0,
+            padding: 0,
+            lineHeight: 1.4
+          }}
+          title={value || '-'}
+        >
+          {value || '-'}
+        </Typography>
+      )
+    },
   ];
 
   // Table actions
   const actions = (row) => (
-    <Box>
+    <Box sx={{ display: 'flex', gap: 0.5, justifyContent: 'center' }}>
       {canCRUD() && (
         <Tooltip title="Edit">
-          <IconButton onClick={() => handleOpenForm(row)} size="small">
+          <IconButton 
+            onClick={() => handleOpenForm(row)} 
+            size="small"
+            sx={{ 
+              color: 'primary.main',
+              '&:hover': { backgroundColor: 'primary.light', color: 'white' }
+            }}
+          >
             <EditIcon fontSize="small" />
           </IconButton>
         </Tooltip>
       )}
       {canDeleteLokasiKategori() && (
         <Tooltip title="Hapus">
-          <IconButton onClick={() => handleDeleteConfirm(row)} size="small" color="error">
+          <IconButton 
+            onClick={() => handleDeleteConfirm(row)} 
+            size="small" 
+            sx={{ 
+              color: 'error.main',
+              '&:hover': { backgroundColor: 'error.light', color: 'white' }
+            }}
+          >
             <DeleteIcon fontSize="small" />
           </IconButton>
         </Tooltip>

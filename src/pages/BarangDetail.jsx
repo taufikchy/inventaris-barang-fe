@@ -42,6 +42,7 @@ import {
   Devices as DevicesIcon,
   Visibility as VisibilityIcon,
 } from '@mui/icons-material';
+import { generatePlaceholderDataUrl } from '../components/ImagePlaceholder';
 import PageHeader from '../components/PageHeader';
 import ConfirmDialog from '../components/ConfirmDialog';
 
@@ -54,6 +55,17 @@ const BarangSchema = Yup.object().shape({
     .min(0, 'Jumlah tidak boleh negatif')
     .integer('Jumlah harus berupa bilangan bulat'),
   satuan: Yup.string().required('Satuan barang wajib diisi'),
+  unit_per_set: Yup.number()
+    .nullable()
+    .when(['satuan', 'id_kategori'], {
+      is: (satuan, id_kategori) => {
+        return satuan === 'set';
+      },
+      then: (schema) => schema.required('Unit per set wajib diisi untuk satuan set')
+        .min(1, 'Unit per set minimal 1')
+        .integer('Unit per set harus berupa bilangan bulat'),
+      otherwise: (schema) => schema.nullable()
+    }),
   kondisi: Yup.string().required('Kondisi barang wajib diisi'),
   tanggal_perolehan: Yup.date().required('Tanggal pencatatan barang wajib diisi'),
   tahun_pengadaan: Yup.number()
@@ -104,6 +116,7 @@ const BarangDetail = () => {
         deskripsi: '',
         jumlah: 0,
         satuan: 'unit',
+        unit_per_set: null,
         kondisi: 'Baik',
         tanggal_perolehan: new Date().toISOString().split('T')[0],
         tahun_pengadaan: new Date().getFullYear(),
@@ -267,7 +280,31 @@ const BarangDetail = () => {
       }
     } catch (error) {
       console.error('Error deleting barang:', error);
-      toast.error('Gagal menghapus barang: ' + (error.response?.data?.pesan || error.message));
+      
+      let errorMessage = 'Gagal menghapus barang';
+      
+      if (error.response) {
+        const status = error.response.status;
+        const responseMessage = error.response.data?.pesan || error.response.data?.message;
+        
+        switch (status) {
+          case 400:
+            errorMessage = 'Barang tidak dapat dihapus. Kemungkinan barang memiliki riwayat peminjaman atau sedang dipinjam.';
+            break;
+          case 403:
+            errorMessage = 'Anda tidak memiliki izin untuk menghapus barang. Hanya Kepala Lab yang dapat menghapus barang.';
+            break;
+          case 404:
+            errorMessage = 'Barang tidak ditemukan.';
+            break;
+          default:
+            errorMessage = responseMessage || `Terjadi kesalahan (${status})`;
+        }
+      } else {
+        errorMessage = error.message || 'Terjadi kesalahan jaringan';
+      }
+      
+      toast.error(errorMessage);
       setConfirmDelete(false);
     } finally {
       setDeleteLoading(false);
@@ -291,7 +328,7 @@ const BarangDetail = () => {
     if (!dateString) {
       return '-';
     }
-    const options = { year: 'numeric', month: 'long', day: 'numeric' };
+    const options = { year: 'numeric', month: 'long', day: '2-digit' };
     const date = new Date(dateString);
     if (isNaN(date.getTime())) {
       return '-';
@@ -404,7 +441,7 @@ const BarangDetail = () => {
                         <CardMedia
                           component="img"
                           height="250"
-                          image={imagePreview || (barang.gambar ? `http://localhost:5000${barang.gambar}` : 'https://via.placeholder.com/400x300?text=No+Image')}
+                          image={imagePreview || (barang.gambar ? `http://localhost:5000${barang.gambar}` : generatePlaceholderDataUrl(400, 300, 'No Image'))}
                           alt={values.nama}
                           sx={{ objectFit: 'contain', bgcolor: 'grey.100', p: 2 }}
                         />
@@ -493,6 +530,22 @@ const BarangDetail = () => {
                           ))}
                         </Field>
                       </Grid>
+                      {/* Field Unit per Set - muncul ketika satuan adalah 'set' dan kategori adalah 'bahan' */}
+                      {values.satuan === 'set' && kategoris.find(k => k.id === parseInt(values.id_kategori))?.tipe === 'bahan' && (
+                        <Grid item xs={12} sm={3}>
+                          <Field
+                            as={TextField}
+                            name="unit_per_set"
+                            label="Unit per Set"
+                            type="number"
+                            fullWidth
+                            required
+                            InputProps={{ inputProps: { min: 1 } }}
+                            error={touched.unit_per_set && Boolean(errors.unit_per_set)}
+                            helperText={touched.unit_per_set && errors.unit_per_set || "Berapa unit dalam 1 set"}
+                          />
+                        </Grid>
+                      )}
                       <Grid item xs={12} sm={6}>
                         <Field
                           as={TextField}
@@ -669,7 +722,7 @@ const BarangDetail = () => {
                       <CardMedia
                         component="img"
                         height="250"
-                        image={barang?.gambar ? `http://localhost:5000${barang?.gambar}` : 'https://via.placeholder.com/400x300?text=No+Image'}
+                        image={barang?.gambar ? `http://localhost:5000${barang?.gambar}` : generatePlaceholderDataUrl(400, 300, 'No Image')}
                         alt={barang?.nama || 'Barang'}
                         sx={{ objectFit: 'contain', bgcolor: 'grey.100', p: 2 }}
                       />
@@ -732,8 +785,13 @@ const BarangDetail = () => {
                           Jumlah
                         </Typography>
                         <Typography variant="body1" gutterBottom>
-                          {barang?.jumlah || 0} unit
+                          {barang?.jumlah || 0} {barang?.satuan || 'unit'}
                         </Typography>
+                        {barang?.kategori?.tipe === 'bahan' && (
+                          <Typography variant="caption" color="primary" sx={{ fontStyle: 'italic', display: 'block' }}>
+                            * Bahan dapat digunakan sebagian
+                          </Typography>
+                        )}
                       </Grid>
                       <Grid item xs={12} sm={6}>
                         <Typography variant="body2" color="text.secondary">

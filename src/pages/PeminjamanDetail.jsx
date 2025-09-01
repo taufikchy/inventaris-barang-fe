@@ -436,7 +436,7 @@ const PeminjamanDetail = () => {
   // Format date
   const formatDate = (dateString) => {
     if (!dateString) return '-';
-    const options = { year: 'numeric', month: 'long', day: 'numeric' };
+    const options = { year: 'numeric', month: 'long', day: '2-digit' };
     return new Date(dateString).toLocaleDateString('id-ID', options);
   };
 
@@ -1112,9 +1112,10 @@ const PeminjamanDetail = () => {
                                 renderOption={(props, option) => {
                                   const currentDetailPeminjaman = Array.isArray(values.detail_peminjaman) ? values.detail_peminjaman : [];
                                   const isAlreadyAdded = currentDetailPeminjaman.some(item => item.id_barang === option.id);
+                                  const { key, ...otherProps } = props;
                                   
                                   return (
-                                    <Box component="li" {...props} sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                    <Box component="li" key={key} {...otherProps} sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                       <Box>
                                         <Typography variant="body2">
                                           {option.kode} - {option.nama}
@@ -1151,8 +1152,13 @@ const PeminjamanDetail = () => {
                             {dialogValues.barang && (
                               <Grid item xs={12}>
                                 <Typography variant="body2" color="text.secondary">
-                                  Stok Tersedia: {dialogValues.barang.jumlah_tersedia} unit
+                                  Stok Tersedia: {dialogValues.barang.jumlah_tersedia} {dialogValues.barang.satuan || 'unit'}
                                 </Typography>
+                                {dialogValues.barang.kategori?.tipe === 'bahan' && (
+                                  <Typography variant="caption" color="primary" sx={{ fontStyle: 'italic', display: 'block', mt: 0.5 }}>
+                                    * Bahan dapat digunakan sebagian - stok akan berkurang sesuai jumlah yang digunakan
+                                  </Typography>
+                                )}
                               </Grid>
                             )}
                             <Grid item xs={12}>

@@ -20,6 +20,7 @@ import Lokasi from './pages/Lokasi';
 import Peminjaman from './pages/Peminjaman';
 import DetailPeminjaman from './pages/DetailPeminjaman';
 import HistoriTransaksi from './pages/Transaksi';
+import TransaksiInventaris from './pages/TransaksiInventaris';
 import Pengguna from './pages/Pengguna';
 import Laporan from './pages/Laporan';
 import HistoriAktivitas from './pages/HistoriAktivitas';
@@ -136,6 +137,7 @@ function App() {
               <Route path="/peminjaman/:id" element={<DetailPeminjaman />} />
               <Route path="/peminjaman/:id/edit" element={<DetailPeminjaman />} />
               <Route path="/transaksi" element={<HistoriTransaksi />} />
+              <Route path="/transaksi-inventaris" element={<TransaksiInventaris />} />
               <Route path="/histori-aktivitas" element={<HistoriAktivitas />} />
               <Route path="/laporan" element={<Laporan />} />
               

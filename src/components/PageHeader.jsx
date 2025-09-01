@@ -4,6 +4,7 @@ import { Home as HomeIcon, ArrowBack as ArrowBackIcon } from '@mui/icons-materia
 
 const PageHeader = ({
   title,
+  subtitle,
   actionText,
   actionIcon,
   onActionClick,
@@ -12,6 +13,7 @@ const PageHeader = ({
   backButton = false,
   onBackClick,
   actionButton,
+  actions = [],
 }) => {
   return (
     <Box sx={{ mb: { xs: 2, sm: 3 } }}>
@@ -75,16 +77,27 @@ const PageHeader = ({
               <ArrowBackIcon />
             </IconButton>
           )}
-          <Typography 
-            variant="h4" 
-            component="h1" 
-            sx={{ 
-              fontWeight: 600,
-              fontSize: { xs: '1.5rem', sm: '2rem', md: '2.125rem' }
-            }}
-          >
-            {title}
-          </Typography>
+          <Box>
+            <Typography 
+              variant="h4" 
+              component="h1" 
+              sx={{ 
+                fontWeight: 600,
+                fontSize: { xs: '1.5rem', sm: '2rem', md: '2.125rem' }
+              }}
+            >
+              {title}
+            </Typography>
+            {subtitle && (
+              <Typography 
+                variant="body2" 
+                color="text.secondary"
+                sx={{ mt: 0.5 }}
+              >
+                {subtitle}
+              </Typography>
+            )}
+          </Box>
         </Box>
 
         <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
@@ -121,6 +134,28 @@ const PageHeader = ({
               {actionButton.text}
             </Button>
           )}
+          {actions.map((action, index) => (
+            <Button
+              key={index}
+              variant={action.variant || 'contained'}
+              color={action.color || 'primary'}
+              startIcon={action.icon}
+              onClick={action.onClick}
+              sx={{ 
+                px: { xs: 2, sm: 3 },
+                fontSize: { xs: '0.75rem', sm: '0.875rem' },
+                alignSelf: { xs: 'stretch', sm: 'auto' },
+                ...(action.variant === 'contained' && {
+                  color: 'white',
+                  '& .MuiSvgIcon-root': {
+                    color: 'white'
+                  }
+                })
+              }}
+            >
+              {action.label}
+            </Button>
+          ))}
         </Box>
       </Box>
 

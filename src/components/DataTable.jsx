@@ -152,10 +152,15 @@ const DataTable = ({
     : rowsWithIndex;
 
   // Calculate empty rows to maintain consistent page height
-  const currentPage = isServerSidePagination ? page : internalPage;
-  const currentRowsPerPage = isServerSidePagination ? externalRowsPerPage : internalRowsPerPage;
-  const totalCount = isServerSidePagination ? count : filteredRows.length;
-  const emptyRows = currentPage > 0 ? Math.max(0, (1 + currentPage) * currentRowsPerPage - totalCount) : 0;
+  const currentPage = isServerSidePagination ? (page || 0) : internalPage;
+  const currentRowsPerPage = isServerSidePagination ? (externalRowsPerPage || defaultRowsPerPage) : internalRowsPerPage;
+  const totalCount = isServerSidePagination ? (count || 0) : filteredRows.length;
+  
+  // Ensure page is within valid range
+  const maxPage = totalCount > 0 ? Math.max(0, Math.ceil(totalCount / currentRowsPerPage) - 1) : 0;
+  const validCurrentPage = Math.min(currentPage, maxPage);
+  
+  const emptyRows = validCurrentPage > 0 ? Math.max(0, (1 + validCurrentPage) * currentRowsPerPage - totalCount) : 0;
 
   // Get displayed rows
   let displayedRows;
@@ -243,7 +248,14 @@ const DataTable = ({
           </Box>
         </Toolbar>
 
-        <TableContainer>
+        <TableContainer 
+          sx={{ 
+            overflowX: 'auto',
+            '& .MuiTable-root': {
+              minWidth: { xs: 800, sm: 900, md: 1000 }
+            }
+          }}
+        >
           <Table
             sx={{ minWidth: 750 }}
             aria-labelledby="tableTitle"
@@ -259,7 +271,13 @@ const DataTable = ({
                     sx={{ 
                       fontWeight: 600,
                       backgroundColor: index % 2 === 0 ? 'var(--primary-color)' : 'var(--primary-light)',
-                      color: 'white'
+                      color: 'white',
+                      padding: { xs: '8px 6px', sm: '16px 12px' },
+                      fontSize: { xs: '0.75rem', sm: '0.875rem' },
+                      lineHeight: 1.5,
+                      borderBottom: '2px solid rgba(255, 255, 255, 0.2)',
+                      minWidth: column.minWidth || 'auto',
+                      maxWidth: column.maxWidth || 'none'
                     }}
                   >
                     {column.sortable !== false ? (
@@ -285,11 +303,16 @@ const DataTable = ({
                   </TableCell>
                 ))}
                 {actions && <TableCell 
+                  key="actions-header"
                   align="center" 
                   sx={{ 
                     fontWeight: 600,
                     backgroundColor: columns.length % 2 === 0 ? 'var(--primary-color)' : 'var(--primary-light)',
-                    color: 'white'
+                    color: 'white',
+                    padding: '16px 12px',
+                    fontSize: '0.875rem',
+                    lineHeight: 1.5,
+                    borderBottom: '2px solid rgba(255, 255, 255, 0.2)'
                   }}
                 >Aksi</TableCell>}
               </TableRow>
@@ -320,13 +343,58 @@ const DataTable = ({
                         const value = row[column.id];
                         const displayIndexForFormat = row.displayIndex !== undefined ? row.displayIndex : index;
                         return (
-                          <TableCell key={column.id} align={column.align || 'center'}>
+                          <TableCell 
+                            key={column.id} 
+                            align={column.align || 'center'}
+                            sx={{
+                              padding: { xs: '8px 12px', sm: '12px 16px' },
+                              fontSize: { xs: '0.8rem', sm: '0.875rem' },
+                              lineHeight: 1.6,
+                              borderBottom: '1px solid rgba(224, 224, 224, 1)',
+                              minWidth: column.minWidth || 'auto',
+                              maxWidth: column.maxWidth || 'none',
+                              wordBreak: 'break-word',
+                              '& .MuiTypography-root': {
+                                margin: 0,
+                                padding: 0,
+                                lineHeight: 'inherit'
+                              },
+                              '& p': {
+                                margin: 0,
+                                padding: 0,
+                                lineHeight: 'inherit'
+                              }
+                            }}
+                          >
                             {column.format ? column.format(value, row, displayIndexForFormat) : value}
                           </TableCell>
                         );
                       })}
                       {actions && (
-                        <TableCell align="center">{actions(row)}</TableCell>
+                        <TableCell 
+                          key="actions" 
+                          align="center"
+                          sx={{
+                            padding: { xs: '8px 12px', sm: '12px 16px' },
+                            fontSize: { xs: '0.8rem', sm: '0.875rem' },
+                            lineHeight: 1.6,
+                            borderBottom: '1px solid rgba(224, 224, 224, 1)',
+                            minWidth: { xs: '80px', sm: '120px' },
+                            whiteSpace: 'nowrap',
+                            '& .MuiTypography-root': {
+                              margin: 0,
+                              padding: 0,
+                              lineHeight: 'inherit'
+                            },
+                            '& p': {
+                              margin: 0,
+                              padding: 0,
+                              lineHeight: 'inherit'
+                            }
+                          }}
+                        >
+                          {actions(row)}
+                        </TableCell>
                       )}
                     </TableRow>
                   );
@@ -352,12 +420,12 @@ const DataTable = ({
           component="div"
           count={totalCount}
           rowsPerPage={currentRowsPerPage}
-          page={currentPage}
+          page={validCurrentPage}
           onPageChange={handleChangePage}
           onRowsPerPageChange={handleChangeRowsPerPage}
           labelRowsPerPage="Baris per halaman:"
           labelDisplayedRows={({ from, to, count }) =>
-            `${from}-${to} dari ${count}`
+            count > 0 ? `${from}-${to} dari ${count}` : '0 dari 0'
           }
         />
       </Paper>

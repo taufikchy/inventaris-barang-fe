@@ -180,6 +180,7 @@ const HistoriTransaksi = () => {
           label={getStatusText(params.value)}
           color={getStatusColor(params.value)}
           size="small"
+          sx={{ color: 'white' }}
         />
       ),
     },

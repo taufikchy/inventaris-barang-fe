@@ -134,28 +134,39 @@ const HistoriAktivitas = () => {
     {
       id: 'waktu_aktivitas',
       label: 'Tanggal',
+      minWidth: 120,
       format: (value) => (
-        <div>
-          <div>{dayjs(value).locale('id').format('DD MMMM YYYY')}</div>
-          <div style={{ fontSize: '0.875rem', color: '#666' }}>{dayjs(value).locale('id').format('HH:mm')}</div>
-        </div>
+        <Box>
+          <Typography variant="body2" sx={{ fontWeight: 500, margin: 0, padding: 0, lineHeight: 1.4 }}>
+            {dayjs(value).locale('id').format('DD MMMM YYYY')}
+          </Typography>
+          <Typography variant="caption" color="text.secondary" sx={{ margin: 0, padding: 0, lineHeight: 1.2 }}>
+            {dayjs(value).locale('id').format('HH:mm')}
+          </Typography>
+        </Box>
       )
     },
     {
       id: 'pengguna',
       label: 'Pengguna',
-      format: (value) => value?.nama || 'Sistem'
+      minWidth: 120,
+      format: (value) => (
+        <Typography variant="body2" sx={{ fontWeight: 500, margin: 0, padding: 0, lineHeight: 1.4 }}>
+          {value?.nama || 'Sistem'}
+        </Typography>
+      )
     },
     {
       id: 'role',
       label: 'Role',
+      minWidth: 100,
       format: (value, row) => {
         const getRoleDisplayName = (role) => {
           switch (role) {
             case 'admin':
               return 'Administrator';
             case 'kepala_lab':
-              return 'Kepala Laboratorium';
+              return 'Kepala Lab';
             case 'staff':
               return 'Staff';
             case 'guru':
@@ -164,34 +175,69 @@ const HistoriAktivitas = () => {
               return 'Pengguna';
           }
         };
-        return row?.pengguna?.peran ? getRoleDisplayName(row.pengguna.peran) : 'Sistem';
+        return (
+          <Typography variant="body2" sx={{ margin: 0, padding: 0, lineHeight: 1.4 }}>
+            {row?.pengguna?.peran ? getRoleDisplayName(row.pengguna.peran) : 'Sistem'}
+          </Typography>
+        );
       }
     },
     {
       id: 'jenis_aktivitas',
       label: 'Jenis Aktivitas',
+      minWidth: 110,
+      align: 'center',
       format: (value) => (
         <Chip 
           label={getJenisAktivitasLabel(value)} 
           color={getJenisAktivitasColor(value)} 
           size="small" 
           variant="outlined"
+          sx={{ minWidth: 70 }}
         />
       )
     },
     {
       id: 'modul',
       label: 'Modul',
-      format: (value) => getModulLabel(value)
+      minWidth: 100,
+      format: (value) => (
+        <Typography variant="body2" sx={{ fontWeight: 500, margin: 0, padding: 0, lineHeight: 1.4 }}>
+          {getModulLabel(value)}
+        </Typography>
+      )
     },
     {
       id: 'deskripsi',
       label: 'Deskripsi',
-      minWidth: 250
+      minWidth: 200,
+      format: (value) => (
+        <Typography 
+          variant="body2" 
+          sx={{ 
+            maxWidth: 250,
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            whiteSpace: 'nowrap',
+            margin: 0,
+            padding: 0,
+            lineHeight: 1.4
+          }}
+          title={value || '-'}
+        >
+          {value || '-'}
+        </Typography>
+      )
     },
     {
       id: 'ip_address',
-      label: 'IP Address'
+      label: 'IP Address',
+      minWidth: 100,
+      format: (value) => (
+        <Typography variant="body2" sx={{ margin: 0, padding: 0, lineHeight: 1.4, fontFamily: 'monospace' }}>
+          {value || '-'}
+        </Typography>
+      )
     }
   ];
 
@@ -486,6 +532,7 @@ const HistoriAktivitas = () => {
                       label={getJenisAktivitasLabel(selectedActivity.jenis_aktivitas)} 
                       color={getJenisAktivitasColor(selectedActivity.jenis_aktivitas)} 
                       size="small" 
+                      sx={{ color: 'white' }}
                     />
                   </Box>
                 </Grid>

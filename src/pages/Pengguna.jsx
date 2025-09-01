@@ -321,6 +321,7 @@ const Pengguna = () => {
             label={label}
             color={color}
             size="small"
+            sx={{ color: 'white' }}
           />
         );
       }
