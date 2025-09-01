@@ -32,6 +32,7 @@ import { Formik, Form } from 'formik';
 import * as Yup from 'yup';
 import PageHeader from '../components/PageHeader';
 import DataTable from '../components/DataTable';
+import ConfirmDialog from '../components/ConfirmDialog';
 
 // Validation schema for transaksi form
 const TransaksiSchema = Yup.object().shape({
@@ -55,6 +56,9 @@ const TransaksiInventaris = () => {
 
   const [viewDialogOpen, setViewDialogOpen] = useState(false);
   const [viewingTransaksi, setViewingTransaksi] = useState(null);
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [deleteLoading, setDeleteLoading] = useState(false);
+  const [transaksiToDelete, setTransaksiToDelete] = useState(null);
 
   // Fetch data
   const fetchTransaksis = async () => {
@@ -177,43 +181,53 @@ const TransaksiInventaris = () => {
 
 
 
+  // Handle delete confirmation
+  const handleDeleteConfirm = (transaksi) => {
+    setTransaksiToDelete(transaksi);
+    setConfirmDelete(true);
+  };
+
   // Handle delete transaksi
-  const handleDelete = async (id) => {
-    if (!id) {
+  const handleDelete = async () => {
+    if (!transaksiToDelete?.id) {
       toast.error('ID transaksi tidak valid');
       return;
     }
     
-    if (window.confirm('Apakah Anda yakin ingin menghapus transaksi ini?')) {
-      try {
-        const response = await axios.delete(`/api/transaksi/${id}`);
-        if (response.data && response.data.success) {
-          toast.success('Transaksi berhasil dihapus');
-          fetchTransaksis();
-          
-          // Refresh barang data to show updated stock
-          fetchBarangs();
-          
-          // Dispatch custom event to notify other components about inventory change
-          window.dispatchEvent(new CustomEvent('inventoryUpdated', {
-            detail: {
-              type: 'transaction',
-              action: 'delete'
-            }
-          }));
-          
-          // Check stock levels after deletion
-          setTimeout(() => {
-            checkStockLevels();
-          }, 1000);
-        } else {
-          toast.error(response.data?.message || 'Gagal menghapus transaksi');
-        }
-      } catch (error) {
-        console.error('Error deleting transaksi:', error);
-        const errorMessage = error.response?.data?.message || 'Gagal menghapus transaksi';
-        toast.error(errorMessage);
+    setDeleteLoading(true);
+    try {
+      const response = await axios.delete(`/api/transaksi/${transaksiToDelete.id}`);
+      if (response.data && response.data.success) {
+        toast.success('Transaksi berhasil dihapus');
+        fetchTransaksis();
+        
+        // Refresh barang data to show updated stock
+        fetchBarangs();
+        
+        // Dispatch custom event to notify other components about inventory change
+        window.dispatchEvent(new CustomEvent('inventoryUpdated', {
+          detail: {
+            type: 'transaction',
+            action: 'delete'
+          }
+        }));
+        
+        // Check stock levels after deletion
+        setTimeout(() => {
+          checkStockLevels();
+        }, 1000);
+        
+        setConfirmDelete(false);
+        setTransaksiToDelete(null);
+      } else {
+        toast.error(response.data?.message || 'Gagal menghapus transaksi');
       }
+    } catch (error) {
+      console.error('Error deleting transaksi:', error);
+      const errorMessage = error.response?.data?.message || 'Gagal menghapus transaksi';
+      toast.error(errorMessage);
+    } finally {
+      setDeleteLoading(false);
     }
   };
 
@@ -486,7 +500,7 @@ const TransaksiInventaris = () => {
               variant="outlined"
               color="error"
               startIcon={<DeleteIcon />}
-              onClick={() => handleDelete(row.id)}
+              onClick={() => handleDeleteConfirm(row)}
               sx={{ minWidth: 60, fontSize: '0.75rem' }}
             >
               Hapus
@@ -835,6 +849,19 @@ const TransaksiInventaris = () => {
           </Button>
         </DialogActions>
       </Dialog>
+
+      {/* Confirm Delete Dialog */}
+      <ConfirmDialog
+        open={confirmDelete}
+        title="Hapus Transaksi"
+        message={`Apakah Anda yakin ingin menghapus transaksi ${transaksiToDelete?.jenis_transaksi} untuk barang "${transaksiToDelete?.barang?.nama}"?`}
+        confirmText="Hapus"
+        cancelText="Batal"
+        confirmButtonColor="error"
+        onConfirm={handleDelete}
+        onCancel={() => setConfirmDelete(false)}
+        loading={deleteLoading}
+      />
     </Box>
   );
 };
