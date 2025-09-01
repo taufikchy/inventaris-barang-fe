@@ -34,6 +34,7 @@ import {
   Inventory as InventoryIcon,
   SwapHoriz as SwapHorizIcon,
   Assessment as AssessmentIcon,
+  Visibility as VisibilityIcon,
 } from '@mui/icons-material';
 import dayjs from 'dayjs';
 import PageHeader from '../components/PageHeader';
@@ -64,6 +65,7 @@ const Laporan = () => {
   // Filter states
   const [startDate, setStartDate] = useState(null);
   const [endDate, setEndDate] = useState(null);
+  const [tahunFilter, setTahunFilter] = useState('');
   const [kategoriFilter, setKategoriFilter] = useState('');
   const [lokasiFilter, setLokasiFilter] = useState('');
   const [kondisiFilter, setKondisiFilter] = useState('');
@@ -94,12 +96,20 @@ const Laporan = () => {
     setExportMenu(null);
   };
 
-  const handleExport = (format) => {
-    toast.info(`Mengekspor laporan dalam format ${format}...`);
-    // In a real application, you would implement the export functionality here
-    setTimeout(() => {
-      toast.success(`Laporan berhasil diekspor dalam format ${format}`);
-    }, 1500);
+  const handleExport = (action) => {
+    if (action === 'download') {
+      toast.info('Mengunduh laporan PDF...');
+      // In a real application, you would implement the PDF download functionality here
+      setTimeout(() => {
+        toast.success('Laporan PDF berhasil diunduh');
+      }, 1500);
+    } else if (action === 'preview') {
+      toast.info('Membuka preview laporan PDF...');
+      // In a real application, you would implement the PDF preview functionality here
+      setTimeout(() => {
+        toast.success('Preview laporan PDF dibuka');
+      }, 1500);
+    }
     handleExportClose();
   };
 
@@ -260,28 +270,32 @@ const Laporan = () => {
   const filteredInventoryData = inventoryData.filter(item => {
     const itemDate = dayjs(item.tanggal_perolehan);
     const dateMatch = (!startDate || !endDate) ? true : itemDate.isBetween(startDate, endDate, 'day', '[]');
+    const tahunMatch = !tahunFilter || (item.tahun_pengadaan && item.tahun_pengadaan.toString() === tahunFilter.toString()) || (itemDate.year() === parseInt(tahunFilter));
     const kategoriMatch = !kategoriFilter || (item.kategori?.nama || item.kategori) === kategoriFilter;
     const lokasiMatch = !lokasiFilter || (item.lokasi?.nama || item.lokasi) === lokasiFilter;
     const kondisiMatch = !kondisiFilter || item.kondisi === kondisiFilter;
     const statusMatch = !statusFilter || item.status === statusFilter;
     
-    return dateMatch && kategoriMatch && lokasiMatch && kondisiMatch && statusMatch;
+    return dateMatch && tahunMatch && kategoriMatch && lokasiMatch && kondisiMatch && statusMatch;
   });
 
   const filteredLoanData = loanData.filter(item => {
     const itemDate = dayjs(item.tanggal_pinjam);
     const dateMatch = (!startDate || !endDate) ? true : itemDate.isBetween(startDate, endDate, 'day', '[]');
+    const tahunMatch = !tahunFilter || itemDate.year() === parseInt(tahunFilter);
     const statusMatch = !statusFilter || item.status === statusFilter;
     
-    return dateMatch && statusMatch;
+    return dateMatch && tahunMatch && statusMatch;
   });
 
   const filteredConditionData = conditionData.filter(item => {
+    const itemDate = dayjs(item.tanggal_perolehan);
+    const tahunMatch = !tahunFilter || (item.tahun_pengadaan && item.tahun_pengadaan.toString() === tahunFilter.toString()) || (itemDate.year() === parseInt(tahunFilter));
     const kategoriMatch = !kategoriFilter || (item.kategori?.nama || item.kategori) === kategoriFilter;
     const lokasiMatch = !lokasiFilter || (item.lokasi?.nama || item.lokasi) === lokasiFilter;
     const kondisiMatch = !kondisiFilter || item.kondisi === kondisiFilter;
     
-    return kategoriMatch && lokasiMatch && kondisiMatch;
+    return tahunMatch && kategoriMatch && lokasiMatch && kondisiMatch;
   });
 
 
@@ -430,14 +444,11 @@ const Laporan = () => {
         open={Boolean(exportMenu)}
         onClose={handleExportClose}
       >
-        <MenuItem onClick={() => handleExport('PDF')}>
-          <PdfIcon sx={{ mr: 1 }} /> Ekspor PDF
+        <MenuItem onClick={() => handleExport('download')}>
+          <FileDownloadIcon sx={{ mr: 1 }} /> Download PDF
         </MenuItem>
-        <MenuItem onClick={() => handleExport('Excel')}>
-          <ExcelIcon sx={{ mr: 1 }} /> Ekspor Excel
-        </MenuItem>
-        <MenuItem onClick={() => handleExport('Print')}>
-          <PrintIcon sx={{ mr: 1 }} /> Cetak
+        <MenuItem onClick={() => handleExport('preview')}>
+          <VisibilityIcon sx={{ mr: 1 }} /> Preview PDF
         </MenuItem>
       </Menu>
 
@@ -448,6 +459,26 @@ const Laporan = () => {
             Filter Laporan
           </Typography>
           <Grid container spacing={2}>
+            <Grid item xs={12} md={6} lg={3}>
+              <FormControl fullWidth size="small">
+                <InputLabel>Tahun</InputLabel>
+                <Select
+                  value={tahunFilter}
+                  label="Tahun"
+                  onChange={(e) => setTahunFilter(e.target.value)}
+                >
+                  <MenuItem value="">Semua</MenuItem>
+                  {Array.from({ length: 10 }, (_, i) => {
+                    const year = new Date().getFullYear() - i;
+                    return (
+                      <MenuItem key={year} value={year}>
+                        {year}
+                      </MenuItem>
+                    );
+                  })}
+                </Select>
+              </FormControl>
+            </Grid>
             <Grid item xs={12} md={6} lg={3}>
               <DatePicker
                 label="Dari Tanggal"
@@ -538,8 +569,9 @@ const Laporan = () => {
                 variant="outlined" 
                 startIcon={<FilterListIcon />}
                 onClick={() => {
-                  setStartDate(dayjs().subtract(30, 'day'));
-                  setEndDate(dayjs());
+                  setTahunFilter('');
+                  setStartDate(null);
+                  setEndDate(null);
                   setKategoriFilter('');
                   setLokasiFilter('');
                   setKondisiFilter('');
