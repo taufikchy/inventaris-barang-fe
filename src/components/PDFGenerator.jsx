@@ -478,6 +478,7 @@ class PDFGenerator {
 
     // Nama (bold + underline, rata kiri)
     doc.setFont(this.fontFamily, "bold");
+    doc.setFontSize(12);
     doc.text(kepalaLab.nama, leftX, currentY);
 
     // underline nama

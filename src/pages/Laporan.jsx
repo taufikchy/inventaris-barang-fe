@@ -210,7 +210,7 @@ const Laporan = () => {
       setStatuses([
         { value: 'tersedia', label: 'Tersedia' },
         { value: 'dipinjam', label: 'Dipinjam' },
-        { value: 'dalam_perbaikan', label: 'Dalam Perbaikan' }
+        { value: 'perbaikan', label: 'Perbaikan' }
       ]);
     } catch (error) {
       console.error('Error setting statuses:', error);
@@ -380,7 +380,7 @@ const Laporan = () => {
       const statusLabels = {
         'tersedia': 'Tersedia',
         'dipinjam': 'Dipinjam',
-        'dalam_perbaikan': 'Dalam Perbaikan'
+        'perbaikan': 'Perbaikan'
       };
       return statusLabels[value] || value || '-';
     }},

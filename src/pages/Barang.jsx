@@ -258,8 +258,6 @@ const Barang = () => {
         return 'primary';
       case 'Perbaikan':
         return 'warning';
-      case 'Rusak':
-        return 'error';
       default:
         return 'default';
     }
@@ -464,7 +462,6 @@ const Barang = () => {
                 <MenuItem value="Tersedia">Tersedia</MenuItem>
                 <MenuItem value="Dipinjam">Dipinjam</MenuItem>
                 <MenuItem value="Perbaikan">Perbaikan</MenuItem>
-                <MenuItem value="Rusak">Rusak</MenuItem>
               </TextField>
             </Grid>
             <Grid item xs={12} sm={6} md={3}>
@@ -569,7 +566,6 @@ const Barang = () => {
                       <MenuItem value="Tersedia">Tersedia</MenuItem>
                       <MenuItem value="Dipinjam">Dipinjam</MenuItem>
                       <MenuItem value="Perbaikan">Perbaikan</MenuItem>
-                      <MenuItem value="Rusak">Rusak</MenuItem>
                     </TextField>
                   </Grid>
                 </Grid>

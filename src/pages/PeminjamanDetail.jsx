@@ -1320,8 +1320,8 @@ const PeminjamanDetail = () => {
                       </Button>
                     )}
                     
-                    {/* Tombol Cetak Surat Pengajuan - untuk Admin/Toolman */}
-                    {isAdminOrToolman() && (
+                    {/* Tombol Cetak Surat Pengajuan - untuk Admin/Toolman/Kepala Lab */}
+                    {isAdminToolmanOrKepalaLab() && (
                       <>
                         <Button
                           variant="outlined"

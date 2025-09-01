@@ -147,6 +147,27 @@ const HistoriAktivitas = () => {
       format: (value) => value?.nama || 'Sistem'
     },
     {
+      id: 'role',
+      label: 'Role',
+      format: (value, row) => {
+        const getRoleDisplayName = (role) => {
+          switch (role) {
+            case 'admin':
+              return 'Administrator';
+            case 'kepala_lab':
+              return 'Kepala Laboratorium';
+            case 'staff':
+              return 'Staff';
+            case 'guru':
+              return 'Guru';
+            default:
+              return 'Pengguna';
+          }
+        };
+        return row?.pengguna?.peran ? getRoleDisplayName(row.pengguna.peran) : 'Sistem';
+      }
+    },
+    {
       id: 'jenis_aktivitas',
       label: 'Jenis Aktivitas',
       format: (value) => (
@@ -476,6 +497,108 @@ const HistoriAktivitas = () => {
                     {getModulLabel(selectedActivity.modul)}
                   </Typography>
                 </Grid>
+                {/* Kode untuk berbagai modul */}
+                {(selectedActivity.modul === 'barang' || selectedActivity.modul === 'kategori' || selectedActivity.modul === 'lokasi' || selectedActivity.modul === 'peminjaman') && (
+                  <Grid item xs={12} sm={6}>
+                    <Typography variant="subtitle2" color="text.secondary">
+                      {(() => {
+                        switch(selectedActivity.modul) {
+                          case 'barang': return 'Kode Barang';
+                          case 'kategori': return 'Kode Kategori';
+                          case 'lokasi': return 'Kode Lokasi';
+                          case 'peminjaman': return 'Kode Peminjaman';
+                          default: return 'Kode';
+                        }
+                      })()} 
+                    </Typography>
+                    <Typography variant="body1" sx={{ mb: 2 }}>
+                      {(() => {
+                        // Untuk peminjaman, prioritaskan nama_objek yang berisi kode_peminjaman
+                        if (selectedActivity.modul === 'peminjaman') {
+                          if (selectedActivity.nama_objek && selectedActivity.nama_objek.startsWith('PJM-')) {
+                            return selectedActivity.nama_objek;
+                          }
+                          // Fallback ke data_sesudah atau data_sebelum
+                          try {
+                            const dataSesudah = selectedActivity.data_sesudah ? JSON.parse(selectedActivity.data_sesudah) : null;
+                            const dataSebelum = selectedActivity.data_sebelum ? JSON.parse(selectedActivity.data_sebelum) : null;
+                            return dataSesudah?.kode_peminjaman || dataSebelum?.kode_peminjaman || 'Tidak tersedia';
+                          } catch (e) {
+                            return 'Tidak tersedia';
+                          }
+                        }
+                        
+                        // Untuk modul barang, tampilkan hanya kode barang
+                        if (selectedActivity.modul === 'barang') {
+                          let kodeBarang = 'Tidak tersedia';
+                          
+                          // Coba ambil kode dari nama_objek
+                          if (selectedActivity.nama_objek && selectedActivity.nama_objek.includes('-')) {
+                            kodeBarang = selectedActivity.nama_objek;
+                          } else {
+                            // Coba ambil dari data_sesudah atau data_sebelum
+                            try {
+                              const dataSesudah = selectedActivity.data_sesudah ? JSON.parse(selectedActivity.data_sesudah) : null;
+                              const dataSebelum = selectedActivity.data_sebelum ? JSON.parse(selectedActivity.data_sebelum) : null;
+                              kodeBarang = dataSesudah?.kode || dataSebelum?.kode || 'Tidak tersedia';
+                            } catch (e) {
+                              // Ignore parsing error
+                            }
+                          }
+                          
+                          return kodeBarang;
+                        }
+                        
+                        // Untuk modul lain, coba ambil kode dari nama_objek atau data
+                        if (selectedActivity.nama_objek && selectedActivity.nama_objek.includes('-')) {
+                          return selectedActivity.nama_objek;
+                        }
+                        
+                        // Coba ambil dari data_sesudah
+                        try {
+                          const dataSesudah = selectedActivity.data_sesudah ? JSON.parse(selectedActivity.data_sesudah) : null;
+                          if (dataSesudah && dataSesudah.kode) {
+                            return dataSesudah.kode;
+                          }
+                        } catch (e) {
+                          // Ignore parsing error
+                        }
+                        
+                        // Coba ambil dari data_sebelum
+                        try {
+                          const dataSebelum = selectedActivity.data_sebelum ? JSON.parse(selectedActivity.data_sebelum) : null;
+                          if (dataSebelum && dataSebelum.kode) {
+                            return dataSebelum.kode;
+                          }
+                        } catch (e) {
+                          // Ignore parsing error
+                        }
+                        
+                        return 'Tidak tersedia';
+                      })()} 
+                    </Typography>
+                  </Grid>
+                )}
+                
+                {/* Nama Barang untuk modul barang */}
+                {selectedActivity.modul === 'barang' && (
+                  <Grid item xs={12} sm={6}>
+                    <Typography variant="subtitle2" color="text.secondary">
+                      Nama Barang
+                    </Typography>
+                    <Typography variant="body1" sx={{ mb: 2 }}>
+                      {(() => {
+                        try {
+                          const dataSesudah = selectedActivity.data_sesudah ? JSON.parse(selectedActivity.data_sesudah) : null;
+                          const dataSebelum = selectedActivity.data_sebelum ? JSON.parse(selectedActivity.data_sebelum) : null;
+                          return dataSesudah?.nama || dataSebelum?.nama || 'Tidak tersedia';
+                        } catch (e) {
+                          return 'Tidak tersedia';
+                        }
+                      })()} 
+                    </Typography>
+                  </Grid>
+                )}
                 <Grid item xs={12}>
                   <Typography variant="subtitle2" color="text.secondary">
                     Deskripsi
