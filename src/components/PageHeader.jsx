@@ -14,6 +14,7 @@ const PageHeader = ({
   onBackClick,
   actionButton,
   actions = [],
+  showAction = true,
 }) => {
   return (
     <Box sx={{ mb: { xs: 2, sm: 3 } }}>
@@ -101,7 +102,7 @@ const PageHeader = ({
         </Box>
 
         <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
-          {actionText && onActionClick && (
+          {actionText && onActionClick && showAction && (
             <Button
               variant="contained"
               startIcon={actionIcon}
