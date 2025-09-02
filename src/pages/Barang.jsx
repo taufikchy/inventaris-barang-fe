@@ -418,7 +418,15 @@ const Barang = () => {
       sortable: true,
       align: 'center',
       format: (value, row) => {
-        const jumlahText = `${value} ${row.satuan || 'unit'}`;
+        // Untuk satuan set, tampilkan unit dalam kurung
+        let jumlahText;
+        if (row.satuan === 'set' && row.unit_per_set) {
+          const totalUnit = value * row.unit_per_set;
+          jumlahText = `${value} set (${totalUnit} unit)`;
+        } else {
+          jumlahText = `${value} ${row.satuan || 'unit'}`;
+        }
+        
         // Tambahkan indikator untuk kategori bahan
         if (row.kategori?.tipe === 'bahan') {
           return (
@@ -470,13 +478,14 @@ const Barang = () => {
           if (row.satuan === 'set' && row.unit_per_set) {
             const unitTersisaDalamSet = row.unit_tersisa || 0;
             const totalUnit = jumlahAwal * row.unit_per_set;
+            const totalUnitTersisa = (stok * row.unit_per_set) + unitTersisaDalamSet;
             
-            // Format tampilan: "0 set + 5 unit" atau "1 set" jika tidak ada sisa unit
+            // Format tampilan: "0 set + 5 unit" atau "1 set (10 unit)" jika tidak ada sisa unit
             let displayText;
             if (unitTersisaDalamSet > 0) {
-              displayText = `${stok} set + ${unitTersisaDalamSet} unit`;
+              displayText = `${stok} set + ${unitTersisaDalamSet} unit (${totalUnitTersisa} unit)`;
             } else {
-              displayText = `${stok} set`;
+              displayText = `${stok} set (${totalUnitTersisa} unit)`;
             }
             
             return (
