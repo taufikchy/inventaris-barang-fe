@@ -78,6 +78,7 @@ const DataTable = ({
   rowsPerPageOptions = [5, 10, 25],
   defaultRowsPerPage = 10,
   actions,
+  additionalActions,
   emptyMessage = 'Tidak ada data',
   // Server-side pagination props
   page,
@@ -245,6 +246,8 @@ const DataTable = ({
                 </span>
               </Tooltip>
             )}
+            
+            {additionalActions && additionalActions}
           </Box>
         </Toolbar>
 

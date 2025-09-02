@@ -24,6 +24,7 @@ import TransaksiInventaris from './pages/TransaksiInventaris';
 import Pengguna from './pages/Pengguna';
 import Laporan from './pages/Laporan';
 import HistoriAktivitas from './pages/HistoriAktivitas';
+import HistoriAktivitasArsip from './pages/HistoriAktivitasArsip';
 import NotFound from './pages/NotFound';
 
 // Guards
@@ -139,6 +140,7 @@ function App() {
               <Route path="/transaksi" element={<HistoriTransaksi />} />
               <Route path="/transaksi-inventaris" element={<TransaksiInventaris />} />
               <Route path="/histori-aktivitas" element={<HistoriAktivitas />} />
+              <Route path="/histori-aktivitas/arsip" element={<HistoriAktivitasArsip />} />
               <Route path="/laporan" element={<Laporan />} />
               
               {/* Admin, Toolman, Kepala Lab, dan Sarana Routes */}
