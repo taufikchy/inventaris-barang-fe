@@ -324,7 +324,7 @@ const Dashboard = () => {
         </Grid>
         <Grid item xs={6} sm={6} md={4} lg={2.4}>
           {loading ? (
-            <Skeleton variant="rounded" height={{ xs: 100, sm: 120 }} />
+            <Skeleton variant="rounded" height="120px" />
           ) : (
             <InfoCard
               title="Rusak Berat"
@@ -337,7 +337,7 @@ const Dashboard = () => {
         </Grid>
         <Grid item xs={12} sm={6} md={4} lg={2.4}>
           {loading ? (
-            <Skeleton variant="rounded" height={{ xs: 100, sm: 120 }} />
+            <Skeleton variant="rounded" height="120px" />
           ) : (
             <InfoCard
               title="Peminjaman Aktif"
