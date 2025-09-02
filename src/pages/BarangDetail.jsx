@@ -433,8 +433,8 @@ const BarangDetail = () => {
         >
           {({ errors, touched, isSubmitting, values, handleChange }) => (
             <Form>
-              <Paper sx={{ p: 3, mb: 3 }}>
-                <Grid container spacing={3}>
+              <Paper sx={{ p: { xs: 2, sm: 3 }, mb: { xs: 2, sm: 3 } }}>
+                <Grid container spacing={{ xs: 2, sm: 3 }}>
                   <Grid item xs={12} md={4}>
                     <Box sx={{ position: 'relative' }}>
                       <Card>
@@ -458,9 +458,10 @@ const BarangDetail = () => {
                               <Button
                                 variant="outlined"
                                 component="span"
-                                startIcon={<PhotoCameraIcon />}
-                                size="small"
+                                startIcon={<PhotoCameraIcon sx={{ fontSize: { xs: '1rem', sm: '1.25rem' } }} />}
+                                size={{ xs: 'small', sm: 'medium' }}
                                 fullWidth
+                                sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}
                               >
                                 Ubah Gambar
                               </Button>
@@ -485,6 +486,11 @@ const BarangDetail = () => {
                           InputProps={{
                             readOnly: true,
                           }}
+                          sx={{
+                            '& .MuiInputLabel-root': { fontSize: { xs: '0.875rem', sm: '1rem' } },
+                            '& .MuiInputBase-input': { fontSize: { xs: '0.875rem', sm: '1rem' } },
+                            '& .MuiFormHelperText-root': { fontSize: { xs: '0.75rem', sm: '0.875rem' } }
+                          }}
                         />
                       </Grid>
                       <Grid item xs={12} sm={6}>
@@ -496,6 +502,11 @@ const BarangDetail = () => {
                           required
                           error={touched.nama && Boolean(errors.nama)}
                           helperText={touched.nama && errors.nama}
+                          sx={{
+                            '& .MuiInputLabel-root': { fontSize: { xs: '0.875rem', sm: '1rem' } },
+                            '& .MuiInputBase-input': { fontSize: { xs: '0.875rem', sm: '1rem' } },
+                            '& .MuiFormHelperText-root': { fontSize: { xs: '0.75rem', sm: '0.875rem' } }
+                          }}
                         />
                       </Grid>
                       <Grid item xs={12}>
@@ -505,9 +516,14 @@ const BarangDetail = () => {
                           label="Deskripsi"
                           fullWidth
                           multiline
-                          rows={3}
+                          rows={{ xs: 2, sm: 3 }}
                           error={touched.deskripsi && Boolean(errors.deskripsi)}
                           helperText={touched.deskripsi && errors.deskripsi}
+                          sx={{
+                            '& .MuiInputLabel-root': { fontSize: { xs: '0.875rem', sm: '1rem' } },
+                            '& .MuiInputBase-input': { fontSize: { xs: '0.875rem', sm: '1rem' } },
+                            '& .MuiFormHelperText-root': { fontSize: { xs: '0.75rem', sm: '0.875rem' } }
+                          }}
                         />
                       </Grid>
                       <Grid item xs={12} sm={6}>
@@ -522,6 +538,11 @@ const BarangDetail = () => {
                           onChange={handleChange}
                           error={touched.id_kategori && Boolean(errors.id_kategori)}
                           helperText={touched.id_kategori && errors.id_kategori}
+                          sx={{
+                            '& .MuiInputLabel-root': { fontSize: { xs: '0.875rem', sm: '1rem' } },
+                            '& .MuiInputBase-input': { fontSize: { xs: '0.875rem', sm: '1rem' } },
+                            '& .MuiFormHelperText-root': { fontSize: { xs: '0.75rem', sm: '0.875rem' } }
+                          }}
                         >
                           {kategoris.map((kategori) => (
                             <MenuItem key={kategori.id} value={kategori.id}>
@@ -543,6 +564,11 @@ const BarangDetail = () => {
                             InputProps={{ inputProps: { min: 1 } }}
                             error={touched.unit_per_set && Boolean(errors.unit_per_set)}
                             helperText={touched.unit_per_set && errors.unit_per_set || "Berapa unit dalam 1 set"}
+                            sx={{
+                              '& .MuiInputLabel-root': { fontSize: { xs: '0.875rem', sm: '1rem' } },
+                              '& .MuiInputBase-input': { fontSize: { xs: '0.875rem', sm: '1rem' } },
+                              '& .MuiFormHelperText-root': { fontSize: { xs: '0.75rem', sm: '0.875rem' } }
+                            }}
                           />
                         </Grid>
                       )}
@@ -558,6 +584,11 @@ const BarangDetail = () => {
                           onChange={handleChange}
                           error={touched.id_lokasi && Boolean(errors.id_lokasi)}
                           helperText={touched.id_lokasi && errors.id_lokasi}
+                          sx={{
+                            '& .MuiInputLabel-root': { fontSize: { xs: '0.875rem', sm: '1rem' } },
+                            '& .MuiInputBase-input': { fontSize: { xs: '0.875rem', sm: '1rem' } },
+                            '& .MuiFormHelperText-root': { fontSize: { xs: '0.75rem', sm: '0.875rem' } }
+                          }}
                         >
                           {lokasis.map((lokasi) => (
                             <MenuItem key={lokasi.id} value={lokasi.id}>
@@ -577,6 +608,11 @@ const BarangDetail = () => {
                           InputProps={{ inputProps: { min: 0 } }}
                           error={touched.jumlah && Boolean(errors.jumlah)}
                           helperText={touched.jumlah && errors.jumlah}
+                          sx={{
+                            '& .MuiInputLabel-root': { fontSize: { xs: '0.875rem', sm: '1rem' } },
+                            '& .MuiInputBase-input': { fontSize: { xs: '0.875rem', sm: '1rem' } },
+                            '& .MuiFormHelperText-root': { fontSize: { xs: '0.75rem', sm: '0.875rem' } }
+                          }}
                         />
                       </Grid>
                       <Grid item xs={12} sm={3}>
@@ -591,6 +627,11 @@ const BarangDetail = () => {
                           onChange={handleChange}
                           error={touched.satuan && Boolean(errors.satuan)}
                           helperText={touched.satuan && errors.satuan}
+                          sx={{
+                            '& .MuiInputLabel-root': { fontSize: { xs: '0.875rem', sm: '1rem' } },
+                            '& .MuiInputBase-input': { fontSize: { xs: '0.875rem', sm: '1rem' } },
+                            '& .MuiFormHelperText-root': { fontSize: { xs: '0.75rem', sm: '0.875rem' } }
+                          }}
                         >
                           <MenuItem value="unit">Unit</MenuItem>
                           <MenuItem value="set">Set</MenuItem>
@@ -609,6 +650,11 @@ const BarangDetail = () => {
                           onChange={handleChange}
                           error={touched.kondisi && Boolean(errors.kondisi)}
                           helperText={touched.kondisi && errors.kondisi}
+                          sx={{
+                            '& .MuiInputLabel-root': { fontSize: { xs: '0.875rem', sm: '1rem' } },
+                            '& .MuiInputBase-input': { fontSize: { xs: '0.875rem', sm: '1rem' } },
+                            '& .MuiFormHelperText-root': { fontSize: { xs: '0.75rem', sm: '0.875rem' } }
+                          }}
                         >
                           <MenuItem value="Baik">Baik</MenuItem>
                           <MenuItem value="Rusak Ringan">Rusak Ringan</MenuItem>
@@ -627,6 +673,11 @@ const BarangDetail = () => {
                           onChange={handleChange}
                           error={touched.status && Boolean(errors.status)}
                           helperText={touched.status && errors.status}
+                          sx={{
+                            '& .MuiInputLabel-root': { fontSize: { xs: '0.875rem', sm: '1rem' } },
+                            '& .MuiInputBase-input': { fontSize: { xs: '0.875rem', sm: '1rem' } },
+                            '& .MuiFormHelperText-root': { fontSize: { xs: '0.75rem', sm: '0.875rem' } }
+                          }}
                         >
                           <MenuItem value="Tersedia">Tersedia</MenuItem>
                           <MenuItem value="Dipinjam">Dipinjam</MenuItem>
@@ -644,6 +695,11 @@ const BarangDetail = () => {
                           InputLabelProps={{ shrink: true }}
                           error={touched.tanggal_perolehan && Boolean(errors.tanggal_perolehan)}
                           helperText={touched.tanggal_perolehan && errors.tanggal_perolehan}
+                          sx={{
+                            '& .MuiInputLabel-root': { fontSize: { xs: '0.875rem', sm: '1rem' } },
+                            '& .MuiInputBase-input': { fontSize: { xs: '0.875rem', sm: '1rem' } },
+                            '& .MuiFormHelperText-root': { fontSize: { xs: '0.75rem', sm: '0.875rem' } }
+                          }}
                         />
                       </Grid>
                       <Grid item xs={12} sm={6}>
@@ -657,29 +713,50 @@ const BarangDetail = () => {
                           InputProps={{ inputProps: { min: 1900, max: new Date().getFullYear() } }}
                           error={touched.tahun_pengadaan && Boolean(errors.tahun_pengadaan)}
                           helperText={touched.tahun_pengadaan && errors.tahun_pengadaan}
+                          sx={{
+                            '& .MuiInputLabel-root': { fontSize: { xs: '0.875rem', sm: '1rem' } },
+                            '& .MuiInputBase-input': { fontSize: { xs: '0.875rem', sm: '1rem' } },
+                            '& .MuiFormHelperText-root': { fontSize: { xs: '0.75rem', sm: '0.875rem' } }
+                          }}
                         />
                       </Grid>
                     </Grid>
                   </Grid>
                 </Grid>
 
-                <Box sx={{ mt: 3, display: 'flex', justifyContent: 'space-between' }}>
+                <Box sx={{ 
+                  mt: { xs: 2, sm: 3 }, 
+                  display: 'flex', 
+                  flexDirection: { xs: 'column', sm: 'row' },
+                  justifyContent: 'space-between',
+                  gap: { xs: 2, sm: 0 }
+                }}>
                   <Button
                     variant="outlined"
                     color="secondary"
                     onClick={() => isNewBarang ? navigate('/barang') : navigate(`/barang/${id}`, { replace: true })}
-                    startIcon={<CancelIcon />}
+                    startIcon={<CancelIcon sx={{ fontSize: { xs: '1rem', sm: '1.25rem' } }} />}
+                    size="small"
+                    sx={{ fontSize: { xs: '0.875rem', sm: '1rem' } }}
                   >
                     Batal
                   </Button>
-                  <Box>
+                  <Box sx={{ 
+                    display: 'flex', 
+                    flexDirection: { xs: 'column', sm: 'row' },
+                    gap: { xs: 1, sm: 0 }
+                  }}>
                     {!isNewBarang && canDeleteBarang() && (
                       <Button
                         variant="outlined"
                         color="error"
                         onClick={() => setConfirmDelete(true)}
-                        startIcon={<DeleteIcon />}
-                        sx={{ mr: 1 }}
+                        startIcon={<DeleteIcon sx={{ fontSize: { xs: '1rem', sm: '1.25rem' } }} />}
+                        size="small"
+                        sx={{ 
+                          mr: { xs: 0, sm: 1 },
+                          fontSize: { xs: '0.875rem', sm: '1rem' }
+                        }}
                       >
                         Hapus
                       </Button>
@@ -689,7 +766,9 @@ const BarangDetail = () => {
                       variant="contained"
                       color="primary"
                       disabled={isSubmitting}
-                      startIcon={saving ? <CircularProgress size={20} /> : <SaveIcon />}
+                      startIcon={saving ? <CircularProgress size={20} /> : <SaveIcon sx={{ fontSize: { xs: '1rem', sm: '1.25rem' } }} />}
+                      size="small"
+                      sx={{ fontSize: { xs: '0.875rem', sm: '1rem' } }}
                     >
                       {isNewBarang ? 'Tambah' : 'Simpan'}
                     </Button>

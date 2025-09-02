@@ -191,16 +191,22 @@ const DataTable = ({
       <Paper sx={{ width: '100%', mb: 2 }}>
         <Toolbar
           sx={{
-            pl: { sm: 2 },
+            pl: { xs: 1, sm: 2 },
             pr: { xs: 1, sm: 1 },
             display: 'flex',
             justifyContent: 'space-between',
             flexWrap: 'wrap',
-            gap: 2,
+            gap: { xs: 1, sm: 2 },
+            py: { xs: 1, sm: 2 },
+            minHeight: { xs: 56, sm: 64 }
           }}
         >
           <Typography
-            sx={{ flex: '1 1 auto' }}
+            sx={{ 
+              flex: '1 1 auto',
+              fontSize: { xs: '1.1rem', sm: '1.25rem' },
+              fontWeight: 600
+            }}
             variant="h6"
             id="tableTitle"
             component="div"
@@ -211,7 +217,13 @@ const DataTable = ({
             )}
           </Typography>
 
-          <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
+          <Box sx={{ 
+            display: 'flex', 
+            gap: { xs: 0.5, sm: 1 }, 
+            alignItems: 'center',
+            flexWrap: 'wrap',
+            justifyContent: { xs: 'flex-end', sm: 'flex-end' }
+          }}>
             {searchable && (
               <TextField
                 size="small"
@@ -221,18 +233,28 @@ const DataTable = ({
                 InputProps={{
                   startAdornment: (
                     <InputAdornment position="start">
-                      <SearchIcon fontSize="small" />
+                      <SearchIcon sx={{ fontSize: { xs: '1rem', sm: '1.25rem' } }} />
                     </InputAdornment>
                   ),
+                  sx: {
+                    fontSize: { xs: '0.8rem', sm: '0.875rem' },
+                    height: { xs: 32, sm: 40 }
+                  }
                 }}
-                sx={{ minWidth: { xs: '100%', sm: 250 } }}
+                sx={{ 
+                  minWidth: { xs: 150, sm: 200, md: 250 },
+                  '& .MuiInputBase-input': {
+                    fontSize: { xs: '0.8rem', sm: '0.875rem' },
+                    py: { xs: 0.5, sm: 1 }
+                  }
+                }}
               />
             )}
 
             {filterable && (
               <Tooltip title="Filter">
-                <IconButton>
-                  <FilterListIcon />
+                <IconButton sx={{ p: { xs: 0.5, sm: 1 } }}>
+                  <FilterListIcon sx={{ fontSize: { xs: '1.1rem', sm: '1.25rem' } }} />
                 </IconButton>
               </Tooltip>
             )}
@@ -240,8 +262,8 @@ const DataTable = ({
             {refreshable && onRefresh && (
               <Tooltip title="Refresh">
                 <span>
-                  <IconButton onClick={onRefresh} disabled={loading}>
-                    <RefreshIcon />
+                  <IconButton onClick={onRefresh} disabled={loading} sx={{ p: { xs: 0.5, sm: 1 } }}>
+                    <RefreshIcon sx={{ fontSize: { xs: '1.1rem', sm: '1.25rem' } }} />
                   </IconButton>
                 </span>
               </Tooltip>
@@ -430,6 +452,30 @@ const DataTable = ({
           labelDisplayedRows={({ from, to, count }) =>
             count > 0 ? `${from}-${to} dari ${count}` : '0 dari 0'
           }
+          sx={{
+            '& .MuiTablePagination-toolbar': {
+              px: { xs: 1, sm: 2 },
+              py: { xs: 0.5, sm: 1 },
+              minHeight: { xs: 48, sm: 52 },
+              flexWrap: 'wrap',
+              gap: { xs: 1, sm: 0 }
+            },
+            '& .MuiTablePagination-selectLabel, & .MuiTablePagination-displayedRows': {
+              fontSize: { xs: '0.75rem', sm: '0.875rem' },
+              margin: 0
+            },
+            '& .MuiTablePagination-select': {
+              fontSize: { xs: '0.75rem', sm: '0.875rem' }
+            },
+            '& .MuiTablePagination-actions': {
+              '& .MuiIconButton-root': {
+                p: { xs: 0.5, sm: 1 },
+                '& .MuiSvgIcon-root': {
+                  fontSize: { xs: '1rem', sm: '1.25rem' }
+                }
+              }
+            }
+          }}
         />
       </Paper>
     </Box>

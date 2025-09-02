@@ -622,12 +622,12 @@ const Barang = () => {
       />
 
       {/* Filters */}
-      <Card sx={{ mb: 3, display: showFilters ? 'block' : 'none' }}>
-        <CardContent>
-          <Typography variant="h6" gutterBottom>
+      <Card sx={{ mb: { xs: 2, sm: 3 }, display: showFilters ? 'block' : 'none' }}>
+        <CardContent sx={{ p: { xs: 2, sm: 3 } }}>
+          <Typography variant="h6" gutterBottom sx={{ fontSize: { xs: '1rem', sm: '1.25rem' } }}>
             Filter Barang
           </Typography>
-          <Grid container spacing={2}>
+          <Grid container spacing={{ xs: 2, sm: 2, md: 3 }}>
             <Grid item xs={12} sm={6} md={3}>
               <TextField
                 select
@@ -637,6 +637,10 @@ const Barang = () => {
                 value={filters.kategori}
                 onChange={handleFilterChange}
                 size="small"
+                sx={{
+                  '& .MuiInputLabel-root': { fontSize: { xs: '0.875rem', sm: '1rem' } },
+                  '& .MuiInputBase-input': { fontSize: { xs: '0.875rem', sm: '1rem' } }
+                }}
               >
                 <MenuItem value="">Semua Kategori</MenuItem>
                 {kategoris.map((kategori) => (
@@ -655,6 +659,10 @@ const Barang = () => {
                 value={filters.lokasi}
                 onChange={handleFilterChange}
                 size="small"
+                sx={{
+                  '& .MuiInputLabel-root': { fontSize: { xs: '0.875rem', sm: '1rem' } },
+                  '& .MuiInputBase-input': { fontSize: { xs: '0.875rem', sm: '1rem' } }
+                }}
               >
                 <MenuItem value="">Semua Lokasi</MenuItem>
                 {lokasis.map((lokasi) => (
@@ -673,6 +681,10 @@ const Barang = () => {
                 value={filters.status}
                 onChange={handleFilterChange}
                 size="small"
+                sx={{
+                  '& .MuiInputLabel-root': { fontSize: { xs: '0.875rem', sm: '1rem' } },
+                  '& .MuiInputBase-input': { fontSize: { xs: '0.875rem', sm: '1rem' } }
+                }}
               >
                 <MenuItem value="">Semua Status</MenuItem>
                 <MenuItem value="Tersedia">Tersedia</MenuItem>
@@ -689,6 +701,10 @@ const Barang = () => {
                 value={filters.kondisi}
                 onChange={handleFilterChange}
                 size="small"
+                sx={{
+                  '& .MuiInputLabel-root': { fontSize: { xs: '0.875rem', sm: '1rem' } },
+                  '& .MuiInputBase-input': { fontSize: { xs: '0.875rem', sm: '1rem' } }
+                }}
               >
                 <MenuItem value="">Semua Kondisi</MenuItem>
                 <MenuItem value="Baik">Baik</MenuItem>
@@ -700,11 +716,13 @@ const Barang = () => {
         </CardContent>
       </Card>
 
-      <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 2 }}>
+      <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: { xs: 1.5, sm: 2 } }}>
         <Button
           variant="outlined"
-          startIcon={<FilterAltIcon />}
+          startIcon={<FilterAltIcon sx={{ fontSize: { xs: '1rem', sm: '1.25rem' } }} />}
           onClick={() => setShowFilters(!showFilters)}
+          size="small"
+          sx={{ fontSize: { xs: '0.875rem', sm: '1rem' } }}
         >
           {showFilters ? 'Sembunyikan Filter' : 'Tampilkan Filter'}
         </Button>
@@ -728,19 +746,27 @@ const Barang = () => {
         onClose={handleCloseUnitDialog}
         maxWidth="md"
         fullWidth
+        sx={{
+          '& .MuiDialog-paper': {
+            margin: { xs: 0, sm: 2 },
+            width: { xs: '100%', sm: 'auto' },
+            height: { xs: '100%', sm: 'auto' },
+            maxHeight: { xs: '100%', sm: '90vh' }
+          }
+        }}
       >
-        <DialogTitle>
+        <DialogTitle sx={{ fontSize: { xs: '1rem', sm: '1.25rem' }, p: { xs: 2, sm: 3 } }}>
           Detail Unit Barang: {selectedBarang?.nama} ({selectedBarang?.kode_grup})
         </DialogTitle>
-        <DialogContent>
+        <DialogContent sx={{ p: { xs: 2, sm: 3 } }}>
           {selectedBarang && (
             <>
               {/* Filter dan Pencarian untuk Unit */}
-              <Box sx={{ mb: 3 }}>
-                <Typography variant="h6" gutterBottom>
+              <Box sx={{ mb: { xs: 2, sm: 3 } }}>
+                <Typography variant="h6" gutterBottom sx={{ fontSize: { xs: '1rem', sm: '1.25rem' } }}>
                   Filter & Pencarian Unit
                 </Typography>
-                <Grid container spacing={2}>
+                <Grid container spacing={{ xs: 2, sm: 2 }}>
                   <Grid item xs={12} sm={4}>
                     <TextField
                       fullWidth
@@ -750,6 +776,10 @@ const Barang = () => {
                       onChange={handleUnitFilterChange}
                       size="small"
                       placeholder="Cari berdasarkan kode unit..."
+                      sx={{
+                        '& .MuiInputLabel-root': { fontSize: { xs: '0.875rem', sm: '1rem' } },
+                        '& .MuiInputBase-input': { fontSize: { xs: '0.875rem', sm: '1rem' } }
+                      }}
                     />
                   </Grid>
                   <Grid item xs={12} sm={4}>
@@ -761,6 +791,10 @@ const Barang = () => {
                       value={unitFilters.kondisi}
                       onChange={handleUnitFilterChange}
                       size="small"
+                      sx={{
+                        '& .MuiInputLabel-root': { fontSize: { xs: '0.875rem', sm: '1rem' } },
+                        '& .MuiInputBase-input': { fontSize: { xs: '0.875rem', sm: '1rem' } }
+                      }}
                     >
                       <MenuItem value="">Semua Kondisi</MenuItem>
                       <MenuItem value="Baik">Baik</MenuItem>
@@ -777,6 +811,10 @@ const Barang = () => {
                       value={unitFilters.status}
                       onChange={handleUnitFilterChange}
                       size="small"
+                      sx={{
+                        '& .MuiInputLabel-root': { fontSize: { xs: '0.875rem', sm: '1rem' } },
+                        '& .MuiInputBase-input': { fontSize: { xs: '0.875rem', sm: '1rem' } }
+                      }}
                     >
                       <MenuItem value="">Semua Status</MenuItem>
                       <MenuItem value="Tersedia">Tersedia</MenuItem>
@@ -787,22 +825,22 @@ const Barang = () => {
                 </Grid>
               </Box>
 
-              <TableContainer component={Paper}>
-                <Table>
+              <TableContainer component={Paper} sx={{ overflowX: 'auto' }}>
+                <Table size="small">
                   <TableHead>
                     <TableRow>
-                      <TableCell>Kode Unit</TableCell>
-                      <TableCell>Kondisi</TableCell>
-                      <TableCell>Status</TableCell>
-                      <TableCell>Lokasi</TableCell>
-                      <TableCell align="right">Aksi</TableCell>
+                      <TableCell sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}>Kode Unit</TableCell>
+                      <TableCell sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}>Kondisi</TableCell>
+                      <TableCell sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}>Status</TableCell>
+                      <TableCell sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' }, display: { xs: 'none', sm: 'table-cell' } }}>Lokasi</TableCell>
+                      <TableCell align="right" sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}>Aksi</TableCell>
                     </TableRow>
                   </TableHead>
                   <TableBody>
                     {getFilteredUnits().length === 0 ? (
                       <TableRow>
-                        <TableCell colSpan={5} align="center">
-                          <Typography variant="body2" color="text.secondary">
+                        <TableCell colSpan={{ xs: 4, sm: 5 }} align="center">
+                          <Typography variant="body2" color="text.secondary" sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}>
                             {selectedBarang.units?.length === 0 ? 'Tidak ada unit untuk barang ini' : 'Tidak ada unit yang sesuai dengan filter'}
                           </Typography>
                         </TableCell>
@@ -810,7 +848,7 @@ const Barang = () => {
                     ) : (
                       getFilteredUnits().map((unit) => (
                     <TableRow key={unit.id}>
-                      <TableCell>{unit.kode}</TableCell>
+                      <TableCell sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}>{unit.kode}</TableCell>
                       <TableCell>
                         <Chip
                           label={formatKondisiLabel(unit.kondisi)}
@@ -819,10 +857,11 @@ const Barang = () => {
                           sx={{
                             color: 'white',
                             fontWeight: 'bold',
-                            fontSize: '0.75rem',
-                            minWidth: '80px',
+                            fontSize: { xs: '0.7rem', sm: '0.75rem' },
+                            minWidth: { xs: '60px', sm: '80px' },
+                            height: { xs: 20, sm: 24 },
                             '& .MuiChip-label': {
-                              px: 1.5,
+                              px: { xs: 1, sm: 1.5 },
                               py: 0.5
                             }
                           }}
@@ -836,24 +875,27 @@ const Barang = () => {
                           sx={{
                             color: 'white',
                             fontWeight: 'bold',
-                            fontSize: '0.75rem',
-                            minWidth: '80px',
+                            fontSize: { xs: '0.7rem', sm: '0.75rem' },
+                            minWidth: { xs: '60px', sm: '80px' },
+                            height: { xs: 20, sm: 24 },
                             '& .MuiChip-label': {
-                              px: 1.5,
+                              px: { xs: 1, sm: 1.5 },
                               py: 0.5
                             }
                           }}
                         />
                       </TableCell>
-                      <TableCell>{unit.lokasi ? (typeof unit.lokasi === 'object' ? unit.lokasi.nama : unit.lokasi) : '-'}</TableCell>
+                      <TableCell sx={{ display: { xs: 'none', sm: 'table-cell' }, fontSize: { xs: '0.75rem', sm: '0.875rem' } }}>
+                        {unit.lokasi ? (typeof unit.lokasi === 'object' ? unit.lokasi.nama : unit.lokasi) : '-'}
+                      </TableCell>
                       <TableCell align="right">
-                        <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
+                        <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: { xs: 0.5, sm: 1 } }}>
                           <Tooltip title="Lihat Detail">
                             <IconButton onClick={() => {
                               handleCloseUnitDialog();
                               navigate(`/barang/${unit.id}`);
-                            }} size="small" sx={{ mr: 1 }}>
-                              <VisibilityIcon fontSize="small" />
+                            }} size="small" sx={{ p: { xs: 0.5, sm: 1 } }}>
+                              <VisibilityIcon sx={{ fontSize: { xs: '1rem', sm: '1.25rem' } }} />
                             </IconButton>
                           </Tooltip>
                           {canCRUD && (
@@ -861,8 +903,8 @@ const Barang = () => {
                               <IconButton onClick={() => {
                                 handleCloseUnitDialog();
                                 navigate(`/barang/${unit.id}`, { state: { edit: true } });
-                              }} size="small" color="primary">
-                                <EditIcon fontSize="small" />
+                              }} size="small" color="primary" sx={{ p: { xs: 0.5, sm: 1 } }}>
+                                <EditIcon sx={{ fontSize: { xs: '1rem', sm: '1.25rem' } }} />
                               </IconButton>
                             </Tooltip>
                           )}
@@ -877,8 +919,17 @@ const Barang = () => {
             </>
           )}
         </DialogContent>
-        <DialogActions>
-          <Button onClick={handleCloseUnitDialog}>Tutup</Button>
+        <DialogActions sx={{ p: { xs: 1, sm: 2 } }}>
+          <Button 
+            onClick={handleCloseUnitDialog}
+            sx={{ 
+              fontSize: { xs: '0.8rem', sm: '0.875rem' },
+              px: { xs: 2, sm: 3 },
+              py: { xs: 0.5, sm: 1 }
+            }}
+          >
+            Tutup
+          </Button>
         </DialogActions>
       </Dialog>
 

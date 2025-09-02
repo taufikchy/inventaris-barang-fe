@@ -449,12 +449,16 @@ const Peminjaman = () => {
       />
 
       {/* Filters */}
-      <Card sx={{ mb: 3, display: showFilters ? 'block' : 'none' }}>
-        <CardContent>
-          <Typography variant="h6" gutterBottom>
+      <Card sx={{ mb: { xs: 2, sm: 3 }, display: showFilters ? 'block' : 'none' }}>
+        <CardContent sx={{ p: { xs: 2, sm: 3 } }}>
+          <Typography 
+            variant="h6" 
+            gutterBottom
+            sx={{ fontSize: { xs: '1.1rem', sm: '1.25rem' } }}
+          >
             Filter Peminjaman
           </Typography>
-          <Grid container spacing={2}>
+          <Grid container spacing={{ xs: 1, sm: 2 }}>
             <Grid item xs={12} sm={6} md={4}>
               <TextField
                 select
@@ -464,6 +468,14 @@ const Peminjaman = () => {
                 value={filters.status}
                 onChange={handleFilterChange}
                 size="small"
+                sx={{
+                  '& .MuiInputLabel-root': {
+                    fontSize: { xs: '0.8rem', sm: '0.875rem' }
+                  },
+                  '& .MuiInputBase-input': {
+                    fontSize: { xs: '0.8rem', sm: '0.875rem' }
+                  }
+                }}
               >
                 <MenuItem value="">Semua Status</MenuItem>
                 <MenuItem value="menunggu_persetujuan">Menunggu Persetujuan</MenuItem>
@@ -484,6 +496,14 @@ const Peminjaman = () => {
                 onChange={handleFilterChange}
                 InputLabelProps={{ shrink: true }}
                 size="small"
+                sx={{
+                  '& .MuiInputLabel-root': {
+                    fontSize: { xs: '0.8rem', sm: '0.875rem' }
+                  },
+                  '& .MuiInputBase-input': {
+                    fontSize: { xs: '0.8rem', sm: '0.875rem' }
+                  }
+                }}
               />
             </Grid>
             <Grid item xs={12} sm={6} md={4}>
@@ -496,17 +516,30 @@ const Peminjaman = () => {
                 onChange={handleFilterChange}
                 InputLabelProps={{ shrink: true }}
                 size="small"
+                sx={{
+                  '& .MuiInputLabel-root': {
+                    fontSize: { xs: '0.8rem', sm: '0.875rem' }
+                  },
+                  '& .MuiInputBase-input': {
+                    fontSize: { xs: '0.8rem', sm: '0.875rem' }
+                  }
+                }}
               />
             </Grid>
           </Grid>
         </CardContent>
       </Card>
 
-      <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 2 }}>
+      <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: { xs: 1, sm: 2 } }}>
         <Button
           variant="outlined"
-          startIcon={<FilterAltIcon />}
+          startIcon={<FilterAltIcon sx={{ fontSize: { xs: '1rem', sm: '1.25rem' } }} />}
           onClick={() => setShowFilters(!showFilters)}
+          sx={{
+            fontSize: { xs: '0.8rem', sm: '0.875rem' },
+            px: { xs: 2, sm: 3 },
+            py: { xs: 0.5, sm: 1 }
+          }}
         >
           {showFilters ? 'Sembunyikan Filter' : 'Tampilkan Filter'}
         </Button>

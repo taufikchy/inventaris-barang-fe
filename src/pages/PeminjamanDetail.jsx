@@ -651,11 +651,16 @@ const PeminjamanDetail = () => {
         >
           {({ errors, touched, isSubmitting, values, handleChange, setFieldValue }) => (
             <Form>
-              <Paper sx={{ p: 3, mb: 3 }}>
-                <Typography variant="h6" gutterBottom>
+              <Paper sx={{ 
+                p: { xs: 2, sm: 3 }, 
+                mb: { xs: 2, sm: 3 } 
+              }}>
+                <Typography variant="h6" gutterBottom sx={{
+                  fontSize: { xs: '1.1rem', sm: '1.25rem' }
+                }}>
                   Informasi Peminjaman
                 </Typography>
-                <Grid container spacing={2}>
+                <Grid container spacing={{ xs: 1.5, sm: 2 }}>
                   <Grid item xs={12} sm={6}>
                     <TextField
                       fullWidth
@@ -664,6 +669,17 @@ const PeminjamanDetail = () => {
                       disabled
                       size="small"
                       margin="normal"
+                      sx={{
+                        '& .MuiInputLabel-root': {
+                          fontSize: { xs: '0.875rem', sm: '1rem' }
+                        },
+                        '& .MuiInputBase-input': {
+                          fontSize: { xs: '0.875rem', sm: '1rem' }
+                        },
+                        '& .MuiFormHelperText-root': {
+                          fontSize: { xs: '0.75rem', sm: '0.875rem' }
+                        }
+                      }}
                     />
                   </Grid>
                   <Grid item xs={12} sm={6}>
@@ -678,6 +694,17 @@ const PeminjamanDetail = () => {
                       margin="normal"
                       error={touched.peminjam && Boolean(errors.peminjam)}
                       helperText={touched.peminjam && errors.peminjam}
+                      sx={{
+                        '& .MuiInputLabel-root': {
+                          fontSize: { xs: '0.875rem', sm: '1rem' }
+                        },
+                        '& .MuiInputBase-input': {
+                          fontSize: { xs: '0.875rem', sm: '1rem' }
+                        },
+                        '& .MuiFormHelperText-root': {
+                          fontSize: { xs: '0.75rem', sm: '0.875rem' }
+                        }
+                      }}
                     />
                   </Grid>
                   <Grid item xs={12} sm={6}>
@@ -692,6 +719,17 @@ const PeminjamanDetail = () => {
                       margin="normal"
                       error={touched.kontak && Boolean(errors.kontak)}
                       helperText={touched.kontak && errors.kontak}
+                      sx={{
+                        '& .MuiInputLabel-root': {
+                          fontSize: { xs: '0.875rem', sm: '1rem' }
+                        },
+                        '& .MuiInputBase-input': {
+                          fontSize: { xs: '0.875rem', sm: '1rem' }
+                        },
+                        '& .MuiFormHelperText-root': {
+                          fontSize: { xs: '0.75rem', sm: '0.875rem' }
+                        }
+                      }}
                     />
                   </Grid>
                   <Grid item xs={12} sm={6}>
@@ -706,6 +744,17 @@ const PeminjamanDetail = () => {
                       margin="normal"
                       error={touched.kelas && Boolean(errors.kelas)}
                       helperText={touched.kelas && errors.kelas}
+                      sx={{
+                        '& .MuiInputLabel-root': {
+                          fontSize: { xs: '0.875rem', sm: '1rem' }
+                        },
+                        '& .MuiInputBase-input': {
+                          fontSize: { xs: '0.875rem', sm: '1rem' }
+                        },
+                        '& .MuiFormHelperText-root': {
+                          fontSize: { xs: '0.75rem', sm: '0.875rem' }
+                        }
+                      }}
                     />
                   </Grid>
                   <Grid item xs={12} sm={6}>
@@ -719,6 +768,17 @@ const PeminjamanDetail = () => {
                       margin="normal"
                       error={touched.jabatan && Boolean(errors.jabatan)}
                       helperText={touched.jabatan && errors.jabatan}
+                      sx={{
+                        '& .MuiInputLabel-root': {
+                          fontSize: { xs: '0.875rem', sm: '1rem' }
+                        },
+                        '& .MuiInputBase-input': {
+                          fontSize: { xs: '0.875rem', sm: '1rem' }
+                        },
+                        '& .MuiFormHelperText-root': {
+                          fontSize: { xs: '0.75rem', sm: '0.875rem' }
+                        }
+                      }}
                     />
                   </Grid>
                   <Grid item xs={12} sm={6}>
@@ -735,6 +795,17 @@ const PeminjamanDetail = () => {
                       InputLabelProps={{ shrink: true }}
                       error={touched.tanggal_pinjam && Boolean(errors.tanggal_pinjam)}
                       helperText={touched.tanggal_pinjam && errors.tanggal_pinjam}
+                      sx={{
+                        '& .MuiInputLabel-root': {
+                          fontSize: { xs: '0.875rem', sm: '1rem' }
+                        },
+                        '& .MuiInputBase-input': {
+                          fontSize: { xs: '0.875rem', sm: '1rem' }
+                        },
+                        '& .MuiFormHelperText-root': {
+                          fontSize: { xs: '0.75rem', sm: '0.875rem' }
+                        }
+                      }}
                     />
                   </Grid>
                   <Grid item xs={12} sm={6}>
@@ -751,6 +822,17 @@ const PeminjamanDetail = () => {
                       InputLabelProps={{ shrink: true }}
                       error={touched.tanggal_kembali_harapan && Boolean(errors.tanggal_kembali_harapan)}
                       helperText={touched.tanggal_kembali_harapan && errors.tanggal_kembali_harapan}
+                      sx={{
+                        '& .MuiInputLabel-root': {
+                          fontSize: { xs: '0.875rem', sm: '1rem' }
+                        },
+                        '& .MuiInputBase-input': {
+                          fontSize: { xs: '0.875rem', sm: '1rem' }
+                        },
+                        '& .MuiFormHelperText-root': {
+                          fontSize: { xs: '0.75rem', sm: '0.875rem' }
+                        }
+                      }}
                     />
                   </Grid>
 
@@ -762,26 +844,50 @@ const PeminjamanDetail = () => {
                       label="Keterangan"
                       fullWidth
                       multiline
-                      rows={2}
+                      rows={{ xs: 2, sm: 2 }}
                       size="small"
                       margin="normal"
                       error={touched.keterangan && Boolean(errors.keterangan)}
                       helperText={touched.keterangan && errors.keterangan}
+                      sx={{
+                        '& .MuiInputLabel-root': {
+                          fontSize: { xs: '0.875rem', sm: '1rem' }
+                        },
+                        '& .MuiInputBase-input': {
+                          fontSize: { xs: '0.875rem', sm: '1rem' }
+                        },
+                        '& .MuiFormHelperText-root': {
+                          fontSize: { xs: '0.75rem', sm: '0.875rem' }
+                        }
+                      }}
                     />
                   </Grid>
                 </Grid>
 
                 <Divider sx={{ my: 3 }} />
 
-                <Box sx={{ mb: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <Typography variant="h6">
+                <Box sx={{ 
+                  mb: { xs: 1.5, sm: 2 }, 
+                  display: 'flex', 
+                  justifyContent: 'space-between', 
+                  alignItems: 'center',
+                  flexDirection: { xs: 'column', sm: 'row' },
+                  gap: { xs: 1, sm: 0 }
+                }}>
+                  <Typography variant="h6" sx={{
+                    fontSize: { xs: '1.1rem', sm: '1.25rem' }
+                  }}>
                     Barang yang Dipinjam
                   </Typography>
                   <Button
                     variant="outlined"
-                    startIcon={<AddIcon />}
+                    startIcon={<AddIcon sx={{ fontSize: { xs: '1rem', sm: '1.25rem' } }} />}
                     onClick={() => openBarangDialog()}
-                    size="small"
+                    size={{ xs: 'small', sm: 'medium' }}
+                    sx={{
+                      fontSize: { xs: '0.75rem', sm: '0.875rem' },
+                      padding: { xs: '4px 8px', sm: '6px 16px' }
+                    }}
                   >
                     Tambah Barang
                   </Button>
@@ -806,47 +912,53 @@ const PeminjamanDetail = () => {
                                 minWidth: '80px',
                                 backgroundColor: 'var(--primary-color)',
                                 color: 'white',
-                                padding: '12px 8px',
-                                whiteSpace: 'nowrap'
+                                padding: { xs: '8px 4px', sm: '12px 8px' },
+                                whiteSpace: 'nowrap',
+                                fontSize: { xs: '0.75rem', sm: '0.875rem' }
                               }}>Kode</TableCell>
                               <TableCell sx={{ 
                                 fontWeight: 600, 
                                 minWidth: '200px',
                                 backgroundColor: 'var(--primary-light)',
                                 color: 'white',
-                                padding: '12px 8px'
+                                padding: { xs: '8px 4px', sm: '12px 8px' },
+                                fontSize: { xs: '0.75rem', sm: '0.875rem' }
                               }}>Nama Barang</TableCell>
                               <TableCell sx={{ 
                                 fontWeight: 600, 
                                 minWidth: '120px',
                                 backgroundColor: 'var(--primary-color)',
                                 color: 'white',
-                                padding: '12px 8px',
-                                whiteSpace: 'nowrap'
+                                padding: { xs: '8px 4px', sm: '12px 8px' },
+                                whiteSpace: 'nowrap',
+                                fontSize: { xs: '0.75rem', sm: '0.875rem' }
                               }}>Lokasi Ruangan</TableCell>
                               <TableCell align="center" sx={{ 
                                 fontWeight: 600, 
                                 minWidth: '70px',
                                 backgroundColor: 'var(--primary-light)',
                                 color: 'white',
-                                padding: '12px 8px',
-                                whiteSpace: 'nowrap'
+                                padding: { xs: '8px 4px', sm: '12px 8px' },
+                                whiteSpace: 'nowrap',
+                                fontSize: { xs: '0.75rem', sm: '0.875rem' }
                               }}>Jumlah</TableCell>
                               <TableCell sx={{ 
                                 fontWeight: 600, 
                                 minWidth: '100px',
                                 backgroundColor: 'var(--primary-color)',
                                 color: 'white',
-                                padding: '12px 8px',
-                                whiteSpace: 'nowrap'
+                                padding: { xs: '8px 4px', sm: '12px 8px' },
+                                whiteSpace: 'nowrap',
+                                fontSize: { xs: '0.75rem', sm: '0.875rem' }
                               }}>Kondisi</TableCell>
                               <TableCell align="center" sx={{ 
                                 fontWeight: 600, 
                                 minWidth: '80px',
                                 backgroundColor: 'var(--primary-light)',
                                 color: 'white',
-                                padding: '12px 8px',
-                                whiteSpace: 'nowrap'
+                                padding: { xs: '8px 4px', sm: '12px 8px' },
+                                whiteSpace: 'nowrap',
+                                fontSize: { xs: '0.75rem', sm: '0.875rem' }
                               }}>Aksi</TableCell>
                             </TableRow>
                           </TableHead>
@@ -858,12 +970,12 @@ const PeminjamanDetail = () => {
                                   '&:hover': { backgroundColor: '#e8f5e9 !important' }
                                 }}>
                                   <TableCell align="center" sx={{ 
-                                    padding: '12px 8px',
+                                    padding: { xs: '8px 4px', sm: '12px 8px' },
                                     minWidth: '80px'
                                   }}>
                                     <Typography variant="body2" sx={{ 
                                       fontWeight: 500,
-                                      fontSize: '0.875rem',
+                                      fontSize: { xs: '0.75rem', sm: '0.875rem' },
                                       lineHeight: 1.3,
                                       whiteSpace: 'nowrap'
                                     }}>
@@ -871,12 +983,12 @@ const PeminjamanDetail = () => {
                                     </Typography>
                                   </TableCell>
                                   <TableCell sx={{ 
-                                    padding: '12px 8px',
+                                    padding: { xs: '8px 4px', sm: '12px 8px' },
                                     minWidth: '200px'
                                   }}>
                                     <Typography variant="body2" sx={{ 
                                       fontWeight: 500,
-                                      fontSize: '0.875rem',
+                                      fontSize: { xs: '0.75rem', sm: '0.875rem' },
                                       lineHeight: 1.4,
                                       wordBreak: 'break-word'
                                     }}>
@@ -884,12 +996,12 @@ const PeminjamanDetail = () => {
                                     </Typography>
                                   </TableCell>
                                   <TableCell align="center" sx={{ 
-                                    padding: '12px 8px',
+                                    padding: { xs: '8px 4px', sm: '12px 8px' },
                                     minWidth: '120px'
                                   }}>
                                     <Typography variant="body2" sx={{
                                       color: item.lokasi_ruangan ? 'text.primary' : 'text.secondary',
-                                      fontSize: '0.875rem',
+                                      fontSize: { xs: '0.75rem', sm: '0.875rem' },
                                       lineHeight: 1.3,
                                       whiteSpace: 'nowrap'
                                     }}>
@@ -897,12 +1009,12 @@ const PeminjamanDetail = () => {
                                     </Typography>
                                   </TableCell>
                                   <TableCell align="center" sx={{ 
-                                    padding: '12px 8px',
+                                    padding: { xs: '8px 4px', sm: '12px 8px' },
                                     minWidth: '70px'
                                   }}>
                                     <Typography variant="body2" sx={{ 
                                       fontWeight: 500,
-                                      fontSize: '0.875rem',
+                                      fontSize: { xs: '0.75rem', sm: '0.875rem' },
                                       lineHeight: 1.3,
                                       whiteSpace: 'nowrap'
                                     }}>
@@ -910,7 +1022,7 @@ const PeminjamanDetail = () => {
                                     </Typography>
                                   </TableCell>
                                   <TableCell align="center" sx={{ 
-                                    padding: '12px 8px',
+                                    padding: { xs: '8px 4px', sm: '12px 8px' },
                                     minWidth: '100px'
                                   }}>
                                     <Chip
@@ -920,26 +1032,30 @@ const PeminjamanDetail = () => {
                                       sx={{
                                         color: 'white',
                                         fontWeight: 'bold',
-                                        fontSize: '0.75rem',
-                                        height: '24px'
+                                        fontSize: { xs: '0.65rem', sm: '0.75rem' },
+                                        height: { xs: '20px', sm: '24px' }
                                       }}
                                     />
                                   </TableCell>
-                                  <TableCell align="center" sx={{ padding: '12px 8px' }}>
+                                  <TableCell align="center" sx={{ padding: { xs: '8px 4px', sm: '12px 8px' } }}>
                                     <IconButton
                                       size="small"
                                       onClick={() => openBarangDialog(index)}
                                       color="primary"
-                                      sx={{ mr: 0.5 }}
+                                      sx={{ 
+                                        mr: { xs: 0.25, sm: 0.5 },
+                                        padding: { xs: '2px', sm: '4px' }
+                                      }}
                                     >
-                                      <EditIcon fontSize="small" />
+                                      <EditIcon sx={{ fontSize: { xs: '1rem', sm: '1.25rem' } }} />
                                     </IconButton>
                                     <IconButton
                                       size="small"
                                       onClick={() => removeBarang({ values, setFieldValue }, index)}
                                       color="error"
+                                      sx={{ padding: { xs: '2px', sm: '4px' } }}
                                     >
-                                      <RemoveIcon fontSize="small" />
+                                      <RemoveIcon sx={{ fontSize: { xs: '1rem', sm: '1.25rem' } }} />
                                     </IconButton>
                                   </TableCell>
                                 </TableRow>
@@ -963,23 +1079,43 @@ const PeminjamanDetail = () => {
                   </Typography>
                 )}
 
-                <Box sx={{ mt: 3, display: 'flex', justifyContent: 'space-between' }}>
+                <Box sx={{ 
+                  mt: { xs: 2, sm: 3 }, 
+                  display: 'flex', 
+                  justifyContent: 'space-between',
+                  flexDirection: { xs: 'column', sm: 'row' },
+                  gap: { xs: 2, sm: 0 }
+                }}>
                   <Button
                     variant="outlined"
                     color="secondary"
                     onClick={() => isNewPeminjaman ? navigate('/peminjaman') : navigate(`/peminjaman/${id}`)}
-                    startIcon={<CancelIcon />}
+                    startIcon={<CancelIcon sx={{ fontSize: { xs: '1rem', sm: '1.25rem' } }} />}
+                    size={{ xs: 'small', sm: 'medium' }}
+                    sx={{
+                      fontSize: { xs: '0.75rem', sm: '0.875rem' },
+                      padding: { xs: '6px 12px', sm: '8px 16px' }
+                    }}
                   >
                     Batal
                   </Button>
-                  <Box>
+                  <Box sx={{
+                    display: 'flex',
+                    flexDirection: { xs: 'column', sm: 'row' },
+                    gap: { xs: 1, sm: 0 }
+                  }}>
                     {!isNewPeminjaman && (
                       <Button
                         variant="outlined"
                         color="error"
                         onClick={() => setConfirmDelete(true)}
-                        startIcon={<DeleteIcon />}
-                        sx={{ mr: 1 }}
+                        startIcon={<DeleteIcon sx={{ fontSize: { xs: '1rem', sm: '1.25rem' } }} />}
+                        size={{ xs: 'small', sm: 'medium' }}
+                        sx={{ 
+                          mr: { xs: 0, sm: 1 },
+                          fontSize: { xs: '0.75rem', sm: '0.875rem' },
+                          padding: { xs: '6px 12px', sm: '8px 16px' }
+                        }}
                       >
                         Hapus
                       </Button>
@@ -989,7 +1125,12 @@ const PeminjamanDetail = () => {
                       variant="contained"
                       color="primary"
                       disabled={isSubmitting}
-                      startIcon={saving ? <CircularProgress size={20} /> : <SaveIcon />}
+                      startIcon={saving ? <CircularProgress size={20} /> : <SaveIcon sx={{ fontSize: { xs: '1rem', sm: '1.25rem' } }} />}
+                      size="small"
+                      sx={{
+                        fontSize: { xs: '0.75rem', sm: '0.875rem' },
+                        padding: { xs: '6px 12px', sm: '8px 16px' }
+                      }}
                     >
                       {isNewPeminjaman ? 'Tambah' : 'Simpan'}
                     </Button>
@@ -999,17 +1140,24 @@ const PeminjamanDetail = () => {
 
               {/* Barang Dialog */}
               <Dialog open={barangDialogOpen} onClose={closeBarangDialog} maxWidth="sm" fullWidth>
-                <DialogTitle>
+                <DialogTitle sx={{
+                  fontSize: { xs: '1.1rem', sm: '1.25rem' },
+                  padding: { xs: '12px 16px', sm: '16px 24px' }
+                }}>
                   {selectedBarangIndex !== null ? 'Edit Barang' : 'Tambah Barang'}
                 </DialogTitle>
-                <DialogContent>
-                  <Box sx={{ pt: 1 }}>
+                <DialogContent sx={{
+                  padding: { xs: '8px 16px', sm: '16px 24px' }
+                }}>
+                  <Box sx={{ pt: { xs: 0.5, sm: 1 } }}>
                     {/* Filter Barang */}
                     <Box sx={{ mb: 2 }}>
-                      <Typography variant="subtitle2" gutterBottom>
+                      <Typography variant="subtitle2" gutterBottom sx={{
+                        fontSize: { xs: '0.875rem', sm: '1rem' }
+                      }}>
                         Filter Barang
                       </Typography>
-                      <Grid container spacing={2}>
+                      <Grid container spacing={{ xs: 1, sm: 2 }}>
                         <Grid item xs={12} sm={4}>
                           <TextField
                             select
@@ -1019,6 +1167,14 @@ const PeminjamanDetail = () => {
                             value={filterKategori}
                             onChange={handleFilterChange}
                             size="small"
+                            sx={{
+                              '& .MuiInputLabel-root': {
+                                fontSize: { xs: '0.875rem', sm: '1rem' }
+                              },
+                              '& .MuiInputBase-input': {
+                                fontSize: { xs: '0.875rem', sm: '1rem' }
+                              }
+                            }}
                           >
                             <MenuItem value="">Semua Kategori</MenuItem>
                             {kategoris.map((kategori) => (
@@ -1037,6 +1193,14 @@ const PeminjamanDetail = () => {
                             value={filterLokasi}
                             onChange={handleFilterChange}
                             size="small"
+                            sx={{
+                              '& .MuiInputLabel-root': {
+                                fontSize: { xs: '0.875rem', sm: '1rem' }
+                              },
+                              '& .MuiInputBase-input': {
+                                fontSize: { xs: '0.875rem', sm: '1rem' }
+                              }
+                            }}
                           >
                             <MenuItem value="">Semua Lokasi</MenuItem>
                             {lokasis.map((lokasi) => (
@@ -1055,6 +1219,14 @@ const PeminjamanDetail = () => {
                             value={filterKondisi}
                             onChange={handleFilterChange}
                             size="small"
+                            sx={{
+                              '& .MuiInputLabel-root': {
+                                fontSize: { xs: '0.875rem', sm: '1rem' }
+                              },
+                              '& .MuiInputBase-input': {
+                                fontSize: { xs: '0.875rem', sm: '1rem' }
+                              }
+                            }}
                           >
                             <MenuItem value="">Semua Kondisi</MenuItem>
                             <MenuItem value="baik">Baik</MenuItem>
@@ -1097,7 +1269,7 @@ const PeminjamanDetail = () => {
                     >
                       {({ errors: dialogErrors, touched: dialogTouched, values: dialogValues, handleChange: dialogHandleChange, setFieldValue: dialogSetFieldValue, isSubmitting: dialogIsSubmitting }) => (
                         <Form>
-                          <Grid container spacing={2}>
+                          <Grid container spacing={{ xs: 1, sm: 2 }}>
                             <Grid item xs={12}>
                               <Autocomplete
                                 options={barangs}
@@ -1145,6 +1317,17 @@ const PeminjamanDetail = () => {
                                     error={dialogTouched.barang && Boolean(dialogErrors.barang)}
                                     helperText={dialogTouched.barang && dialogErrors.barang}
                                     margin="normal"
+                                    sx={{
+                                      '& .MuiInputLabel-root': {
+                                        fontSize: { xs: '0.875rem', sm: '1rem' }
+                                      },
+                                      '& .MuiInputBase-input': {
+                                        fontSize: { xs: '0.875rem', sm: '1rem' }
+                                      },
+                                      '& .MuiFormHelperText-root': {
+                                        fontSize: { xs: '0.75rem', sm: '0.875rem' }
+                                      }
+                                    }}
                                   />
                                 )}
                               />
@@ -1174,11 +1357,35 @@ const PeminjamanDetail = () => {
                                 error={dialogTouched.jumlah && Boolean(dialogErrors.jumlah)}
                                 helperText={dialogTouched.jumlah && dialogErrors.jumlah}
                                 margin="normal"
+                                sx={{
+                                  '& .MuiInputLabel-root': {
+                                    fontSize: { xs: '0.875rem', sm: '1rem' }
+                                  },
+                                  '& .MuiInputBase-input': {
+                                    fontSize: { xs: '0.875rem', sm: '1rem' }
+                                  },
+                                  '& .MuiFormHelperText-root': {
+                                    fontSize: { xs: '0.75rem', sm: '0.875rem' }
+                                  }
+                                }}
                               />
                             </Grid>
                           </Grid>
-                          <DialogActions sx={{ mt: 2 }}>
-                            <Button onClick={closeBarangDialog} color="secondary">
+                          <DialogActions sx={{ 
+                            mt: 2,
+                            flexDirection: { xs: 'column', sm: 'row' },
+                            gap: { xs: 1, sm: 0 },
+                            padding: { xs: '8px 16px', sm: '8px 24px' }
+                          }}>
+                            <Button 
+                              onClick={closeBarangDialog} 
+                              color="secondary"
+                              sx={{
+                                fontSize: { xs: '0.875rem', sm: '1rem' },
+                                padding: { xs: '6px 12px', sm: '8px 16px' },
+                                width: { xs: '100%', sm: 'auto' }
+                              }}
+                            >
                               Batal
                             </Button>
                             <Button
@@ -1186,6 +1393,11 @@ const PeminjamanDetail = () => {
                               variant="contained"
                               color="primary"
                               disabled={dialogIsSubmitting || !dialogValues.barang}
+                              sx={{
+                                fontSize: { xs: '0.875rem', sm: '1rem' },
+                                padding: { xs: '6px 12px', sm: '8px 16px' },
+                                width: { xs: '100%', sm: 'auto' }
+                              }}
                             >
                               {selectedBarangIndex !== null ? 'Perbarui' : 'Tambah'}
                             </Button>
