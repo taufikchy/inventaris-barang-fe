@@ -36,6 +36,7 @@ import 'dayjs/locale/id';
 import { Visibility as VisibilityIcon, FilterAlt as FilterAltIcon, FileDownload as FileDownloadIcon, TableView as TableViewIcon, Description as DescriptionIcon, KeyboardArrowDown as KeyboardArrowDownIcon, Archive as ArchiveIcon } from '@mui/icons-material';
 import DataTable from '../components/DataTable';
 import PageHeader from '../components/PageHeader';
+import AlertDialog from '../components/AlertDialog';
 import axios from '../utils/axios';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
@@ -66,6 +67,10 @@ const HistoriAktivitas = () => {
   const [exportMenuAnchor, setExportMenuAnchor] = useState(null);
   const [exportLoading, setExportLoading] = useState(false);
   const exportMenuOpen = Boolean(exportMenuAnchor);
+  
+  // Alert dialog states
+  const [alertOpen, setAlertOpen] = useState(false);
+  const [alertMessage, setAlertMessage] = useState('');
 
 
 
@@ -319,7 +324,8 @@ const HistoriAktivitas = () => {
           params.append('tanggal_mulai', dayjs(tanggalMulai).format('YYYY-MM-DD'));
           params.append('tanggal_akhir', dayjs(tanggalAkhir).format('YYYY-MM-DD'));
         } else {
-          alert('Silakan pilih tanggal mulai dan tanggal akhir terlebih dahulu untuk ekspor rentang tanggal custom.');
+          setAlertMessage('Silakan pilih tanggal mulai dan tanggal akhir terlebih dahulu untuk ekspor rentang tanggal custom.');
+          setAlertOpen(true);
           setExportLoading(false);
           return;
         }
@@ -368,7 +374,8 @@ const HistoriAktivitas = () => {
       
     } catch (error) {
       console.error('Error exporting data:', error);
-      alert('Gagal mengekspor data. Silakan coba lagi.');
+      setAlertMessage('Gagal mengekspor data. Silakan coba lagi.');
+      setAlertOpen(true);
     } finally {
       setExportLoading(false);
     }
@@ -968,6 +975,15 @@ const HistoriAktivitas = () => {
           </Button>
         </DialogActions>
       </Dialog>
+      
+      {/* Alert Dialog */}
+      <AlertDialog
+        open={alertOpen}
+        title="Peringatan"
+        message={alertMessage}
+        onClose={() => setAlertOpen(false)}
+        severity="warning"
+      />
     </Box>
   );
 };

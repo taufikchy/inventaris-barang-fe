@@ -42,6 +42,7 @@ import 'dayjs/locale/id';
 import { Visibility as VisibilityIcon, FilterAlt as FilterAltIcon, Archive as ArchiveIcon, FileDownload as FileDownloadIcon, Description as DescriptionIcon, TableView as TableViewIcon, KeyboardArrowDown as KeyboardArrowDownIcon } from '@mui/icons-material';
 import DataTable from '../components/DataTable';
 import PageHeader from '../components/PageHeader';
+import AlertDialog from '../components/AlertDialog';
 import axios from '../utils/axios';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
@@ -72,6 +73,10 @@ const HistoriAktivitasArsip = () => {
   const [exportMenuAnchor, setExportMenuAnchor] = useState(null);
   const [exportLoading, setExportLoading] = useState(false);
   const exportMenuOpen = Boolean(exportMenuAnchor);
+  
+  // Alert dialog states
+  const [alertOpen, setAlertOpen] = useState(false);
+  const [alertMessage, setAlertMessage] = useState('');
 
   const fetchHistoriAktivitas = async () => {
     setLoading(true);
@@ -333,7 +338,8 @@ const HistoriAktivitasArsip = () => {
           params.append('tanggal_mulai', dayjs(tanggalMulai).format('YYYY-MM-DD'));
           params.append('tanggal_akhir', dayjs(tanggalAkhir).format('YYYY-MM-DD'));
         } else {
-          alert('Silakan pilih tanggal mulai dan tanggal akhir terlebih dahulu untuk ekspor rentang tanggal custom.');
+          setAlertMessage('Silakan pilih tanggal mulai dan tanggal akhir terlebih dahulu untuk ekspor rentang tanggal custom.');
+          setAlertOpen(true);
           setExportLoading(false);
           return;
         }
@@ -382,7 +388,8 @@ const HistoriAktivitasArsip = () => {
       
     } catch (error) {
       console.error('Error exporting data:', error);
-      alert('Gagal mengekspor data. Silakan coba lagi.');
+      setAlertMessage('Gagal mengekspor data. Silakan coba lagi.');
+      setAlertOpen(true);
     } finally {
       setExportLoading(false);
     }
@@ -591,40 +598,19 @@ const HistoriAktivitasArsip = () => {
           </ListItemIcon>
           <ListItemText primary="Excel - Hari Ini" />
         </MenuItem>
-        <MenuItem onClick={() => handleExport('csv', 'hari-ini')}>
-           <ListItemIcon>
-             <DescriptionIcon fontSize="small" />
-           </ListItemIcon>
-           <ListItemText primary="CSV - Hari Ini" />
-         </MenuItem>
-         <Divider />
-         <MenuItem onClick={() => handleExport('excel', 'minggu-ini')}>
-           <ListItemIcon>
-             <TableViewIcon fontSize="small" />
-           </ListItemIcon>
-           <ListItemText primary="Excel - Minggu Ini" />
-         </MenuItem>
-         <MenuItem onClick={() => handleExport('csv', 'minggu-ini')}>
-           <ListItemIcon>
-             <DescriptionIcon fontSize="small" />
-           </ListItemIcon>
-           <ListItemText primary="CSV - Minggu Ini" />
-         </MenuItem>
-         <Divider />
-         <MenuItem onClick={() => handleExport('excel', 'bulan-ini')}>
-           <ListItemIcon>
-             <TableViewIcon fontSize="small" />
-           </ListItemIcon>
-           <ListItemText primary="Excel - Bulan Ini" />
-         </MenuItem>
-         <MenuItem onClick={() => handleExport('csv', 'bulan-ini')}>
-           <ListItemIcon>
-             <DescriptionIcon fontSize="small" />
-           </ListItemIcon>
-           <ListItemText primary="CSV - Bulan Ini" />
-         </MenuItem>
-         <Divider />
-         <MenuItem onClick={() => handleExport('excel', 'semua-data')}>
+        <MenuItem onClick={() => handleExport('excel', 'minggu-ini')}>
+          <ListItemIcon>
+            <TableViewIcon fontSize="small" />
+          </ListItemIcon>
+          <ListItemText primary="Excel - Minggu Ini" />
+        </MenuItem>
+        <MenuItem onClick={() => handleExport('excel', 'bulan-ini')}>
+          <ListItemIcon>
+            <TableViewIcon fontSize="small" />
+          </ListItemIcon>
+          <ListItemText primary="Excel - Bulan Ini" />
+        </MenuItem>
+        <MenuItem onClick={() => handleExport('excel', 'semua-data')}>
           <ListItemIcon>
             <TableViewIcon fontSize="small" />
           </ListItemIcon>
@@ -635,6 +621,25 @@ const HistoriAktivitasArsip = () => {
             <TableViewIcon fontSize="small" />
           </ListItemIcon>
           <ListItemText primary="Excel - Rentang Tanggal Custom" />
+        </MenuItem>
+        <Divider />
+        <MenuItem onClick={() => handleExport('csv', 'hari-ini')}>
+          <ListItemIcon>
+            <DescriptionIcon fontSize="small" />
+          </ListItemIcon>
+          <ListItemText primary="CSV - Hari Ini" />
+        </MenuItem>
+        <MenuItem onClick={() => handleExport('csv', 'minggu-ini')}>
+          <ListItemIcon>
+            <DescriptionIcon fontSize="small" />
+          </ListItemIcon>
+          <ListItemText primary="CSV - Minggu Ini" />
+        </MenuItem>
+        <MenuItem onClick={() => handleExport('csv', 'bulan-ini')}>
+          <ListItemIcon>
+            <DescriptionIcon fontSize="small" />
+          </ListItemIcon>
+          <ListItemText primary="CSV - Bulan Ini" />
         </MenuItem>
         <MenuItem onClick={() => handleExport('csv', 'semua-data')}>
           <ListItemIcon>
@@ -824,6 +829,15 @@ const HistoriAktivitasArsip = () => {
           </Button>
         </DialogActions>
       </Dialog>
+      
+      {/* Alert Dialog */}
+      <AlertDialog
+        open={alertOpen}
+        title="Peringatan"
+        message={alertMessage}
+        onClose={() => setAlertOpen(false)}
+        severity="warning"
+      />
     </Box>
   );
 };
