@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "../utils/axios";
 import { toast } from "react-toastify";
@@ -42,6 +42,8 @@ ChartJS.register(ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarEle
 
 const Dashboard = () => {
   const navigate = useNavigate();
+  const pieChartRef = useRef(null);
+  const barChartRef = useRef(null);
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({
     totalBarang: 0,
@@ -58,6 +60,7 @@ const Dashboard = () => {
   const [transaksiPerJenis, setTransaksiPerJenis] = useState([]);
   const [distribusiPerKondisi, setDistribusiPerKondisi] = useState([]);
   const [barangPerLokasi, setBarangPerLokasi] = useState([]);
+  const [stokBahanMenupis, setStokBahanMenupis] = useState([]);
 
   // Function to format module names
   const getModulLabel = (modulName) => {
@@ -70,6 +73,27 @@ const Dashboard = () => {
       case 'transaksi': return 'Transaksi';
       case 'auth': return 'Autentikasi';
       default: return modulName;
+    }
+  };
+
+  // Function to fetch stok bahan yang menipis
+  const fetchStokBahanMenupis = async () => {
+    try {
+      const response = await axios.get('/api/barang');
+      if (response.data.sukses) {
+        const barangBahan = response.data.data.filter(barang => 
+          barang.kategori?.tipe === 'bahan' && barang.stok_tersisa !== undefined
+        );
+        
+        const bahanMenupis = barangBahan.filter(barang => {
+          const persentaseStok = (barang.stok_tersisa / barang.jumlah) * 100;
+          return persentaseStok <= 20; // Stok menipis jika <= 20%
+        });
+        
+        setStokBahanMenupis(bahanMenupis);
+      }
+    } catch (error) {
+      console.error('Error fetching stok bahan menipis:', error);
     }
   };
 
@@ -111,6 +135,9 @@ const Dashboard = () => {
           setTransaksiPerJenis(response.data.data.transaksiPerJenis || []);
           setDistribusiPerKondisi(distribusiPerKondisi);
           setBarangPerLokasi(barangPerLokasi);
+          
+          // Fetch stok bahan yang menipis
+          fetchStokBahanMenupis();
         } else {
           toast.error('Gagal memuat data dashboard');
           // Fallback to empty data
@@ -151,6 +178,18 @@ const Dashboard = () => {
     };
 
     fetchDashboardData();
+  }, []);
+
+  // Cleanup chart instances on unmount
+  useEffect(() => {
+    return () => {
+      if (pieChartRef.current) {
+        pieChartRef.current.destroy();
+      }
+      if (barChartRef.current) {
+        barChartRef.current.destroy();
+      }
+    };
   }, []);
 
   // Fungsi untuk mengurutkan lokasi berdasarkan nomor lab
@@ -243,10 +282,10 @@ const Dashboard = () => {
       <PageHeader title="Dashboard" />
 
       {/* Info Cards */}
-      <Grid container spacing={{ xs: 1, sm: 2 }} sx={{ mb: 4 }}>
-        <Grid item xs={12} sm={6} md={2.4} lg={2.4}>
+      <Grid container spacing={{ xs: 2, sm: 2, md: 3 }} sx={{ mb: { xs: 3, sm: 4 } }}>
+        <Grid item xs={6} sm={6} md={4} lg={2.4}>
           {loading ? (
-            <Skeleton variant="rounded" height={120} />
+            <Skeleton variant="rounded" height="120px" />
           ) : (
             <InfoCard
               title="Total Barang"
@@ -257,9 +296,9 @@ const Dashboard = () => {
             />
           )}
         </Grid>
-        <Grid item xs={12} sm={6} md={2.4} lg={2.4}>
+        <Grid item xs={6} sm={6} md={4} lg={2.4}>
           {loading ? (
-            <Skeleton variant="rounded" height={120} />
+            <Skeleton variant="rounded" height="120px" />
           ) : (
             <InfoCard
               title="Barang Baik"
@@ -270,9 +309,9 @@ const Dashboard = () => {
             />
           )}
         </Grid>
-        <Grid item xs={12} sm={6} md={2.4} lg={2.4}>
+        <Grid item xs={6} sm={6} md={4} lg={2.4}>
           {loading ? (
-            <Skeleton variant="rounded" height={120} />
+            <Skeleton variant="rounded" height="120px" />
           ) : (
             <InfoCard
               title="Rusak Ringan"
@@ -283,9 +322,9 @@ const Dashboard = () => {
             />
           )}
         </Grid>
-        <Grid item xs={12} sm={6} md={2.4} lg={2.4}>
+        <Grid item xs={6} sm={6} md={4} lg={2.4}>
           {loading ? (
-            <Skeleton variant="rounded" height={120} />
+            <Skeleton variant="rounded" height="120px" />
           ) : (
             <InfoCard
               title="Rusak Berat"
@@ -296,9 +335,9 @@ const Dashboard = () => {
             />
           )}
         </Grid>
-        <Grid item xs={12} sm={6} md={2.4} lg={2.4}>
+        <Grid item xs={12} sm={6} md={4} lg={2.4}>
           {loading ? (
-            <Skeleton variant="rounded" height={120} />
+            <Skeleton variant="rounded" height="120px" />
           ) : (
             <InfoCard
               title="Peminjaman Aktif"
@@ -311,37 +350,137 @@ const Dashboard = () => {
         </Grid>
       </Grid>
 
+      {/* Peringatan Stok Bahan Menipis */}
+      {stokBahanMenupis.length > 0 && (
+        <Card sx={{ mb: { xs: 3, sm: 4 }, border: '2px solid #f59e0b', backgroundColor: '#fef3c7' }}>
+          <CardContent sx={{ p: { xs: 2, sm: 3 } }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', mb: { xs: 1.5, sm: 2 } }}>
+              <WarningIcon sx={{ color: '#f59e0b', mr: 1, fontSize: { xs: '1.2rem', sm: '1.5rem' } }} />
+              <Typography variant="h6" sx={{ color: '#92400e', fontSize: { xs: '1rem', sm: '1.25rem' } }}>
+                Peringatan: Stok Bahan Menipis!
+              </Typography>
+            </Box>
+            <Typography variant="body2" sx={{ mb: { xs: 1.5, sm: 2 }, color: '#92400e', fontSize: { xs: '0.875rem', sm: '1rem' } }}>
+              Beberapa bahan memiliki stok yang menipis dan perlu segera diisi ulang:
+            </Typography>
+            <Grid container spacing={{ xs: 1, sm: 2 }}>
+              {stokBahanMenupis.map((barang) => {
+                const persentaseStok = ((barang.stok_tersisa || 0) / barang.jumlah) * 100;
+                return (
+                  <Grid item xs={12} sm={6} md={4} key={barang.id}>
+                    <Box 
+                      sx={{ 
+                        p: { xs: 1.5, sm: 2 }, 
+                        border: '1px solid #f59e0b', 
+                        borderRadius: 1, 
+                        backgroundColor: '#ffffff',
+                        cursor: 'pointer',
+                        '&:hover': {
+                          backgroundColor: '#fef3c7'
+                        }
+                      }}
+                      onClick={() => navigate(`/barang?search=${encodeURIComponent(barang.nama)}`)}
+                    >
+                      <Typography variant="subtitle2" sx={{ fontWeight: 'bold', color: '#92400e', fontSize: { xs: '0.875rem', sm: '1rem' } }}>
+                        {barang.nama}
+                      </Typography>
+                      {/* Tampilkan unit tersisa untuk satuan set */}
+                      {barang.satuan === 'set' && barang.unit_per_set ? (
+                        <>
+                          <Typography variant="body2" sx={{ color: '#92400e', fontSize: { xs: '0.75rem', sm: '0.875rem' } }}>
+                            Stok tersisa: {barang.stok_tersisa || 0} set ({(barang.stok_tersisa || 0) * barang.unit_per_set} unit)
+                          </Typography>
+                          <Typography variant="body2" sx={{ color: '#92400e', fontSize: { xs: '0.75rem', sm: '0.875rem' } }}>
+                            Dari total: {barang.jumlah} set ({barang.jumlah * barang.unit_per_set} unit)
+                          </Typography>
+                        </>
+                      ) : (
+                        <>
+                          <Typography variant="body2" sx={{ color: '#92400e', fontSize: { xs: '0.75rem', sm: '0.875rem' } }}>
+                            Stok tersisa: {barang.stok_tersisa || 0} {barang.satuan}
+                          </Typography>
+                          <Typography variant="body2" sx={{ color: '#92400e', fontSize: { xs: '0.75rem', sm: '0.875rem' } }}>
+                            Dari total: {barang.jumlah} {barang.satuan}
+                          </Typography>
+                        </>
+                      )}
+                      <Chip 
+                        label={`${persentaseStok.toFixed(1)}% tersisa`}
+                        size="small"
+                        color={persentaseStok <= 10 ? 'error' : 'warning'}
+                        sx={{ 
+                          mt: 1, 
+                          color: 'white',
+                          fontSize: { xs: '0.75rem', sm: '0.875rem' },
+                          height: { xs: 24, sm: 32 }
+                        }}
+                      />
+                    </Box>
+                  </Grid>
+                );
+              })}
+            </Grid>
+            <Box sx={{ mt: { xs: 1.5, sm: 2 }, textAlign: 'right' }}>
+              <Button
+                variant="outlined"
+                color="warning"
+                onClick={() => navigate('/barang?kategori_tipe=bahan')}
+                endIcon={<ArrowForwardIcon />}
+                size={{ xs: 'small', sm: 'medium' }}
+              >
+                Lihat Semua Bahan
+              </Button>
+            </Box>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Charts and Tables */}
       <Grid container spacing={{ xs: 2, sm: 3 }}>
         {/* Distribusi Barang per Ruangan Chart */}
         <Grid item xs={12} lg={7}>
           <Card sx={{ height: '100%' }}>
-            <CardContent sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-              <Typography variant="h6" gutterBottom>
+            <CardContent sx={{ height: '100%', display: 'flex', flexDirection: 'column', p: { xs: 2, sm: 3 } }}>
+              <Typography variant="h6" gutterBottom sx={{ fontSize: { xs: '1rem', sm: '1.25rem' } }}>
                 Distribusi Barang per Ruangan
               </Typography>
               {loading ? (
-                <Skeleton variant="rectangular" height={300} />
+                <Skeleton variant="rectangular" height="300px" />
               ) : (
                 <Box sx={{ 
-                  height: { xs: 250, sm: 300 },
+                  height: { xs: 200, sm: 250, md: 300 },
                   width: '100%',
                   overflow: 'hidden'
                 }}>
-                  <Bar data={barChartData} options={{
-                    ...barChartOptions,
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    scales: {
-                      ...barChartOptions.scales,
-                      x: {
-                        ticks: {
-                          maxRotation: 45,
-                          minRotation: 0
+                  <Bar 
+                    key={`bar-chart-${barangPerLokasi.length}`}
+                    ref={barChartRef}
+                    data={barChartData} 
+                    options={{
+                      ...barChartOptions,
+                      responsive: true,
+                      maintainAspectRatio: false,
+                      scales: {
+                        ...barChartOptions.scales,
+                        x: {
+                          ticks: {
+                            maxRotation: 45,
+                            minRotation: 0,
+                            font: {
+                              size: 12
+                            }
+                          }
+                        },
+                        y: {
+                          ticks: {
+                            font: {
+                              size: 12
+                            }
+                          }
                         }
                       }
-                    }
-                  }} />
+                    }} 
+                  />
                 </Box>
               )}
             </CardContent>
@@ -351,48 +490,56 @@ const Dashboard = () => {
         {/* Distribusi Barang per Kondisi Chart */}
         <Grid item xs={12} lg={5}>
           <Card sx={{ height: '100%' }}>
-            <CardContent sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-              <Typography variant="h6" gutterBottom>
+            <CardContent sx={{ height: '100%', display: 'flex', flexDirection: 'column', p: { xs: 2, sm: 3 } }}>
+              <Typography variant="h6" gutterBottom sx={{ fontSize: { xs: '1rem', sm: '1.25rem' } }}>
                 Distribusi Barang per Kondisi
               </Typography>
               {loading ? (
-                <Skeleton variant="rectangular" height={300} />
+                <Skeleton variant="circular" width="250px" height="250px" sx={{ mx: 'auto' }} />
               ) : (
                 <Box sx={{ 
-                  height: { xs: 250, sm: 300 }, 
+                  height: { xs: 200, sm: 250, md: 300 }, 
                   display: 'flex', 
                   justifyContent: 'center', 
                   alignItems: 'center',
                   width: '100%'
                 }}>
-                  <Pie data={pieChartData} options={{
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                      legend: {
-                        position: 'bottom',
-                        labels: {
-                          padding: 20,
-                          usePointStyle: true
+                  <Pie 
+                    key={`pie-chart-${distribusiPerKondisi.length}`}
+                    ref={pieChartRef}
+                    data={pieChartData} 
+                    options={{
+                      responsive: true,
+                      maintainAspectRatio: false,
+                      plugins: {
+                        legend: {
+                          position: 'bottom',
+                          labels: {
+                            padding: 20,
+                            usePointStyle: true,
+                            font: {
+                              size: 12
+                            }
+                          }
                         }
-                      }
-                    },
-                    onClick: (event, elements) => {
-                      if (elements.length > 0) {
-                        const elementIndex = elements[0].index;
-                        const kondisiLabel = pieChartData.labels[elementIndex];
-                        // Map display name back to backend value
-                        let kondisiValue = '';
-                        if (kondisiLabel === 'Baik') kondisiValue = 'baik';
-                        else if (kondisiLabel === 'Rusak Ringan') kondisiValue = 'rusak_ringan';
-                        else if (kondisiLabel === 'Rusak Berat') kondisiValue = 'rusak_berat';
-                        
-                        if (kondisiValue) {
-                          navigate(`/barang?kondisi=${encodeURIComponent(kondisiValue)}`);
+                      },
+                      onClick: (event, elements) => {
+                        if (elements.length > 0) {
+                          const elementIndex = elements[0].index;
+                          const kondisiLabel = pieChartData.labels[elementIndex];
+                          // Map display name back to backend value
+                          let kondisiValue = '';
+                          if (kondisiLabel === 'Baik') kondisiValue = 'baik';
+                          else if (kondisiLabel === 'Rusak Ringan') kondisiValue = 'rusak_ringan';
+                          else if (kondisiLabel === 'Rusak Berat') kondisiValue = 'rusak_berat';
+                          
+                          if (kondisiValue) {
+                            navigate(`/barang?kondisi=${encodeURIComponent(kondisiValue)}`);
+                          }
                         }
-                      }
-                    },
-                  }} />
+                      },
+                    }} 
+                  />
                 </Box>
               )}
             </CardContent>
@@ -402,7 +549,7 @@ const Dashboard = () => {
         {/* Recent Peminjaman Table */}
         <Grid item xs={12} md={6}>
           <Card sx={{ height: '100%' }}>
-            <CardContent sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+            <CardContent sx={{ height: '100%', display: 'flex', flexDirection: 'column', p: { xs: 2, sm: 3 } }}>
               <Box sx={{ 
                 display: 'flex', 
                 justifyContent: 'space-between', 
@@ -411,33 +558,34 @@ const Dashboard = () => {
                 flexDirection: { xs: 'column', sm: 'row' },
                 gap: { xs: 1, sm: 0 }
               }}>
-                <Typography variant="h6">Peminjaman Aktif</Typography>
+                <Typography variant="h6" sx={{ fontSize: { xs: '1rem', sm: '1.25rem' } }}>Peminjaman Aktif</Typography>
                 <Button
                   size="small"
                   endIcon={<ArrowForwardIcon />}
                   onClick={() => navigate('/peminjaman')}
+                  sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}
                 >
                   Lihat Semua
                 </Button>
               </Box>
               {loading ? (
-                <Skeleton variant="rectangular" height={200} />
+                <Skeleton variant="rectangular" height="200px" />
               ) : (
                 <TableContainer component={Paper} sx={{ boxShadow: 'none', overflowX: 'auto', flex: 1 }}>
                   <Table size="small">
                     <TableHead>
                       <TableRow>
-                        <TableCell>Peminjam</TableCell>
-                        <TableCell sx={{ display: { xs: 'none', sm: 'table-cell' } }}>Tanggal Pinjam</TableCell>
-                        <TableCell>Status</TableCell>
-                        <TableCell align="right">Aksi</TableCell>
+                        <TableCell sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}>Peminjam</TableCell>
+                        <TableCell sx={{ display: { xs: 'none', md: 'table-cell' }, fontSize: { xs: '0.75rem', sm: '0.875rem' } }}>Tanggal Pinjam</TableCell>
+                        <TableCell sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}>Status</TableCell>
+                        <TableCell align="right" sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}>Aksi</TableCell>
                       </TableRow>
                     </TableHead>
                     <TableBody>
                       {recentPeminjaman.length === 0 ? (
                         <TableRow>
                           <TableCell colSpan={4} align="center">
-                            <Typography variant="body2" color="text.secondary" sx={{ py: 3 }}>
+                            <Typography variant="body2" color="text.secondary" sx={{ py: 3, fontSize: { xs: '0.75rem', sm: '0.875rem' } }}>
                               Tidak ada peminjaman aktif
                             </Typography>
                           </TableCell>
@@ -446,12 +594,12 @@ const Dashboard = () => {
                         recentPeminjaman.map((row) => (
                           <TableRow key={row.id}>
                             <TableCell>
-                              <Typography variant="body2" noWrap>
+                              <Typography variant="body2" noWrap sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}>
                                 {row.nama_peminjam}
                               </Typography>
                             </TableCell>
-                            <TableCell sx={{ display: { xs: 'none', sm: 'table-cell' } }}>
-                              <Typography variant="body2">
+                            <TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}>
+                              <Typography variant="body2" sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}>
                                 {formatDate(row.tanggal_pinjam)}
                               </Typography>
                             </TableCell>
@@ -462,7 +610,9 @@ const Dashboard = () => {
                                 size="small"
                                 sx={{
                                   color: 'white',
-                                  fontWeight: 'bold'
+                                  fontWeight: 'bold',
+                                  fontSize: { xs: '0.7rem', sm: '0.75rem' },
+                                  height: { xs: 20, sm: 24 }
                                 }}
                               />
                             </TableCell>
@@ -470,6 +620,7 @@ const Dashboard = () => {
                               <Button
                                 size="small"
                                 onClick={() => navigate(`/peminjaman/${row.id}`)}
+                                sx={{ fontSize: { xs: '0.7rem', sm: '0.75rem' } }}
                               >
                                 Detail
                               </Button>
@@ -488,7 +639,7 @@ const Dashboard = () => {
         {/* Recent Activities Table */}
         <Grid item xs={12} md={6}>
           <Card sx={{ height: '100%' }}>
-            <CardContent sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+            <CardContent sx={{ height: '100%', display: 'flex', flexDirection: 'column', p: { xs: 2, sm: 3 } }}>
               <Box sx={{ 
                 display: 'flex', 
                 justifyContent: 'space-between', 
@@ -497,33 +648,34 @@ const Dashboard = () => {
                 flexDirection: { xs: 'column', sm: 'row' },
                 gap: { xs: 1, sm: 0 }
               }}>
-                <Typography variant="h6">Aktivitas Terbaru</Typography>
+                <Typography variant="h6" sx={{ fontSize: { xs: '1rem', sm: '1.25rem' } }}>Aktivitas Terbaru</Typography>
                 <Button
                   size="small"
                   endIcon={<ArrowForwardIcon />}
                   onClick={() => navigate('/histori-aktivitas')}
+                  sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}
                 >
                   Lihat Semua
                 </Button>
               </Box>
               {loading ? (
-                <Skeleton variant="rectangular" height={200} />
+                <Skeleton variant="rectangular" height="200px" />
               ) : (
                 <TableContainer component={Paper} sx={{ boxShadow: 'none', overflowX: 'auto', flex: 1 }}>
                   <Table size="small">
                     <TableHead>
                       <TableRow>
-                        <TableCell>Pengguna</TableCell>
-                        <TableCell>Aktivitas</TableCell>
-                        <TableCell sx={{ display: { xs: 'none', sm: 'table-cell' } }}>Modul</TableCell>
-                        <TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}>Waktu</TableCell>
+                        <TableCell sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}>Pengguna</TableCell>
+                        <TableCell sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}>Aktivitas</TableCell>
+                        <TableCell sx={{ display: { xs: 'none', md: 'table-cell' }, fontSize: { xs: '0.75rem', sm: '0.875rem' } }}>Modul</TableCell>
+                        <TableCell sx={{ display: { xs: 'none', lg: 'table-cell' }, fontSize: { xs: '0.75rem', sm: '0.875rem' } }}>Waktu</TableCell>
                       </TableRow>
                     </TableHead>
                     <TableBody>
                       {recentAktivitas.length === 0 ? (
                         <TableRow>
-                          <TableCell colSpan={{ xs: 2, sm: 3, md: 4 }} align="center">
-                            <Typography variant="body2" color="text.secondary">
+                          <TableCell colSpan={{ xs: 2, md: 3, lg: 4 }} align="center">
+                            <Typography variant="body2" color="text.secondary" sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}>
                               Tidak ada data aktivitas
                             </Typography>
                           </TableCell>
@@ -532,7 +684,7 @@ const Dashboard = () => {
                         recentAktivitas.map((aktivitas) => (
                           <TableRow key={aktivitas.id}>
                             <TableCell>
-                              <Typography variant="body2" noWrap>
+                              <Typography variant="body2" noWrap sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}>
                                 {aktivitas.pengguna?.nama || 'N/A'}
                               </Typography>
                             </TableCell>
@@ -551,6 +703,8 @@ const Dashboard = () => {
                                   '& .MuiChip-label': {
                                     color: 'white'
                                   },
+                                  fontSize: { xs: '0.7rem', sm: '0.75rem' },
+                                  height: { xs: 20, sm: 24 },
                                   ...(aktivitas.jenis_aktivitas === 'logout' && {
                                     backgroundColor: '#424242',
                                     '& .MuiChip-label': {
@@ -561,15 +715,15 @@ const Dashboard = () => {
                                 }}
                               />
                             </TableCell>
-                            <TableCell sx={{ display: { xs: 'none', sm: 'table-cell' } }}>
-                              <Typography variant="body2">
+                            <TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}>
+                              <Typography variant="body2" sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}>
                                 {getModulLabel(aktivitas.modul)}
                               </Typography>
                             </TableCell>
-                            <TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}>
+                            <TableCell sx={{ display: { xs: 'none', lg: 'table-cell' } }}>
                               <Box>
-                                <Typography variant="body2">{dayjs(aktivitas.waktu_aktivitas).locale('id').format('DD MMMM YYYY')}</Typography>
-                                <Typography variant="body2" color="text.secondary">{dayjs(aktivitas.waktu_aktivitas).locale('id').format('HH:mm')}</Typography>
+                                <Typography variant="body2" sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}>{dayjs(aktivitas.waktu_aktivitas).locale('id').format('DD MMMM YYYY')}</Typography>
+                                <Typography variant="body2" color="text.secondary" sx={{ fontSize: { xs: '0.7rem', sm: '0.75rem' } }}>{dayjs(aktivitas.waktu_aktivitas).locale('id').format('HH:mm')}</Typography>
                               </Box>
                             </TableCell>
                           </TableRow>

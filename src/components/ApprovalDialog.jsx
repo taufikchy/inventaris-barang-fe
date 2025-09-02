@@ -77,11 +77,18 @@ const ApprovalDialog = ({
 
   return (
     <Dialog open={open} onClose={loading ? null : handleClose} maxWidth="sm" fullWidth>
-      <DialogTitle>Persetujuan Peminjaman</DialogTitle>
-      <DialogContent>
-        <Box sx={{ mb: 3 }}>
+      <DialogTitle sx={{
+        fontSize: { xs: '1.1rem', sm: '1.25rem' },
+        padding: { xs: '12px 16px', sm: '16px 24px' }
+      }}>Persetujuan Peminjaman</DialogTitle>
+      <DialogContent sx={{
+        padding: { xs: '8px 16px', sm: '16px 24px' }
+      }}>
+        <Box sx={{ mb: { xs: 2, sm: 3 } }}>
           <FormControl component="fieldset">
-            <FormLabel component="legend">Status Persetujuan</FormLabel>
+            <FormLabel component="legend" sx={{
+              fontSize: { xs: '0.875rem', sm: '1rem' }
+            }}>Status Persetujuan</FormLabel>
             <RadioGroup
               row
               name="status"
@@ -92,11 +99,21 @@ const ApprovalDialog = ({
                 value="disetujui"
                 control={<Radio />}
                 label="Disetujui"
+                sx={{
+                  '& .MuiFormControlLabel-label': {
+                    fontSize: { xs: '0.875rem', sm: '1rem' }
+                  }
+                }}
               />
               <FormControlLabel
                 value="ditolak"
                 control={<Radio />}
                 label="Ditolak"
+                sx={{
+                  '& .MuiFormControlLabel-label': {
+                    fontSize: { xs: '0.875rem', sm: '1rem' }
+                  }
+                }}
               />
             </RadioGroup>
           </FormControl>
@@ -105,12 +122,20 @@ const ApprovalDialog = ({
         <TextField
           label="Catatan Persetujuan"
           multiline
-          rows={4}
+          rows={{ xs: 3, sm: 4 }}
           fullWidth
           value={catatan}
           onChange={(e) => setCatatan(e.target.value)}
           margin="normal"
           placeholder={status === 'ditolak' ? 'Berikan alasan penolakan' : 'Catatan tambahan (opsional)'}
+          sx={{
+            '& .MuiInputLabel-root': {
+              fontSize: { xs: '0.875rem', sm: '1rem' }
+            },
+            '& .MuiInputBase-input': {
+              fontSize: { xs: '0.875rem', sm: '1rem' }
+            }
+          }}
         />
 
         {status === 'disetujui' && (
@@ -121,8 +146,20 @@ const ApprovalDialog = ({
           </Box>
         )}
       </DialogContent>
-      <DialogActions>
-        <Button onClick={handleClose} disabled={loading}>
+      <DialogActions sx={{
+        flexDirection: { xs: 'column', sm: 'row' },
+        gap: { xs: 1, sm: 0 },
+        padding: { xs: '8px 16px', sm: '8px 24px' }
+      }}>
+        <Button 
+          onClick={handleClose} 
+          disabled={loading}
+          sx={{
+            fontSize: { xs: '0.875rem', sm: '1rem' },
+            padding: { xs: '6px 12px', sm: '8px 16px' },
+            width: { xs: '100%', sm: 'auto' }
+          }}
+        >
           Batal
         </Button>
         <Button
@@ -131,6 +168,11 @@ const ApprovalDialog = ({
           color={status === 'disetujui' ? 'primary' : 'error'}
           disabled={loading}
           startIcon={loading && <CircularProgress size={20} />}
+          sx={{
+            fontSize: { xs: '0.875rem', sm: '1rem' },
+            padding: { xs: '6px 12px', sm: '8px 16px' },
+            width: { xs: '100%', sm: 'auto' }
+          }}
         >
           {status === 'disetujui' ? 'Setujui' : 'Tolak'} Peminjaman
         </Button>

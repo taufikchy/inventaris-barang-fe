@@ -78,16 +78,27 @@ const Header = ({ open, setOpen }) => {
           aria-label="open drawer"
           edge="start"
           onClick={handleDrawerToggle}
-          sx={{ mr: 2 }}
+          sx={{ 
+            mr: { xs: 1, sm: 2 },
+            padding: { xs: '6px', sm: '8px' }
+          }}
         >
-          <MenuIcon />
+          <MenuIcon sx={{ fontSize: { xs: '1.25rem', sm: '1.5rem' } }} />
         </IconButton>
 
         <Typography
           variant="h6"
           noWrap
           component="div"
-          sx={{ display: { xs: 'none', sm: 'block' }, fontWeight: 600 }}
+          sx={{ 
+            display: { xs: 'none', sm: 'block' }, 
+            fontWeight: 600,
+            fontSize: {
+              xs: '1rem',
+              sm: '1.1rem',
+              md: '1.25rem'
+            }
+          }}
         >
           {isMobile ? 'Inventaris' : 'Sistem Inventaris Barang'}
         </Typography>
@@ -95,11 +106,36 @@ const Header = ({ open, setOpen }) => {
         <Box sx={{ flexGrow: 1 }} />
 
         <Box sx={{ display: 'flex', alignItems: 'center' }}>
-          <Box sx={{ mr: 2, display: { xs: 'none', sm: 'block' }, textAlign: 'right' }}>
-            <Typography variant="subtitle1" sx={{ display: 'block', lineHeight: 1, fontWeight: 600 }}>
+          <Box sx={{ 
+            mr: { xs: 1, sm: 2 }, 
+            display: { xs: 'none', sm: 'block' }, 
+            textAlign: 'right' 
+          }}>
+            <Typography 
+              variant="subtitle1" 
+              sx={{ 
+                display: 'block', 
+                lineHeight: 1, 
+                fontWeight: 600,
+                fontSize: {
+                  xs: '0.875rem',
+                  sm: '1rem'
+                }
+              }}
+            >
               {user?.nama || ''}
             </Typography>
-            <Typography variant="body1" color="text.secondary" sx={{ display: 'block' }}>
+            <Typography 
+              variant="body1" 
+              color="text.secondary" 
+              sx={{ 
+                display: 'block',
+                fontSize: {
+                  xs: '0.75rem',
+                  sm: '0.875rem'
+                }
+              }}
+            >
               {getRoleDisplayName(user?.peran)}
             </Typography>
           </Box>
@@ -112,16 +148,22 @@ const Header = ({ open, setOpen }) => {
               aria-haspopup="true"
               onClick={handleMenu}
               color="inherit"
+              sx={{
+                padding: { xs: '6px', sm: '8px' }
+              }}
             >
               <Avatar
                 sx={{
-                  width: 32,
-                  height: 32,
+                  width: { xs: 28, sm: 32 },
+                  height: { xs: 28, sm: 32 },
                   bgcolor: 'primary.main',
-                  fontSize: '0.875rem',
+                  fontSize: {
+                    xs: '0.75rem',
+                    sm: '0.875rem'
+                  },
                 }}
               >
-                {user?.nama?.charAt(0) || <AccountCircle />}
+                {user?.nama?.charAt(0) || <AccountCircle sx={{ fontSize: { xs: '1rem', sm: '1.25rem' } }} />}
               </Avatar>
             </IconButton>
           </Tooltip>
@@ -141,17 +183,53 @@ const Header = ({ open, setOpen }) => {
             open={Boolean(anchorEl)}
             onClose={handleClose}
           >
-            <Box sx={{ px: 2, py: 1 }}>
-              <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
+            <Box sx={{ px: { xs: 1.5, sm: 2 }, py: { xs: 0.75, sm: 1 } }}>
+              <Typography 
+                variant="subtitle1" 
+                sx={{ 
+                  fontWeight: 600,
+                  fontSize: {
+                    xs: '0.875rem',
+                    sm: '1rem'
+                  }
+                }}
+              >
                 {user?.nama || ''}
               </Typography>
-              <Typography variant="body2" color="text.secondary">
+              <Typography 
+                variant="body2" 
+                color="text.secondary"
+                sx={{
+                  fontSize: {
+                    xs: '0.75rem',
+                    sm: '0.875rem'
+                  }
+                }}
+              >
                 {getRoleDisplayName(user?.peran)}
               </Typography>
             </Box>
             <Divider />
-            <MenuItem onClick={handleLogout}>
-              <Logout fontSize="small" sx={{ mr: 1 }} />
+            <MenuItem 
+              onClick={handleLogout}
+              sx={{
+                fontSize: {
+                  xs: '0.875rem',
+                  sm: '1rem'
+                },
+                py: { xs: 1, sm: 1.5 }
+              }}
+            >
+              <Logout 
+                fontSize="small" 
+                sx={{ 
+                  mr: 1,
+                  fontSize: {
+                    xs: '1rem',
+                    sm: '1.25rem'
+                  }
+                }} 
+              />
               Keluar
             </MenuItem>
           </Menu>

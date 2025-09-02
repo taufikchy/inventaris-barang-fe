@@ -78,6 +78,7 @@ const DataTable = ({
   rowsPerPageOptions = [5, 10, 25],
   defaultRowsPerPage = 10,
   actions,
+  additionalActions,
   emptyMessage = 'Tidak ada data',
   // Server-side pagination props
   page,
@@ -152,10 +153,15 @@ const DataTable = ({
     : rowsWithIndex;
 
   // Calculate empty rows to maintain consistent page height
-  const currentPage = isServerSidePagination ? page : internalPage;
-  const currentRowsPerPage = isServerSidePagination ? externalRowsPerPage : internalRowsPerPage;
-  const totalCount = isServerSidePagination ? count : filteredRows.length;
-  const emptyRows = currentPage > 0 ? Math.max(0, (1 + currentPage) * currentRowsPerPage - totalCount) : 0;
+  const currentPage = isServerSidePagination ? (page || 0) : internalPage;
+  const currentRowsPerPage = isServerSidePagination ? (externalRowsPerPage || defaultRowsPerPage) : internalRowsPerPage;
+  const totalCount = isServerSidePagination ? (count || 0) : filteredRows.length;
+  
+  // Ensure page is within valid range
+  const maxPage = totalCount > 0 ? Math.max(0, Math.ceil(totalCount / currentRowsPerPage) - 1) : 0;
+  const validCurrentPage = Math.min(currentPage, maxPage);
+  
+  const emptyRows = validCurrentPage > 0 ? Math.max(0, (1 + validCurrentPage) * currentRowsPerPage - totalCount) : 0;
 
   // Get displayed rows
   let displayedRows;
@@ -185,16 +191,22 @@ const DataTable = ({
       <Paper sx={{ width: '100%', mb: 2 }}>
         <Toolbar
           sx={{
-            pl: { sm: 2 },
+            pl: { xs: 1, sm: 2 },
             pr: { xs: 1, sm: 1 },
             display: 'flex',
             justifyContent: 'space-between',
             flexWrap: 'wrap',
-            gap: 2,
+            gap: { xs: 1, sm: 2 },
+            py: { xs: 1, sm: 2 },
+            minHeight: { xs: 56, sm: 64 }
           }}
         >
           <Typography
-            sx={{ flex: '1 1 auto' }}
+            sx={{ 
+              flex: '1 1 auto',
+              fontSize: { xs: '1.1rem', sm: '1.25rem' },
+              fontWeight: 600
+            }}
             variant="h6"
             id="tableTitle"
             component="div"
@@ -205,7 +217,13 @@ const DataTable = ({
             )}
           </Typography>
 
-          <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
+          <Box sx={{ 
+            display: 'flex', 
+            gap: { xs: 0.5, sm: 1 }, 
+            alignItems: 'center',
+            flexWrap: 'wrap',
+            justifyContent: { xs: 'flex-end', sm: 'flex-end' }
+          }}>
             {searchable && (
               <TextField
                 size="small"
@@ -215,18 +233,28 @@ const DataTable = ({
                 InputProps={{
                   startAdornment: (
                     <InputAdornment position="start">
-                      <SearchIcon fontSize="small" />
+                      <SearchIcon sx={{ fontSize: { xs: '1rem', sm: '1.25rem' } }} />
                     </InputAdornment>
                   ),
+                  sx: {
+                    fontSize: { xs: '0.8rem', sm: '0.875rem' },
+                    height: { xs: 32, sm: 40 }
+                  }
                 }}
-                sx={{ minWidth: { xs: '100%', sm: 250 } }}
+                sx={{ 
+                  minWidth: { xs: 150, sm: 200, md: 250 },
+                  '& .MuiInputBase-input': {
+                    fontSize: { xs: '0.8rem', sm: '0.875rem' },
+                    py: { xs: 0.5, sm: 1 }
+                  }
+                }}
               />
             )}
 
             {filterable && (
               <Tooltip title="Filter">
-                <IconButton>
-                  <FilterListIcon />
+                <IconButton sx={{ p: { xs: 0.5, sm: 1 } }}>
+                  <FilterListIcon sx={{ fontSize: { xs: '1.1rem', sm: '1.25rem' } }} />
                 </IconButton>
               </Tooltip>
             )}
@@ -234,16 +262,25 @@ const DataTable = ({
             {refreshable && onRefresh && (
               <Tooltip title="Refresh">
                 <span>
-                  <IconButton onClick={onRefresh} disabled={loading}>
-                    <RefreshIcon />
+                  <IconButton onClick={onRefresh} disabled={loading} sx={{ p: { xs: 0.5, sm: 1 } }}>
+                    <RefreshIcon sx={{ fontSize: { xs: '1.1rem', sm: '1.25rem' } }} />
                   </IconButton>
                 </span>
               </Tooltip>
             )}
+            
+            {additionalActions && additionalActions}
           </Box>
         </Toolbar>
 
-        <TableContainer>
+        <TableContainer 
+          sx={{ 
+            overflowX: 'auto',
+            '& .MuiTable-root': {
+              minWidth: { xs: 800, sm: 900, md: 1000 }
+            }
+          }}
+        >
           <Table
             sx={{ minWidth: 750 }}
             aria-labelledby="tableTitle"
@@ -259,7 +296,13 @@ const DataTable = ({
                     sx={{ 
                       fontWeight: 600,
                       backgroundColor: index % 2 === 0 ? 'var(--primary-color)' : 'var(--primary-light)',
-                      color: 'white'
+                      color: 'white',
+                      padding: { xs: '8px 6px', sm: '16px 12px' },
+                      fontSize: { xs: '0.75rem', sm: '0.875rem' },
+                      lineHeight: 1.5,
+                      borderBottom: '2px solid rgba(255, 255, 255, 0.2)',
+                      minWidth: column.minWidth || 'auto',
+                      maxWidth: column.maxWidth || 'none'
                     }}
                   >
                     {column.sortable !== false ? (
@@ -285,11 +328,16 @@ const DataTable = ({
                   </TableCell>
                 ))}
                 {actions && <TableCell 
+                  key="actions-header"
                   align="center" 
                   sx={{ 
                     fontWeight: 600,
                     backgroundColor: columns.length % 2 === 0 ? 'var(--primary-color)' : 'var(--primary-light)',
-                    color: 'white'
+                    color: 'white',
+                    padding: '16px 12px',
+                    fontSize: '0.875rem',
+                    lineHeight: 1.5,
+                    borderBottom: '2px solid rgba(255, 255, 255, 0.2)'
                   }}
                 >Aksi</TableCell>}
               </TableRow>
@@ -320,13 +368,58 @@ const DataTable = ({
                         const value = row[column.id];
                         const displayIndexForFormat = row.displayIndex !== undefined ? row.displayIndex : index;
                         return (
-                          <TableCell key={column.id} align={column.align || 'center'}>
+                          <TableCell 
+                            key={column.id} 
+                            align={column.align || 'center'}
+                            sx={{
+                              padding: { xs: '8px 12px', sm: '12px 16px' },
+                              fontSize: { xs: '0.8rem', sm: '0.875rem' },
+                              lineHeight: 1.6,
+                              borderBottom: '1px solid rgba(224, 224, 224, 1)',
+                              minWidth: column.minWidth || 'auto',
+                              maxWidth: column.maxWidth || 'none',
+                              wordBreak: 'break-word',
+                              '& .MuiTypography-root': {
+                                margin: 0,
+                                padding: 0,
+                                lineHeight: 'inherit'
+                              },
+                              '& p': {
+                                margin: 0,
+                                padding: 0,
+                                lineHeight: 'inherit'
+                              }
+                            }}
+                          >
                             {column.format ? column.format(value, row, displayIndexForFormat) : value}
                           </TableCell>
                         );
                       })}
                       {actions && (
-                        <TableCell align="center">{actions(row)}</TableCell>
+                        <TableCell 
+                          key="actions" 
+                          align="center"
+                          sx={{
+                            padding: { xs: '8px 12px', sm: '12px 16px' },
+                            fontSize: { xs: '0.8rem', sm: '0.875rem' },
+                            lineHeight: 1.6,
+                            borderBottom: '1px solid rgba(224, 224, 224, 1)',
+                            minWidth: { xs: '80px', sm: '120px' },
+                            whiteSpace: 'nowrap',
+                            '& .MuiTypography-root': {
+                              margin: 0,
+                              padding: 0,
+                              lineHeight: 'inherit'
+                            },
+                            '& p': {
+                              margin: 0,
+                              padding: 0,
+                              lineHeight: 'inherit'
+                            }
+                          }}
+                        >
+                          {actions(row)}
+                        </TableCell>
                       )}
                     </TableRow>
                   );
@@ -352,13 +445,37 @@ const DataTable = ({
           component="div"
           count={totalCount}
           rowsPerPage={currentRowsPerPage}
-          page={currentPage}
+          page={validCurrentPage}
           onPageChange={handleChangePage}
           onRowsPerPageChange={handleChangeRowsPerPage}
           labelRowsPerPage="Baris per halaman:"
           labelDisplayedRows={({ from, to, count }) =>
-            `${from}-${to} dari ${count}`
+            count > 0 ? `${from}-${to} dari ${count}` : '0 dari 0'
           }
+          sx={{
+            '& .MuiTablePagination-toolbar': {
+              px: { xs: 1, sm: 2 },
+              py: { xs: 0.5, sm: 1 },
+              minHeight: { xs: 48, sm: 52 },
+              flexWrap: 'wrap',
+              gap: { xs: 1, sm: 0 }
+            },
+            '& .MuiTablePagination-selectLabel, & .MuiTablePagination-displayedRows': {
+              fontSize: { xs: '0.75rem', sm: '0.875rem' },
+              margin: 0
+            },
+            '& .MuiTablePagination-select': {
+              fontSize: { xs: '0.75rem', sm: '0.875rem' }
+            },
+            '& .MuiTablePagination-actions': {
+              '& .MuiIconButton-root': {
+                p: { xs: 0.5, sm: 1 },
+                '& .MuiSvgIcon-root': {
+                  fontSize: { xs: '1rem', sm: '1.25rem' }
+                }
+              }
+            }
+          }}
         />
       </Paper>
     </Box>

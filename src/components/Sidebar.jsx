@@ -28,6 +28,7 @@ import {
   Menu as MenuIcon,
   History as HistoryIcon,
   Visibility as VisibilityIcon,
+  MoveToInbox as MoveToInboxIcon,
 } from '@mui/icons-material';
 
 const drawerWidth = 240;
@@ -72,6 +73,11 @@ const Sidebar = ({ open, setOpen }) => {
       path: '/peminjaman',
     },
     {
+      text: 'Transaksi Inventaris',
+      icon: <MoveToInboxIcon />,
+      path: '/transaksi-inventaris',
+    },
+    {
       text: 'Histori Aktivitas',
       icon: <HistoryIcon />,
       path: '/histori-aktivitas',
@@ -99,15 +105,31 @@ const Sidebar = ({ open, setOpen }) => {
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
-          p: 2,
+          p: { xs: 1.5, sm: 2 },
         }}
       >
-        <Typography variant="h6" sx={{ fontWeight: 600, color: 'primary.main' }}>
+        <Typography 
+          variant="h6" 
+          sx={{ 
+            fontWeight: 600, 
+            color: 'primary.main',
+            fontSize: {
+              xs: '1rem',
+              sm: '1.1rem',
+              md: '1.25rem'
+            }
+          }}
+        >
           Inventaris Barang
         </Typography>
         {isMobile && (
-          <IconButton onClick={handleDrawerToggle}>
-            <ChevronLeftIcon />
+          <IconButton 
+            onClick={handleDrawerToggle}
+            sx={{
+              padding: { xs: '6px', sm: '8px' }
+            }}
+          >
+            <ChevronLeftIcon sx={{ fontSize: { xs: '1.25rem', sm: '1.5rem' } }} />
           </IconButton>
         )}
       </Box>
@@ -135,16 +157,31 @@ const Sidebar = ({ open, setOpen }) => {
                 borderRadius: '0 20px 20px 0',
                 mr: 1,
                 mt: 0.5,
+                py: { xs: 1, sm: 1.5 },
+                px: { xs: 1.5, sm: 2 },
               }}
             >
               <ListItemIcon
                 sx={{
                   color: location.pathname === item.path ? 'white' : 'primary.main',
+                  minWidth: { xs: '40px', sm: '56px' },
+                  '& .MuiSvgIcon-root': {
+                    fontSize: { xs: '1.25rem', sm: '1.5rem' }
+                  }
                 }}
               >
                 {item.icon}
               </ListItemIcon>
-              <ListItemText primary={item.text} />
+              <ListItemText 
+                primary={item.text}
+                primaryTypographyProps={{
+                  fontSize: {
+                    xs: '0.875rem',
+                    sm: '1rem'
+                  },
+                  fontWeight: 500
+                }}
+              />
             </ListItemButton>
           </ListItem>
         ))}
@@ -155,10 +192,13 @@ const Sidebar = ({ open, setOpen }) => {
             <Typography
               variant="overline"
               sx={{
-                px: 2,
+                px: { xs: 1.5, sm: 2 },
                 color: 'text.secondary',
                 fontWeight: 600,
-                fontSize: '0.75rem',
+                fontSize: {
+                  xs: '0.625rem',
+                  sm: '0.75rem'
+                },
               }}
             >
               {(() => {
@@ -190,16 +230,31 @@ const Sidebar = ({ open, setOpen }) => {
                     borderRadius: '0 20px 20px 0',
                     mr: 1,
                     mt: 0.5,
+                    py: { xs: 1, sm: 1.5 },
+                    px: { xs: 1.5, sm: 2 },
                   }}
                 >
                   <ListItemIcon
                     sx={{
                       color: location.pathname === item.path ? 'white' : 'primary.main',
+                      minWidth: { xs: '40px', sm: '56px' },
+                      '& .MuiSvgIcon-root': {
+                        fontSize: { xs: '1.25rem', sm: '1.5rem' }
+                      }
                     }}
                   >
                     {item.icon}
                   </ListItemIcon>
-                  <ListItemText primary={item.text} />
+                  <ListItemText 
+                    primary={item.text}
+                    primaryTypographyProps={{
+                      fontSize: {
+                        xs: '0.875rem',
+                        sm: '1rem'
+                      },
+                      fontWeight: 500
+                    }}
+                  />
                 </ListItemButton>
               </ListItem>
             ))}

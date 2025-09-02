@@ -321,6 +321,7 @@ const Pengguna = () => {
             label={label}
             color={color}
             size="small"
+            sx={{ color: 'white' }}
           />
         );
       }
@@ -435,8 +436,25 @@ onActionClick={isKepalaLab() ? () => handleOpenForm() : undefined}
       />
 
       {/* Add/Edit Form Dialog */}
-      <Dialog open={openForm} onClose={handleCloseForm} maxWidth="sm" fullWidth>
-        <DialogTitle>{currentUser ? 'Edit Pengguna' : 'Tambah Pengguna'}</DialogTitle>
+      <Dialog 
+        open={openForm} 
+        onClose={handleCloseForm} 
+        maxWidth="sm" 
+        fullWidth
+        fullScreen={{ xs: true, sm: false }}
+      >
+        <DialogTitle sx={{
+          fontSize: {
+            xs: '1.1rem',
+            sm: '1.25rem'
+          },
+          padding: {
+            xs: '16px',
+            sm: '24px'
+          }
+        }}>
+          {currentUser ? 'Edit Pengguna' : 'Tambah Pengguna'}
+        </DialogTitle>
         <Formik
           initialValues={{
             nama: currentUser?.nama || '',
@@ -453,7 +471,12 @@ onActionClick={isKepalaLab() ? () => handleOpenForm() : undefined}
         >
           {({ values, errors, touched, handleChange, handleBlur, isSubmitting }) => (
             <Form>
-              <DialogContent>
+              <DialogContent sx={{
+                padding: {
+                  xs: '16px',
+                  sm: '24px'
+                }
+              }}>
                 <TextField
                   fullWidth
                   margin="normal"
@@ -466,6 +489,26 @@ onActionClick={isKepalaLab() ? () => handleOpenForm() : undefined}
                   error={touched.nama && Boolean(errors.nama)}
                   helperText={touched.nama && errors.nama}
                   disabled={!(isKepalaLab() || isAdmin() || user.peran === 'toolman' || user.peran === 'sarana')} // Admin, Kepala Lab, Toolman, Sarana bisa edit nama
+                  sx={{
+                    '& .MuiInputLabel-root': {
+                      fontSize: {
+                        xs: '0.875rem',
+                        sm: '1rem'
+                      }
+                    },
+                    '& .MuiInputBase-input': {
+                      fontSize: {
+                        xs: '0.875rem',
+                        sm: '1rem'
+                      }
+                    },
+                    '& .MuiFormHelperText-root': {
+                      fontSize: {
+                        xs: '0.75rem',
+                        sm: '0.875rem'
+                      }
+                    }
+                  }}
                 />
                 
                 <TextField
@@ -480,6 +523,26 @@ onActionClick={isKepalaLab() ? () => handleOpenForm() : undefined}
                   error={touched.nama_pengguna && Boolean(errors.nama_pengguna)}
                   helperText={touched.nama_pengguna && errors.nama_pengguna}
                   disabled={!isKepalaLab()}
+                  sx={{
+                    '& .MuiInputLabel-root': {
+                      fontSize: {
+                        xs: '0.875rem',
+                        sm: '1rem'
+                      }
+                    },
+                    '& .MuiInputBase-input': {
+                      fontSize: {
+                        xs: '0.875rem',
+                        sm: '1rem'
+                      }
+                    },
+                    '& .MuiFormHelperText-root': {
+                      fontSize: {
+                        xs: '0.75rem',
+                        sm: '0.875rem'
+                      }
+                    }
+                  }}
                 />
                 
 
@@ -503,11 +566,40 @@ onActionClick={isKepalaLab() ? () => handleOpenForm() : undefined}
                         <IconButton
                           onClick={handleTogglePasswordVisibility}
                           edge="end"
+                          sx={{
+                            padding: {
+                              xs: '6px',
+                              sm: '8px'
+                            }
+                          }}
                         >
-                          {showPassword ? <VisibilityOffIcon /> : <VisibilityIcon />}
+                          {showPassword ? 
+                            <VisibilityOffIcon sx={{ fontSize: { xs: '1rem', sm: '1.25rem' } }} /> : 
+                            <VisibilityIcon sx={{ fontSize: { xs: '1rem', sm: '1.25rem' } }} />
+                          }
                         </IconButton>
                       </InputAdornment>
                     ),
+                  }}
+                  sx={{
+                    '& .MuiInputLabel-root': {
+                      fontSize: {
+                        xs: '0.875rem',
+                        sm: '1rem'
+                      }
+                    },
+                    '& .MuiInputBase-input': {
+                      fontSize: {
+                        xs: '0.875rem',
+                        sm: '1rem'
+                      }
+                    },
+                    '& .MuiFormHelperText-root': {
+                      fontSize: {
+                        xs: '0.75rem',
+                        sm: '0.875rem'
+                      }
+                    }
                   }}
                 />
                 
@@ -516,6 +608,26 @@ onActionClick={isKepalaLab() ? () => handleOpenForm() : undefined}
                   margin="normal"
                   error={touched.peran && Boolean(errors.peran)}
                   disabled={!isKepalaLab()}
+                  sx={{
+                    '& .MuiInputLabel-root': {
+                      fontSize: {
+                        xs: '0.875rem',
+                        sm: '1rem'
+                      }
+                    },
+                    '& .MuiSelect-select': {
+                      fontSize: {
+                        xs: '0.875rem',
+                        sm: '1rem'
+                      }
+                    },
+                    '& .MuiFormHelperText-root': {
+                      fontSize: {
+                        xs: '0.75rem',
+                        sm: '0.875rem'
+                      }
+                    }
+                  }}
                 >
                   <InputLabel id="peran-label">Role</InputLabel>
                   <Select
@@ -527,10 +639,10 @@ onActionClick={isKepalaLab() ? () => handleOpenForm() : undefined}
                     onChange={handleChange}
                     onBlur={handleBlur}
                   >
-                    <MenuItem value="admin">Admin</MenuItem>
-                    <MenuItem value="kepala_lab">Kepala Lab</MenuItem>
-                    <MenuItem value="toolman">Toolman</MenuItem>
-                    <MenuItem value="sarana">Sarana</MenuItem>
+                    <MenuItem value="admin" sx={{ fontSize: { xs: '0.875rem', sm: '1rem' } }}>Admin</MenuItem>
+                    <MenuItem value="kepala_lab" sx={{ fontSize: { xs: '0.875rem', sm: '1rem' } }}>Kepala Lab</MenuItem>
+                    <MenuItem value="toolman" sx={{ fontSize: { xs: '0.875rem', sm: '1rem' } }}>Toolman</MenuItem>
+                    <MenuItem value="sarana" sx={{ fontSize: { xs: '0.875rem', sm: '1rem' } }}>Sarana</MenuItem>
                   </Select>
                   {touched.peran && errors.peran && (
                     <FormHelperText>{errors.peran}</FormHelperText>
@@ -538,12 +650,35 @@ onActionClick={isKepalaLab() ? () => handleOpenForm() : undefined}
                 </FormControl>
               </DialogContent>
               
-              <DialogActions sx={{ px: 3, pb: 2 }}>
-                <Button onClick={handleCloseForm}>Batal</Button>
+              <DialogActions sx={{ 
+                px: { xs: 2, sm: 3 }, 
+                pb: { xs: 1.5, sm: 2 },
+                flexDirection: { xs: 'column', sm: 'row' },
+                gap: { xs: 1, sm: 0 }
+              }}>
+                <Button 
+                  onClick={handleCloseForm}
+                  sx={{
+                    width: { xs: '100%', sm: 'auto' },
+                    fontSize: {
+                      xs: '0.875rem',
+                      sm: '1rem'
+                    }
+                  }}
+                >
+                  Batal
+                </Button>
                 <Button 
                   type="submit" 
                   variant="contained" 
                   disabled={isSubmitting}
+                  sx={{
+                    width: { xs: '100%', sm: 'auto' },
+                    fontSize: {
+                      xs: '0.875rem',
+                      sm: '1rem'
+                    }
+                  }}
                 >
                   {isSubmitting ? 'Menyimpan...' : 'Simpan'}
                 </Button>

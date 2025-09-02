@@ -171,6 +171,20 @@ const Barang = () => {
     fetchBarangs();
   }, [filters]);
 
+  // Listen for inventory updates from other components
+  useEffect(() => {
+    const handleInventoryUpdate = (event) => {
+      console.log('Inventory updated, refreshing barang data...', event.detail);
+      fetchBarangs();
+    };
+
+    window.addEventListener('inventoryUpdated', handleInventoryUpdate);
+
+    return () => {
+      window.removeEventListener('inventoryUpdated', handleInventoryUpdate);
+    };
+  }, []);
+
   // Handle delete confirmation
   const handleDeleteConfirm = (barang) => {
     setCurrentBarang(barang);
@@ -195,7 +209,31 @@ const Barang = () => {
       setCurrentBarang(null);
     } catch (error) {
       console.error('Error deleting barang:', error);
-      toast.error('Gagal menghapus barang: ' + (error.response?.data?.pesan || error.message));
+      
+      let errorMessage = 'Gagal menghapus barang';
+      
+      if (error.response) {
+        const status = error.response.status;
+        const responseMessage = error.response.data?.pesan || error.response.data?.message;
+        
+        switch (status) {
+          case 400:
+            errorMessage = 'Barang tidak dapat dihapus. Kemungkinan barang memiliki riwayat peminjaman atau sedang dipinjam.';
+            break;
+          case 403:
+            errorMessage = 'Anda tidak memiliki izin untuk menghapus barang. Hanya Kepala Lab yang dapat menghapus barang.';
+            break;
+          case 404:
+            errorMessage = 'Barang tidak ditemukan.';
+            break;
+          default:
+            errorMessage = responseMessage || `Terjadi kesalahan (${status})`;
+        }
+      } else {
+        errorMessage = error.message || 'Terjadi kesalahan jaringan';
+      }
+      
+      toast.error(errorMessage);
     } finally {
       setDeleteLoading(false);
     }
@@ -245,7 +283,7 @@ const Barang = () => {
 
   // Format date
   const formatDate = (dateString) => {
-    const options = { year: 'numeric', month: 'long', day: 'numeric' };
+    const options = { year: 'numeric', month: 'long', day: '2-digit' };
     return new Date(dateString).toLocaleDateString('id-ID', options);
   };
 
@@ -301,34 +339,212 @@ const Barang = () => {
       id: 'no', 
       label: 'No', 
       sortable: true,
-      format: (value, row, displayIndex) => displayIndex + 1 // Menampilkan nomor urut berdasarkan posisi setelah sorting
+      align: 'center',
+      format: (value, row, displayIndex) => (
+        <Typography variant="body2" sx={{ fontWeight: 500, textAlign: 'center' }}>
+          {displayIndex + 1}
+        </Typography>
+      )
     },
-    { id: 'kode_grup', label: 'Kode Grup', sortable: true },
-    { id: 'nama', label: 'Nama Barang', sortable: true },
+    { 
+      id: 'kode_grup', 
+      label: 'Kode Grup', 
+      sortable: true,
+      align: 'center',
+      format: (value) => (
+        <Typography variant="body2" sx={{ fontWeight: 600, color: 'primary.main' }}>
+          {value || '-'}
+        </Typography>
+      )
+    },
+    { 
+      id: 'nama', 
+      label: 'Nama Barang', 
+      sortable: true,
+      align: 'left',
+      format: (value) => (
+        <Typography variant="body2" sx={{ fontWeight: 500, maxWidth: 200, wordWrap: 'break-word' }}>
+          {value || '-'}
+        </Typography>
+      )
+    },
     {
       id: 'kategori',
       label: 'Kategori',
       sortable: true,
-      format: (value) => value?.nama || value || '-',
+      align: 'center',
+      format: (value) => (
+        <Chip 
+          label={value?.nama || value || '-'} 
+          size="small" 
+          variant="outlined"
+          sx={{ 
+            fontWeight: 600,
+            fontSize: '0.75rem',
+            borderWidth: 1.5,
+            '& .MuiChip-label': {
+              px: 1.5,
+              py: 0.5
+            }
+          }}
+        />
+      )
     },
     {
       id: 'tahun_pengadaan',
       label: 'Tahun Pengadaan',
       sortable: true,
-      align: 'center'
+      align: 'center',
+      format: (value) => (
+        <Typography variant="body2" sx={{ fontWeight: 500 }}>
+          {value || '-'}
+        </Typography>
+      )
     },
     {
       id: 'tanggal_perolehan',
-      label: 'Tanggal Pencatatan Barang',
+      label: 'Tanggal Pencatatan',
       sortable: true,
-      format: (value) => formatDate(value),
+      align: 'center',
+      format: (value) => (
+        <Typography variant="body2" sx={{ fontWeight: 500 }}>
+          {value ? formatDate(value) : '-'}
+        </Typography>
+      )
     },
     {
       id: 'jumlah',
       label: 'Jumlah',
       sortable: true,
-      align: 'right',
-      format: (value, row) => `${value} ${row.satuan || 'unit'}` // Menampilkan jumlah dengan satuan
+      align: 'center',
+      format: (value, row) => {
+        // Untuk satuan set, tampilkan unit dalam kurung
+        let jumlahText;
+        if (row.satuan === 'set' && row.unit_per_set) {
+          const totalUnit = value * row.unit_per_set;
+          jumlahText = `${value} set (${totalUnit} unit)`;
+        } else {
+          jumlahText = `${value} ${row.satuan || 'unit'}`;
+        }
+        
+        // Tambahkan indikator untuk kategori bahan
+        if (row.kategori?.tipe === 'bahan') {
+          return (
+            <Box sx={{ textAlign: 'center' }}>
+              <Typography variant="body2" sx={{ fontWeight: 600, color: 'text.primary' }}>
+                {jumlahText}
+              </Typography>
+              <Typography variant="caption" color="primary" sx={{ fontStyle: 'italic', display: 'block', mt: 0.5 }}>
+                (Bahan - dapat digunakan sebagian)
+              </Typography>
+            </Box>
+          );
+        }
+        return (
+          <Typography variant="body2" sx={{ fontWeight: 600, color: 'text.primary' }}>
+            {jumlahText}
+          </Typography>
+        );
+      }
+    },
+    {
+      id: 'stok',
+      label: 'Stok Tersisa',
+      sortable: true,
+      align: 'center',
+      format: (value, row) => {
+        // Hanya tampilkan untuk kategori bahan
+        if (row.kategori?.tipe === 'bahan') {
+          const stok = row.stok || 0;
+          const jumlahAwal = row.jumlah || 0;
+          const persentaseStok = jumlahAwal > 0 ? (stok / jumlahAwal) * 100 : 0;
+          
+          // Tentukan warna berdasarkan persentase stok
+          let chipColor = 'success';
+          let chipLabel = 'Stok Aman';
+          
+          if (persentaseStok <= 10) {
+            chipColor = 'error';
+            chipLabel = 'Stok Kritis';
+          } else if (persentaseStok <= 25) {
+            chipColor = 'warning';
+            chipLabel = 'Stok Menipis';
+          } else if (persentaseStok <= 50) {
+            chipColor = 'info';
+            chipLabel = 'Stok Sedang';
+          }
+          
+          // Untuk kategori bahan dengan satuan set, tampilkan unit tersisa
+          if (row.satuan === 'set' && row.unit_per_set) {
+            const unitTersisaDalamSet = row.unit_tersisa || 0;
+            const totalUnit = jumlahAwal * row.unit_per_set;
+            const totalUnitTersisa = (stok * row.unit_per_set) + unitTersisaDalamSet;
+            
+            // Format tampilan: "0 set + 5 unit" atau "1 set (10 unit)" jika tidak ada sisa unit
+            let displayText;
+            if (unitTersisaDalamSet > 0) {
+              displayText = `${stok} set + ${unitTersisaDalamSet} unit (${totalUnitTersisa} unit)`;
+            } else {
+              displayText = `${stok} set (${totalUnitTersisa} unit)`;
+            }
+            
+            return (
+              <Box sx={{ textAlign: 'center', minWidth: 120 }}>
+                <Typography variant="body2" sx={{ fontWeight: 600, color: 'text.primary', mb: 1 }}>
+                  {displayText}
+                </Typography>
+                <Chip
+                  label={chipLabel}
+                  color={chipColor}
+                  size="small"
+                  sx={{
+                    fontSize: '0.75rem',
+                    fontWeight: 'bold',
+                    minWidth: '90px',
+                    '& .MuiChip-label': { 
+                      color: 'white',
+                      px: 1.5,
+                      py: 0.5
+                    }
+                  }}
+                />
+              </Box>
+            );
+          }
+          
+          return (
+            <Box sx={{ textAlign: 'center', minWidth: 120 }}>
+              <Typography variant="body2" sx={{ fontWeight: 600, color: 'text.primary', mb: 1 }}>
+                {stok} {row.satuan || 'unit'}
+              </Typography>
+              <Chip
+                label={chipLabel}
+                color={chipColor}
+                size="small"
+                sx={{
+                  fontSize: '0.75rem',
+                  fontWeight: 'bold',
+                  minWidth: '90px',
+                  mb: 0.5,
+                  '& .MuiChip-label': { 
+                    color: 'white',
+                    px: 1.5,
+                    py: 0.5
+                  }
+                }}
+              />
+              <Typography variant="caption" color="text.secondary" sx={{ display: 'block', fontSize: '0.7rem' }}>
+                {persentaseStok.toFixed(1)}% dari total
+              </Typography>
+            </Box>
+          );
+        }
+        return (
+          <Typography variant="body2" color="text.secondary" sx={{ fontStyle: 'italic' }}>
+            -
+          </Typography>
+        );
+      }
     },
   ];
 
@@ -406,12 +622,12 @@ const Barang = () => {
       />
 
       {/* Filters */}
-      <Card sx={{ mb: 3, display: showFilters ? 'block' : 'none' }}>
-        <CardContent>
-          <Typography variant="h6" gutterBottom>
+      <Card sx={{ mb: { xs: 2, sm: 3 }, display: showFilters ? 'block' : 'none' }}>
+        <CardContent sx={{ p: { xs: 2, sm: 3 } }}>
+          <Typography variant="h6" gutterBottom sx={{ fontSize: { xs: '1rem', sm: '1.25rem' } }}>
             Filter Barang
           </Typography>
-          <Grid container spacing={2}>
+          <Grid container spacing={{ xs: 2, sm: 2, md: 3 }}>
             <Grid item xs={12} sm={6} md={3}>
               <TextField
                 select
@@ -421,6 +637,10 @@ const Barang = () => {
                 value={filters.kategori}
                 onChange={handleFilterChange}
                 size="small"
+                sx={{
+                  '& .MuiInputLabel-root': { fontSize: { xs: '0.875rem', sm: '1rem' } },
+                  '& .MuiInputBase-input': { fontSize: { xs: '0.875rem', sm: '1rem' } }
+                }}
               >
                 <MenuItem value="">Semua Kategori</MenuItem>
                 {kategoris.map((kategori) => (
@@ -439,6 +659,10 @@ const Barang = () => {
                 value={filters.lokasi}
                 onChange={handleFilterChange}
                 size="small"
+                sx={{
+                  '& .MuiInputLabel-root': { fontSize: { xs: '0.875rem', sm: '1rem' } },
+                  '& .MuiInputBase-input': { fontSize: { xs: '0.875rem', sm: '1rem' } }
+                }}
               >
                 <MenuItem value="">Semua Lokasi</MenuItem>
                 {lokasis.map((lokasi) => (
@@ -457,6 +681,10 @@ const Barang = () => {
                 value={filters.status}
                 onChange={handleFilterChange}
                 size="small"
+                sx={{
+                  '& .MuiInputLabel-root': { fontSize: { xs: '0.875rem', sm: '1rem' } },
+                  '& .MuiInputBase-input': { fontSize: { xs: '0.875rem', sm: '1rem' } }
+                }}
               >
                 <MenuItem value="">Semua Status</MenuItem>
                 <MenuItem value="Tersedia">Tersedia</MenuItem>
@@ -473,6 +701,10 @@ const Barang = () => {
                 value={filters.kondisi}
                 onChange={handleFilterChange}
                 size="small"
+                sx={{
+                  '& .MuiInputLabel-root': { fontSize: { xs: '0.875rem', sm: '1rem' } },
+                  '& .MuiInputBase-input': { fontSize: { xs: '0.875rem', sm: '1rem' } }
+                }}
               >
                 <MenuItem value="">Semua Kondisi</MenuItem>
                 <MenuItem value="Baik">Baik</MenuItem>
@@ -484,11 +716,13 @@ const Barang = () => {
         </CardContent>
       </Card>
 
-      <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 2 }}>
+      <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: { xs: 1.5, sm: 2 } }}>
         <Button
           variant="outlined"
-          startIcon={<FilterAltIcon />}
+          startIcon={<FilterAltIcon sx={{ fontSize: { xs: '1rem', sm: '1.25rem' } }} />}
           onClick={() => setShowFilters(!showFilters)}
+          size="small"
+          sx={{ fontSize: { xs: '0.875rem', sm: '1rem' } }}
         >
           {showFilters ? 'Sembunyikan Filter' : 'Tampilkan Filter'}
         </Button>
@@ -512,19 +746,27 @@ const Barang = () => {
         onClose={handleCloseUnitDialog}
         maxWidth="md"
         fullWidth
+        sx={{
+          '& .MuiDialog-paper': {
+            margin: { xs: 0, sm: 2 },
+            width: { xs: '100%', sm: 'auto' },
+            height: { xs: '100%', sm: 'auto' },
+            maxHeight: { xs: '100%', sm: '90vh' }
+          }
+        }}
       >
-        <DialogTitle>
+        <DialogTitle sx={{ fontSize: { xs: '1rem', sm: '1.25rem' }, p: { xs: 2, sm: 3 } }}>
           Detail Unit Barang: {selectedBarang?.nama} ({selectedBarang?.kode_grup})
         </DialogTitle>
-        <DialogContent>
+        <DialogContent sx={{ p: { xs: 2, sm: 3 } }}>
           {selectedBarang && (
             <>
               {/* Filter dan Pencarian untuk Unit */}
-              <Box sx={{ mb: 3 }}>
-                <Typography variant="h6" gutterBottom>
+              <Box sx={{ mb: { xs: 2, sm: 3 } }}>
+                <Typography variant="h6" gutterBottom sx={{ fontSize: { xs: '1rem', sm: '1.25rem' } }}>
                   Filter & Pencarian Unit
                 </Typography>
-                <Grid container spacing={2}>
+                <Grid container spacing={{ xs: 2, sm: 2 }}>
                   <Grid item xs={12} sm={4}>
                     <TextField
                       fullWidth
@@ -534,6 +776,10 @@ const Barang = () => {
                       onChange={handleUnitFilterChange}
                       size="small"
                       placeholder="Cari berdasarkan kode unit..."
+                      sx={{
+                        '& .MuiInputLabel-root': { fontSize: { xs: '0.875rem', sm: '1rem' } },
+                        '& .MuiInputBase-input': { fontSize: { xs: '0.875rem', sm: '1rem' } }
+                      }}
                     />
                   </Grid>
                   <Grid item xs={12} sm={4}>
@@ -545,6 +791,10 @@ const Barang = () => {
                       value={unitFilters.kondisi}
                       onChange={handleUnitFilterChange}
                       size="small"
+                      sx={{
+                        '& .MuiInputLabel-root': { fontSize: { xs: '0.875rem', sm: '1rem' } },
+                        '& .MuiInputBase-input': { fontSize: { xs: '0.875rem', sm: '1rem' } }
+                      }}
                     >
                       <MenuItem value="">Semua Kondisi</MenuItem>
                       <MenuItem value="Baik">Baik</MenuItem>
@@ -561,6 +811,10 @@ const Barang = () => {
                       value={unitFilters.status}
                       onChange={handleUnitFilterChange}
                       size="small"
+                      sx={{
+                        '& .MuiInputLabel-root': { fontSize: { xs: '0.875rem', sm: '1rem' } },
+                        '& .MuiInputBase-input': { fontSize: { xs: '0.875rem', sm: '1rem' } }
+                      }}
                     >
                       <MenuItem value="">Semua Status</MenuItem>
                       <MenuItem value="Tersedia">Tersedia</MenuItem>
@@ -571,22 +825,22 @@ const Barang = () => {
                 </Grid>
               </Box>
 
-              <TableContainer component={Paper}>
-                <Table>
+              <TableContainer component={Paper} sx={{ overflowX: 'auto' }}>
+                <Table size="small">
                   <TableHead>
                     <TableRow>
-                      <TableCell>Kode Unit</TableCell>
-                      <TableCell>Kondisi</TableCell>
-                      <TableCell>Status</TableCell>
-                      <TableCell>Lokasi</TableCell>
-                      <TableCell align="right">Aksi</TableCell>
+                      <TableCell sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}>Kode Unit</TableCell>
+                      <TableCell sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}>Kondisi</TableCell>
+                      <TableCell sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}>Status</TableCell>
+                      <TableCell sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' }, display: { xs: 'none', sm: 'table-cell' } }}>Lokasi</TableCell>
+                      <TableCell align="right" sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}>Aksi</TableCell>
                     </TableRow>
                   </TableHead>
                   <TableBody>
                     {getFilteredUnits().length === 0 ? (
                       <TableRow>
-                        <TableCell colSpan={5} align="center">
-                          <Typography variant="body2" color="text.secondary">
+                        <TableCell colSpan={{ xs: 4, sm: 5 }} align="center">
+                          <Typography variant="body2" color="text.secondary" sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}>
                             {selectedBarang.units?.length === 0 ? 'Tidak ada unit untuk barang ini' : 'Tidak ada unit yang sesuai dengan filter'}
                           </Typography>
                         </TableCell>
@@ -594,7 +848,7 @@ const Barang = () => {
                     ) : (
                       getFilteredUnits().map((unit) => (
                     <TableRow key={unit.id}>
-                      <TableCell>{unit.kode}</TableCell>
+                      <TableCell sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}>{unit.kode}</TableCell>
                       <TableCell>
                         <Chip
                           label={formatKondisiLabel(unit.kondisi)}
@@ -602,7 +856,14 @@ const Barang = () => {
                           color={getKondisiColor(unit.kondisi)}
                           sx={{
                             color: 'white',
-                            fontWeight: 'bold'
+                            fontWeight: 'bold',
+                            fontSize: { xs: '0.7rem', sm: '0.75rem' },
+                            minWidth: { xs: '60px', sm: '80px' },
+                            height: { xs: 20, sm: 24 },
+                            '& .MuiChip-label': {
+                              px: { xs: 1, sm: 1.5 },
+                              py: 0.5
+                            }
                           }}
                         />
                       </TableCell>
@@ -613,19 +874,28 @@ const Barang = () => {
                           color={getStatusColor(unit.status)}
                           sx={{
                             color: 'white',
-                            fontWeight: 'bold'
+                            fontWeight: 'bold',
+                            fontSize: { xs: '0.7rem', sm: '0.75rem' },
+                            minWidth: { xs: '60px', sm: '80px' },
+                            height: { xs: 20, sm: 24 },
+                            '& .MuiChip-label': {
+                              px: { xs: 1, sm: 1.5 },
+                              py: 0.5
+                            }
                           }}
                         />
                       </TableCell>
-                      <TableCell>{unit.lokasi ? (typeof unit.lokasi === 'object' ? unit.lokasi.nama : unit.lokasi) : '-'}</TableCell>
+                      <TableCell sx={{ display: { xs: 'none', sm: 'table-cell' }, fontSize: { xs: '0.75rem', sm: '0.875rem' } }}>
+                        {unit.lokasi ? (typeof unit.lokasi === 'object' ? unit.lokasi.nama : unit.lokasi) : '-'}
+                      </TableCell>
                       <TableCell align="right">
-                        <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
+                        <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: { xs: 0.5, sm: 1 } }}>
                           <Tooltip title="Lihat Detail">
                             <IconButton onClick={() => {
                               handleCloseUnitDialog();
                               navigate(`/barang/${unit.id}`);
-                            }} size="small" sx={{ mr: 1 }}>
-                              <VisibilityIcon fontSize="small" />
+                            }} size="small" sx={{ p: { xs: 0.5, sm: 1 } }}>
+                              <VisibilityIcon sx={{ fontSize: { xs: '1rem', sm: '1.25rem' } }} />
                             </IconButton>
                           </Tooltip>
                           {canCRUD && (
@@ -633,8 +903,8 @@ const Barang = () => {
                               <IconButton onClick={() => {
                                 handleCloseUnitDialog();
                                 navigate(`/barang/${unit.id}`, { state: { edit: true } });
-                              }} size="small" color="primary">
-                                <EditIcon fontSize="small" />
+                              }} size="small" color="primary" sx={{ p: { xs: 0.5, sm: 1 } }}>
+                                <EditIcon sx={{ fontSize: { xs: '1rem', sm: '1.25rem' } }} />
                               </IconButton>
                             </Tooltip>
                           )}
@@ -649,8 +919,17 @@ const Barang = () => {
             </>
           )}
         </DialogContent>
-        <DialogActions>
-          <Button onClick={handleCloseUnitDialog}>Tutup</Button>
+        <DialogActions sx={{ p: { xs: 1, sm: 2 } }}>
+          <Button 
+            onClick={handleCloseUnitDialog}
+            sx={{ 
+              fontSize: { xs: '0.8rem', sm: '0.875rem' },
+              px: { xs: 2, sm: 3 },
+              py: { xs: 0.5, sm: 1 }
+            }}
+          >
+            Tutup
+          </Button>
         </DialogActions>
       </Dialog>
 

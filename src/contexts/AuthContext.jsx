@@ -249,6 +249,15 @@ export const AuthProvider = ({ children }) => {
     return user?.peran === 'kepala_lab'; // Only 'kepala_lab' can delete lokasi/kategori
   };
 
+  // Transaction permission functions
+  const canCreateTransaction = () => {
+    return user?.peran === 'admin' || user?.peran === 'toolman' || user?.peran === 'kepala_lab';
+  };
+
+  const canDeleteTransaction = () => {
+    return user?.peran === 'kepala_lab'; // Only 'kepala_lab' can delete transactions
+  };
+
   const value = {
     user,
     token,
@@ -266,6 +275,8 @@ export const AuthProvider = ({ children }) => {
     canCRUD,
     canDeleteBarang,
     canDeleteLokasiKategori,
+    canCreateTransaction,
+    canDeleteTransaction,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

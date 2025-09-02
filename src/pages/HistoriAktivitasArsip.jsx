@@ -22,10 +22,16 @@ import {
   Chip,
   IconButton,
   Tooltip,
+  CircularProgress,
+  FormControl,
+  InputLabel,
+  Select,
+  Collapse,
+  Alert,
+  Snackbar,
   Menu,
   ListItemIcon,
   ListItemText,
-  CircularProgress,
   Divider
 } from '@mui/material';
 import { DatePicker } from '@mui/x-date-pickers';
@@ -33,7 +39,7 @@ import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import dayjs from 'dayjs';
 import 'dayjs/locale/id';
-import { Visibility as VisibilityIcon, FilterAlt as FilterAltIcon, FileDownload as FileDownloadIcon, TableView as TableViewIcon, Description as DescriptionIcon, KeyboardArrowDown as KeyboardArrowDownIcon, Archive as ArchiveIcon } from '@mui/icons-material';
+import { Visibility as VisibilityIcon, FilterAlt as FilterAltIcon, Archive as ArchiveIcon, FileDownload as FileDownloadIcon, Description as DescriptionIcon, TableView as TableViewIcon, KeyboardArrowDown as KeyboardArrowDownIcon } from '@mui/icons-material';
 import DataTable from '../components/DataTable';
 import PageHeader from '../components/PageHeader';
 import AlertDialog from '../components/AlertDialog';
@@ -41,7 +47,7 @@ import axios from '../utils/axios';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 
-const HistoriAktivitas = () => {
+const HistoriAktivitasArsip = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
@@ -72,8 +78,6 @@ const HistoriAktivitas = () => {
   const [alertOpen, setAlertOpen] = useState(false);
   const [alertMessage, setAlertMessage] = useState('');
 
-
-
   const fetchHistoriAktivitas = async () => {
     setLoading(true);
     try {
@@ -84,7 +88,6 @@ const HistoriAktivitas = () => {
       if (searchTerm) params.append('search', searchTerm);
       if (jenisAktivitas) params.append('jenis_aktivitas', jenisAktivitas);
       if (modul) params.append('modul', modul);
-
       if (rolePengguna) params.append('role_pengguna', rolePengguna);
       
       if (tanggalMulai) {
@@ -95,14 +98,14 @@ const HistoriAktivitas = () => {
         params.append('tanggal_akhir', dayjs(tanggalAkhir).format('YYYY-MM-DD'));
       }
       
-      const response = await axios.get(`/api/histori-aktivitas?${params.toString()}`);
+      const response = await axios.get(`/api/histori-aktivitas/archive/data?${params.toString()}`);
       
       if (response.data.success) {
         setHistoriAktivitas(response.data.data);
         setTotalRows(response.data.pagination.total);
       }
     } catch (error) {
-      console.error('Error fetching activity history:', error);
+      console.error('Error fetching archived activity history:', error);
     } finally {
       setLoading(false);
     }
@@ -149,16 +152,16 @@ const HistoriAktivitas = () => {
   const getJenisAktivitasColor = (jenis) => {
     switch (jenis) {
       case 'create': return 'success';
-      case 'update': return 'info';
+      case 'update': return 'warning';
       case 'delete': return 'error';
-      case 'login': return 'primary';
-      case 'logout': return 'secondary';
+      case 'login': return 'info';
+      case 'logout': return 'default';
       default: return 'default';
     }
   };
 
-  const getModulLabel = (modulName) => {
-    switch (modulName) {
+  const getModulLabel = (modul) => {
+    switch (modul) {
       case 'barang': return 'Barang';
       case 'kategori': return 'Kategori';
       case 'lokasi': return 'Lokasi';
@@ -166,59 +169,70 @@ const HistoriAktivitas = () => {
       case 'peminjaman': return 'Peminjaman';
       case 'transaksi': return 'Transaksi';
       case 'auth': return 'Autentikasi';
-      default: return modulName;
+      default: return modul;
+    }
+  };
+
+  const getRoleDisplayName = (role) => {
+    switch (role) {
+      case 'admin': return 'Administrator';
+      case 'kepala_lab': return 'Kepala Lab';
+      case 'mahasiswa': return 'Mahasiswa';
+      default: return role;
     }
   };
 
   const columns = [
     {
       id: 'waktu_aktivitas',
-      label: 'Tanggal',
-      minWidth: 120,
-      format: (value) => (
-        <Box>
-          <Typography variant="body2" sx={{ fontWeight: 500, margin: 0, padding: 0, lineHeight: 1.4 }}>
-            {dayjs(value).locale('id').format('DD MMMM YYYY')}
-          </Typography>
-          <Typography variant="caption" color="text.secondary" sx={{ margin: 0, padding: 0, lineHeight: 1.2 }}>
-            {dayjs(value).locale('id').format('HH:mm')}
-          </Typography>
-        </Box>
-      )
+      label: 'Tanggal & Waktu',
+      minWidth: 140,
+      format: (value) => {
+        const date = dayjs(value).locale('id');
+        return (
+          <Box>
+            <Typography variant="body2" sx={{ fontWeight: 500, margin: 0, padding: 0, lineHeight: 1.2 }}>
+              {date.format('DD MMM YYYY')}
+            </Typography>
+            <Typography variant="caption" color="text.secondary" sx={{ margin: 0, padding: 0, lineHeight: 1.2 }}>
+              {date.format('HH:mm')}
+            </Typography>
+          </Box>
+        );
+      }
+    },
+    {
+      id: 'archived_at',
+      label: 'Diarsipkan',
+      minWidth: 140,
+      format: (value) => {
+        const date = dayjs(value).locale('id');
+        return (
+          <Box>
+            <Typography variant="body2" sx={{ fontWeight: 500, margin: 0, padding: 0, lineHeight: 1.2 }}>
+              {date.format('DD MMM YYYY')}
+            </Typography>
+            <Typography variant="caption" color="text.secondary" sx={{ margin: 0, padding: 0, lineHeight: 1.2 }}>
+              {date.format('HH:mm')}
+            </Typography>
+          </Box>
+        );
+      }
     },
     {
       id: 'pengguna',
       label: 'Pengguna',
       minWidth: 120,
-      format: (value) => (
-        <Typography variant="body2" sx={{ fontWeight: 500, margin: 0, padding: 0, lineHeight: 1.4 }}>
-          {value?.nama || 'Sistem'}
-        </Typography>
-      )
-    },
-    {
-      id: 'role',
-      label: 'Role',
-      minWidth: 100,
       format: (value, row) => {
-        const getRoleDisplayName = (role) => {
-          switch (role) {
-            case 'admin':
-              return 'Administrator';
-            case 'kepala_lab':
-              return 'Kepala Lab';
-            case 'staff':
-              return 'Staff';
-            case 'guru':
-              return 'Guru';
-            default:
-              return 'Pengguna';
-          }
-        };
         return (
-          <Typography variant="body2" sx={{ margin: 0, padding: 0, lineHeight: 1.4 }}>
-            {row?.pengguna?.peran ? getRoleDisplayName(row.pengguna.peran) : 'Sistem'}
-          </Typography>
+          <Box>
+            <Typography variant="body2" sx={{ fontWeight: 500, margin: 0, padding: 0, lineHeight: 1.2 }}>
+              {row?.pengguna?.nama || 'Sistem'}
+            </Typography>
+            <Typography variant="caption" color="text.secondary" sx={{ margin: 0, padding: 0, lineHeight: 1.2 }}>
+              {row?.pengguna?.peran ? getRoleDisplayName(row.pengguna.peran) : 'Sistem'}
+            </Typography>
+          </Box>
         );
       }
     },
@@ -347,7 +361,7 @@ const HistoriAktivitas = () => {
       if (modul) params.append('modul', modul);
       if (rolePengguna) params.append('role_pengguna', rolePengguna);
       
-      const response = await axios.get(`/api/histori-aktivitas/ekspor?${params.toString()}`, {
+      const response = await axios.get(`/api/histori-aktivitas/archive/export?${params.toString()}`, {
         responseType: 'blob'
       });
       
@@ -361,9 +375,9 @@ const HistoriAktivitas = () => {
       if (periode === 'custom') {
         const startDate = dayjs(tanggalMulai).format('YYYY-MM-DD');
         const endDate = dayjs(tanggalAkhir).format('YYYY-MM-DD');
-        filename = `histori-aktivitas-${startDate}-to-${endDate}-${timestamp}.${format === 'excel' ? 'xlsx' : 'csv'}`;
+        filename = `histori-aktivitas-arsip-${startDate}-to-${endDate}-${timestamp}.${format === 'excel' ? 'xlsx' : 'csv'}`;
       } else {
-        filename = `histori-aktivitas-${periode}-${timestamp}.${format === 'excel' ? 'xlsx' : 'csv'}`;
+        filename = `histori-aktivitas-arsip-${periode}-${timestamp}.${format === 'excel' ? 'xlsx' : 'csv'}`;
       }
       link.setAttribute('download', filename);
       
@@ -391,70 +405,24 @@ const HistoriAktivitas = () => {
       
       const changes = [];
       
-      // Helper function untuk mengkonversi value menjadi string yang bisa ditampilkan
-      const formatValue = (value) => {
-        if (value === null || value === undefined) return '-';
-        if (typeof value === 'object') {
-          // Handle kategori dan lokasi objects
-          if (value.nama) return value.nama;
-          if (value.id && value.nama) return value.nama;
-          // Handle array of objects
-          if (Array.isArray(value)) {
-            return value.map(item => {
-              if (typeof item === 'object' && item.nama) return item.nama;
-              return String(item);
-            }).join(', ');
-          }
-          return JSON.stringify(value);
-        }
-        
-        // Format status peminjaman dengan kapitalisasi yang konsisten
-        const statusMapping = {
-          'menunggu_persetujuan': 'Menunggu Persetujuan',
-          'disetujui': 'Disetujui',
-          'ditolak': 'Ditolak',
-          'dipinjam': 'Dipinjam',
-          'dikembalikan': 'Dikembalikan',
-          'terlambat': 'Terlambat'
-        };
-        
-        const stringValue = String(value);
-        return statusMapping[stringValue] || stringValue;
-      };
+      // Gabungkan semua key dari before dan after
+      const allKeys = new Set([...Object.keys(before), ...Object.keys(after)]);
       
-      // Daftar field yang penting untuk ditampilkan
-      const importantFields = {
-        'nama': 'Nama',
-        'nama_barang': 'Nama Barang',
-        'nama_peminjam': 'Nama Peminjam',
-        'kode': 'Kode',
-        'jumlah': 'Jumlah',
-        'status': 'Status',
-        'kondisi': 'Kondisi',
-        'nama_lokasi': 'Lokasi',
-        'nama_kategori': 'Kategori',
-        'id_kategori': 'ID Kategori',
-        'id_lokasi': 'ID Lokasi',
-        'deskripsi': 'Deskripsi',
-        'tanggal_pinjam': 'Tanggal Pinjam',
-        'tanggal_kembali_harapan': 'Tanggal Kembali Harapan',
-        'kontak_peminjam': 'Kontak Peminjam',
-        'kelas_peminjam': 'Kelas Peminjam',
-        'catatan': 'Catatan'
-      };
-      
-      // Bandingkan field yang penting
-      Object.keys(importantFields).forEach(field => {
-        const beforeValue = before[field];
-        const afterValue = after[field];
+      allKeys.forEach(key => {
+        const beforeValue = before[key];
+        const afterValue = after[key];
         
-        if (JSON.stringify(beforeValue) !== JSON.stringify(afterValue) && (beforeValue !== undefined || afterValue !== undefined)) {
-          changes.push({
-            field: importantFields[field],
-            before: formatValue(beforeValue),
-            after: formatValue(afterValue)
-          });
-        }
+        // Skip jika nilai sama
+        if (beforeValue === afterValue) return;
+        
+        // Skip field yang tidak perlu ditampilkan
+        if (['created_at', 'updated_at', 'id'].includes(key)) return;
+        
+        changes.push({
+          field: key,
+          before: beforeValue !== undefined ? String(beforeValue) : 'Tidak ada',
+          after: afterValue !== undefined ? String(afterValue) : 'Dihapus'
+        });
       });
       
       return changes;
@@ -477,20 +445,25 @@ const HistoriAktivitas = () => {
     );
   };
 
-
-
   return (
     <Box>
       <PageHeader 
-        title="Histori Aktivitas" 
-        subtitle="Daftar aktivitas pengguna dalam sistem"
+        title="Histori Aktivitas Arsip" 
+        subtitle="Daftar aktivitas pengguna yang telah diarsipkan"
+        icon={<ArchiveIcon />}
+        breadcrumbs={[
+          { text: 'Histori Aktivitas', link: '/histori-aktivitas' },
+          { text: 'Arsip' }
+        ]}
+        backButton={true}
+        onBackClick={() => navigate('/histori-aktivitas')}
       />
       
       {/* Filters */}
       <Card sx={{ mb: 3, display: showFilters ? 'block' : 'none' }}>
         <CardContent>
           <Typography variant="h6" gutterBottom>
-            Filter Aktivitas
+            Filter Aktivitas Arsip
           </Typography>
           <Grid container spacing={2}>
             <Grid item xs={12} sm={6} md={3}>
@@ -525,7 +498,7 @@ const HistoriAktivitas = () => {
                 <MenuItem value="lokasi">Lokasi</MenuItem>
                 <MenuItem value="pengguna">Pengguna</MenuItem>
                 <MenuItem value="peminjaman">Peminjaman</MenuItem>
-
+                <MenuItem value="transaksi">Transaksi</MenuItem>
                 <MenuItem value="auth">Autentikasi</MenuItem>
               </TextField>
             </Grid>
@@ -533,48 +506,47 @@ const HistoriAktivitas = () => {
               <TextField
                 select
                 fullWidth
-                label="Pengguna"
+                label="Role Pengguna"
                 value={rolePengguna}
                 onChange={(e) => setRolePengguna(e.target.value)}
                 size="small"
               >
-                <MenuItem value="">Semua Role</MenuItem>
-                <MenuItem value="admin">Admin</MenuItem>
+                <MenuItem value="">Semua</MenuItem>
+                <MenuItem value="admin">Administrator</MenuItem>
                 <MenuItem value="kepala_lab">Kepala Lab</MenuItem>
-                <MenuItem value="toolman">Toolman</MenuItem>
-                <MenuItem value="sarana">Sarana</MenuItem>
+                <MenuItem value="mahasiswa">Mahasiswa</MenuItem>
               </TextField>
             </Grid>
-            <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale="id">
-              <Grid item xs={12} sm={6} md={3}>
+            <Grid item xs={12} sm={6} md={3}>
+              <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale="id">
                 <DatePicker
                   label="Tanggal Mulai"
                   value={tanggalMulai}
                   onChange={(newValue) => setTanggalMulai(newValue)}
-                  format="DD/MM/YYYY"
                   slotProps={{
                     textField: {
-                      fullWidth: true,
                       size: 'small',
-                    },
+                      fullWidth: true
+                    }
                   }}
                 />
-              </Grid>
-              <Grid item xs={12} sm={6} md={3}>
+              </LocalizationProvider>
+            </Grid>
+            <Grid item xs={12} sm={6} md={3}>
+              <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale="id">
                 <DatePicker
                   label="Tanggal Akhir"
                   value={tanggalAkhir}
                   onChange={(newValue) => setTanggalAkhir(newValue)}
-                  format="DD/MM/YYYY"
                   slotProps={{
                     textField: {
-                      fullWidth: true,
                       size: 'small',
-                    },
+                      fullWidth: true
+                    }
                   }}
                 />
-              </Grid>
-            </LocalizationProvider>
+              </LocalizationProvider>
+            </Grid>
             <Grid item xs={12} sm={6} md={3}>
               <Button
                 variant="outlined"
@@ -588,12 +560,12 @@ const HistoriAktivitas = () => {
           </Grid>
         </CardContent>
       </Card>
-
+      
       <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 2, mb: 2 }}>
         <Button
-          variant="outlined"
+          variant="contained"
           startIcon={exportLoading ? <CircularProgress size={16} /> : <FileDownloadIcon />}
-          endIcon={!exportLoading && <KeyboardArrowDownIcon />}
+          endIcon={<KeyboardArrowDownIcon />}
           onClick={handleExportClick}
           disabled={exportLoading}
         >
@@ -601,17 +573,10 @@ const HistoriAktivitas = () => {
         </Button>
         <Button
           variant="outlined"
-          startIcon={<ArchiveIcon />}
-          onClick={() => navigate('/histori-aktivitas/arsip')}
-        >
-          Arsip
-        </Button>
-        <Button
-          variant="outlined"
           startIcon={<FilterAltIcon />}
           onClick={() => setShowFilters(!showFilters)}
         >
-          {showFilters ? 'Sembunyikan Filter' : 'Tampilkan Filter'}
+          {showFilters ? 'Sembunyikan' : 'Tampilkan'} Filter
         </Button>
       </Box>
       
@@ -620,34 +585,32 @@ const HistoriAktivitas = () => {
         anchorEl={exportMenuAnchor}
         open={exportMenuOpen}
         onClose={handleExportClose}
-        anchorOrigin={{
-          vertical: 'bottom',
-          horizontal: 'left',
-        }}
-        transformOrigin={{
-          vertical: 'top',
-          horizontal: 'left',
+        PaperProps={{
+          sx: {
+            mt: 1,
+            minWidth: 200
+          }
         }}
       >
-        <MenuItem onClick={() => handleExport('excel', 'hari_ini')}>
+        <MenuItem onClick={() => handleExport('excel', 'hari-ini')}>
           <ListItemIcon>
             <TableViewIcon fontSize="small" />
           </ListItemIcon>
           <ListItemText primary="Excel - Hari Ini" />
         </MenuItem>
-        <MenuItem onClick={() => handleExport('excel', 'minggu_ini')}>
+        <MenuItem onClick={() => handleExport('excel', 'minggu-ini')}>
           <ListItemIcon>
             <TableViewIcon fontSize="small" />
           </ListItemIcon>
           <ListItemText primary="Excel - Minggu Ini" />
         </MenuItem>
-        <MenuItem onClick={() => handleExport('excel', 'bulan_ini')}>
+        <MenuItem onClick={() => handleExport('excel', 'bulan-ini')}>
           <ListItemIcon>
             <TableViewIcon fontSize="small" />
           </ListItemIcon>
           <ListItemText primary="Excel - Bulan Ini" />
         </MenuItem>
-        <MenuItem onClick={() => handleExport('excel', 'semua')}>
+        <MenuItem onClick={() => handleExport('excel', 'semua-data')}>
           <ListItemIcon>
             <TableViewIcon fontSize="small" />
           </ListItemIcon>
@@ -660,25 +623,25 @@ const HistoriAktivitas = () => {
           <ListItemText primary="Excel - Rentang Tanggal Custom" />
         </MenuItem>
         <Divider />
-        <MenuItem onClick={() => handleExport('csv', 'hari_ini')}>
+        <MenuItem onClick={() => handleExport('csv', 'hari-ini')}>
           <ListItemIcon>
             <DescriptionIcon fontSize="small" />
           </ListItemIcon>
           <ListItemText primary="CSV - Hari Ini" />
         </MenuItem>
-        <MenuItem onClick={() => handleExport('csv', 'minggu_ini')}>
+        <MenuItem onClick={() => handleExport('csv', 'minggu-ini')}>
           <ListItemIcon>
             <DescriptionIcon fontSize="small" />
           </ListItemIcon>
           <ListItemText primary="CSV - Minggu Ini" />
         </MenuItem>
-        <MenuItem onClick={() => handleExport('csv', 'bulan_ini')}>
+        <MenuItem onClick={() => handleExport('csv', 'bulan-ini')}>
           <ListItemIcon>
             <DescriptionIcon fontSize="small" />
           </ListItemIcon>
           <ListItemText primary="CSV - Bulan Ini" />
         </MenuItem>
-        <MenuItem onClick={() => handleExport('csv', 'semua')}>
+        <MenuItem onClick={() => handleExport('csv', 'semua-data')}>
           <ListItemIcon>
             <DescriptionIcon fontSize="small" />
           </ListItemIcon>
@@ -693,7 +656,7 @@ const HistoriAktivitas = () => {
       </Menu>
       
       <DataTable
-        title="Daftar Aktivitas"
+        title="Daftar Aktivitas Arsip"
         columns={columns}
         rows={historiAktivitas}
         loading={loading}
@@ -703,7 +666,7 @@ const HistoriAktivitas = () => {
         searchable
         searchTerm={searchTerm}
         onSearchChange={handleSearchChange}
-        emptyMessage="Belum ada data aktivitas"
+        emptyMessage="Belum ada data aktivitas arsip"
         page={page - 1} // Konversi page dari 1-based (API) ke 0-based (MUI)
         rowsPerPage={rowsPerPage}
         count={totalRows}
@@ -719,7 +682,7 @@ const HistoriAktivitas = () => {
         fullWidth
       >
         <DialogTitle>
-          Detail Aktivitas
+          Detail Aktivitas Arsip
         </DialogTitle>
         <DialogContent>
           {selectedActivity && (
@@ -727,7 +690,7 @@ const HistoriAktivitas = () => {
               <Grid container spacing={2}>
                 <Grid item xs={12} sm={6}>
                   <Typography variant="subtitle2" color="text.secondary">
-                    Tanggal & Waktu
+                    Tanggal & Waktu Aktivitas
                   </Typography>
                   <Box sx={{ mb: 2 }}>
                     <Typography variant="body1">
@@ -735,6 +698,19 @@ const HistoriAktivitas = () => {
                     </Typography>
                     <Typography variant="body1" color="text.secondary">
                       {dayjs(selectedActivity.waktu_aktivitas).locale('id').format('HH:mm')}
+                    </Typography>
+                  </Box>
+                </Grid>
+                <Grid item xs={12} sm={6}>
+                  <Typography variant="subtitle2" color="text.secondary">
+                    Tanggal Diarsipkan
+                  </Typography>
+                  <Box sx={{ mb: 2 }}>
+                    <Typography variant="body1">
+                      {dayjs(selectedActivity.archived_at).locale('id').format('DD MMMM YYYY')}
+                    </Typography>
+                    <Typography variant="body1" color="text.secondary">
+                      {dayjs(selectedActivity.archived_at).locale('id').format('HH:mm')}
                     </Typography>
                   </Box>
                 </Grid>
@@ -751,23 +727,7 @@ const HistoriAktivitas = () => {
                     Role
                   </Typography>
                   <Typography variant="body1" sx={{ mb: 2 }}>
-                    {(() => {
-                      const getRoleDisplayName = (role) => {
-                        switch (role) {
-                          case 'admin':
-                            return 'Administrator';
-                          case 'kepala_lab':
-                            return 'Kepala Lab';
-                          case 'staff':
-                            return 'Staff';
-                          case 'guru':
-                            return 'Guru';
-                          default:
-                            return 'Pengguna';
-                        }
-                      };
-                      return selectedActivity.pengguna?.peran ? getRoleDisplayName(selectedActivity.pengguna.peran) : 'Sistem';
-                    })()} 
+                    {selectedActivity.pengguna?.peran ? getRoleDisplayName(selectedActivity.pengguna.peran) : 'Sistem'}
                   </Typography>
                 </Grid>
                 <Grid item xs={12} sm={6}>
@@ -779,7 +739,7 @@ const HistoriAktivitas = () => {
                       label={getJenisAktivitasLabel(selectedActivity.jenis_aktivitas)} 
                       color={getJenisAktivitasColor(selectedActivity.jenis_aktivitas)} 
                       size="small" 
-                      sx={{ color: 'white' }}
+                      variant="outlined"
                     />
                   </Box>
                 </Grid>
@@ -791,105 +751,13 @@ const HistoriAktivitas = () => {
                     {getModulLabel(selectedActivity.modul)}
                   </Typography>
                 </Grid>
-                {/* Kode untuk berbagai modul */}
-                {(selectedActivity.modul === 'barang' || selectedActivity.modul === 'kategori' || selectedActivity.modul === 'lokasi' || selectedActivity.modul === 'peminjaman') && (
-                  <Grid item xs={12} sm={6}>
+                {selectedActivity.nama_objek && (
+                  <Grid item xs={12}>
                     <Typography variant="subtitle2" color="text.secondary">
-                      {(() => {
-                        switch(selectedActivity.modul) {
-                          case 'barang': return 'Kode Barang';
-                          case 'kategori': return 'Kode Kategori';
-                          case 'lokasi': return 'Kode Lokasi';
-                          case 'peminjaman': return 'Kode Peminjaman';
-                          default: return 'Kode';
-                        }
-                      })()} 
+                      Objek
                     </Typography>
                     <Typography variant="body1" sx={{ mb: 2 }}>
-                      {(() => {
-                        // Untuk peminjaman, prioritaskan nama_objek yang berisi kode_peminjaman
-                        if (selectedActivity.modul === 'peminjaman') {
-                          if (selectedActivity.nama_objek && selectedActivity.nama_objek.startsWith('PJM-')) {
-                            return selectedActivity.nama_objek;
-                          }
-                          // Fallback ke data_sesudah atau data_sebelum
-                          try {
-                            const dataSesudah = selectedActivity.data_sesudah ? JSON.parse(selectedActivity.data_sesudah) : null;
-                            const dataSebelum = selectedActivity.data_sebelum ? JSON.parse(selectedActivity.data_sebelum) : null;
-                            return dataSesudah?.kode_peminjaman || dataSebelum?.kode_peminjaman || 'Tidak tersedia';
-                          } catch (e) {
-                            return 'Tidak tersedia';
-                          }
-                        }
-                        
-                        // Untuk modul barang, tampilkan hanya kode barang
-                        if (selectedActivity.modul === 'barang') {
-                          let kodeBarang = 'Tidak tersedia';
-                          
-                          // Coba ambil kode dari nama_objek
-                          if (selectedActivity.nama_objek && selectedActivity.nama_objek.includes('-')) {
-                            kodeBarang = selectedActivity.nama_objek;
-                          } else {
-                            // Coba ambil dari data_sesudah atau data_sebelum
-                            try {
-                              const dataSesudah = selectedActivity.data_sesudah ? JSON.parse(selectedActivity.data_sesudah) : null;
-                              const dataSebelum = selectedActivity.data_sebelum ? JSON.parse(selectedActivity.data_sebelum) : null;
-                              kodeBarang = dataSesudah?.kode || dataSebelum?.kode || 'Tidak tersedia';
-                            } catch (e) {
-                              // Ignore parsing error
-                            }
-                          }
-                          
-                          return kodeBarang;
-                        }
-                        
-                        // Untuk modul lain, coba ambil kode dari nama_objek atau data
-                        if (selectedActivity.nama_objek && selectedActivity.nama_objek.includes('-')) {
-                          return selectedActivity.nama_objek;
-                        }
-                        
-                        // Coba ambil dari data_sesudah
-                        try {
-                          const dataSesudah = selectedActivity.data_sesudah ? JSON.parse(selectedActivity.data_sesudah) : null;
-                          if (dataSesudah && dataSesudah.kode) {
-                            return dataSesudah.kode;
-                          }
-                        } catch (e) {
-                          // Ignore parsing error
-                        }
-                        
-                        // Coba ambil dari data_sebelum
-                        try {
-                          const dataSebelum = selectedActivity.data_sebelum ? JSON.parse(selectedActivity.data_sebelum) : null;
-                          if (dataSebelum && dataSebelum.kode) {
-                            return dataSebelum.kode;
-                          }
-                        } catch (e) {
-                          // Ignore parsing error
-                        }
-                        
-                        return 'Tidak tersedia';
-                      })()} 
-                    </Typography>
-                  </Grid>
-                )}
-                
-                {/* Nama Barang untuk modul barang */}
-                {selectedActivity.modul === 'barang' && (
-                  <Grid item xs={12} sm={6}>
-                    <Typography variant="subtitle2" color="text.secondary">
-                      Nama Barang
-                    </Typography>
-                    <Typography variant="body1" sx={{ mb: 2 }}>
-                      {(() => {
-                        try {
-                          const dataSesudah = selectedActivity.data_sesudah ? JSON.parse(selectedActivity.data_sesudah) : null;
-                          const dataSebelum = selectedActivity.data_sebelum ? JSON.parse(selectedActivity.data_sebelum) : null;
-                          return dataSesudah?.nama || dataSebelum?.nama || 'Tidak tersedia';
-                        } catch (e) {
-                          return 'Tidak tersedia';
-                        }
-                      })()} 
+                      {selectedActivity.nama_objek}
                     </Typography>
                   </Grid>
                 )}
@@ -919,28 +787,14 @@ const HistoriAktivitas = () => {
                 </Grid>
                 
                 {/* Data Perubahan */}
-                {(selectedActivity.data_sebelum || selectedActivity.data_sesudah) && (() => {
+                {(() => {
                   const changes = formatDataChanges(selectedActivity.data_sebelum, selectedActivity.data_sesudah);
-                  
-                  if (!changes || changes.length === 0) {
-                    return (
-                      <Grid item xs={12}>
-                        <Divider sx={{ my: 2 }} />
-                        <Typography variant="subtitle2" color="text.secondary">
-                          Detail Perubahan
-                        </Typography>
-                        <Typography variant="body2" sx={{ mt: 1, fontStyle: 'italic' }}>
-                          Tidak ada perubahan data yang dapat ditampilkan
-                        </Typography>
-                      </Grid>
-                    );
-                  }
+                  if (!changes || changes.length === 0) return null;
                   
                   return (
                     <Grid item xs={12}>
-                      <Divider sx={{ my: 2 }} />
-                      <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 2 }}>
-                        Detail Perubahan
+                      <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 1 }}>
+                        Data Perubahan
                       </Typography>
                       <TableContainer component={Paper} variant="outlined">
                         <Table size="small">
@@ -988,4 +842,4 @@ const HistoriAktivitas = () => {
   );
 };
 
-export default HistoriAktivitas;
+export default HistoriAktivitasArsip;

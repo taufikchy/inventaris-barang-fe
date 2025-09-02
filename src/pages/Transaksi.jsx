@@ -180,6 +180,7 @@ const HistoriTransaksi = () => {
           label={getStatusText(params.value)}
           color={getStatusColor(params.value)}
           size="small"
+          sx={{ color: 'white' }}
         />
       ),
     },
@@ -200,8 +201,9 @@ const HistoriTransaksi = () => {
             <IconButton
               size="small"
               onClick={() => navigate(`/peminjaman/${params.row.id}`)}
+              sx={{ p: { xs: 0.5, sm: 1 } }}
             >
-              <VisibilityIcon fontSize="small" />
+              <VisibilityIcon sx={{ fontSize: { xs: '1rem', sm: '1.25rem' } }} />
             </IconButton>
           </Tooltip>
         </Box>
@@ -210,7 +212,7 @@ const HistoriTransaksi = () => {
   ];
 
   const filterComponent = (
-    <Grid container spacing={2} sx={{ mb: 2 }}>
+    <Grid container spacing={{ xs: 1, sm: 2 }} sx={{ mb: { xs: 1, sm: 2 } }}>
       <Grid item xs={12} sm={6} md={3}>
         <TextField
           select
@@ -219,6 +221,14 @@ const HistoriTransaksi = () => {
           value={jenisTransaksi}
           onChange={(e) => setJenisTransaksi(e.target.value)}
           size="small"
+          sx={{
+            '& .MuiInputLabel-root': {
+              fontSize: { xs: '0.8rem', sm: '0.875rem' }
+            },
+            '& .MuiInputBase-input': {
+              fontSize: { xs: '0.8rem', sm: '0.875rem' }
+            }
+          }}
         >
           <MenuItem value="">Semua</MenuItem>
           <MenuItem value="peminjaman">Peminjaman</MenuItem>
@@ -233,6 +243,14 @@ const HistoriTransaksi = () => {
           value={statusTransaksi}
           onChange={(e) => setStatusTransaksi(e.target.value)}
           size="small"
+          sx={{
+            '& .MuiInputLabel-root': {
+              fontSize: { xs: '0.8rem', sm: '0.875rem' }
+            },
+            '& .MuiInputBase-input': {
+              fontSize: { xs: '0.8rem', sm: '0.875rem' }
+            }
+          }}
         >
           <MenuItem value="">Semua</MenuItem>
           <MenuItem value="pending">Menunggu Persetujuan</MenuItem>
@@ -251,6 +269,14 @@ const HistoriTransaksi = () => {
           value={idPengguna}
           onChange={(e) => setIdPengguna(e.target.value)}
           size="small"
+          sx={{
+            '& .MuiInputLabel-root': {
+              fontSize: { xs: '0.8rem', sm: '0.875rem' }
+            },
+            '& .MuiInputBase-input': {
+              fontSize: { xs: '0.8rem', sm: '0.875rem' }
+            }
+          }}
         >
           <MenuItem value="">Semua</MenuItem>
           {pengguna.map((user) => (
@@ -270,6 +296,14 @@ const HistoriTransaksi = () => {
               textField: {
                 size: 'small',
                 fullWidth: true,
+                sx: {
+                  '& .MuiInputLabel-root': {
+                    fontSize: { xs: '0.8rem', sm: '0.875rem' }
+                  },
+                  '& .MuiInputBase-input': {
+                    fontSize: { xs: '0.8rem', sm: '0.875rem' }
+                  }
+                }
               },
             }}
           />
@@ -285,6 +319,14 @@ const HistoriTransaksi = () => {
               textField: {
                 size: 'small',
                 fullWidth: true,
+                sx: {
+                  '& .MuiInputLabel-root': {
+                    fontSize: { xs: '0.8rem', sm: '0.875rem' }
+                  },
+                  '& .MuiInputBase-input': {
+                    fontSize: { xs: '0.8rem', sm: '0.875rem' }
+                  }
+                }
               },
             }}
           />

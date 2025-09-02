@@ -4,6 +4,7 @@ import { Box, Toolbar, Container, useMediaQuery, useTheme } from '@mui/material'
 import Header from '../components/Header';
 import Sidebar from '../components/Sidebar';
 import ErrorBoundary from '../components/ErrorBoundary';
+import useStockNotification from '../hooks/useStockNotification';
 
 const drawerWidth = 240;
 
@@ -11,6 +12,9 @@ const MainLayout = () => {
   const [open, setOpen] = useState(true);
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+  
+  // Initialize stock notification system
+  useStockNotification();
 
   return (
     <Box sx={{ display: 'flex', minHeight: '100vh' }}>

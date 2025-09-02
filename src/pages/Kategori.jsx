@@ -12,6 +12,9 @@ import {
   TextField,
   IconButton,
   Tooltip,
+  MenuItem,
+  Typography,
+  Chip,
 } from '@mui/material';
 import {
   Add as AddIcon,
@@ -28,6 +31,7 @@ import ConfirmDialog from '../components/ConfirmDialog';
 const KategoriSchema = Yup.object().shape({
   nama: Yup.string().required('Nama kategori harus diisi'),
   deskripsi: Yup.string(),
+  tipe: Yup.string().oneOf(['alat', 'bahan'], 'Tipe harus alat atau bahan').required('Tipe kategori harus dipilih'),
 });
 
 const Kategori = () => {
@@ -144,32 +148,154 @@ const Kategori = () => {
     }
   };
 
+  // Helper function for tipe color
+  const getTipeColor = (tipe) => {
+    switch (tipe) {
+      case 'alat':
+        return 'primary';
+      case 'bahan':
+        return 'secondary';
+      default:
+        return 'default';
+    }
+  };
+
   // Table columns definition
   const columns = [
     { 
       id: 'no', 
       label: 'No', 
       sortable: true,
-      format: (value, row, displayIndex) => displayIndex + 1 // Menampilkan nomor urut berdasarkan posisi setelah sorting
+      minWidth: 60,
+      align: 'center',
+      format: (value, row, displayIndex) => (
+        <Typography 
+          variant="body2" 
+          sx={{ 
+            fontWeight: 500,
+            margin: 0,
+            padding: 0,
+            lineHeight: 1.4
+          }}
+        >
+          {displayIndex + 1}
+        </Typography>
+      )
     },
-    { id: 'id', label: 'ID', sortable: true },
-    { id: 'nama', label: 'Nama Kategori', sortable: true },
-    { id: 'deskripsi', label: 'Deskripsi', sortable: true },
+    { 
+      id: 'id', 
+      label: 'ID', 
+      sortable: true,
+      minWidth: 80,
+      align: 'center',
+      format: (value) => (
+        <Typography 
+          variant="body2" 
+          sx={{ 
+            fontWeight: 500, 
+            color: 'text.secondary',
+            margin: 0,
+            padding: 0,
+            lineHeight: 1.4
+          }}
+        >
+          {value}
+        </Typography>
+      )
+    },
+    { 
+      id: 'nama', 
+      label: 'Nama Kategori', 
+      sortable: true,
+      minWidth: 200,
+      format: (value) => (
+        <Typography 
+          variant="body2" 
+          sx={{ 
+            fontWeight: 600, 
+            color: 'text.primary',
+            margin: 0,
+            padding: 0,
+            lineHeight: 1.4
+          }}
+        >
+          {value}
+        </Typography>
+      )
+    },
+    { 
+      id: 'deskripsi', 
+      label: 'Deskripsi', 
+      sortable: true,
+      minWidth: 250,
+      format: (value) => (
+        <Typography 
+          variant="body2" 
+          sx={{ 
+            color: 'text.secondary',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            whiteSpace: 'nowrap',
+            maxWidth: 250,
+            margin: 0,
+            padding: 0,
+            lineHeight: 1.4
+          }}
+          title={value || '-'}
+        >
+          {value || '-'}
+        </Typography>
+      )
+    },
+    { 
+      id: 'tipe', 
+      label: 'Tipe', 
+      sortable: true,
+      minWidth: 120,
+      align: 'center',
+      format: (value) => (
+        <Chip
+          label={value === 'alat' ? 'Alat' : 'Bahan'}
+          size="small"
+          color={getTipeColor(value)}
+          sx={{
+            color: 'white',
+            fontWeight: 'bold',
+            minWidth: 70,
+            fontSize: '0.75rem'
+          }}
+        />
+      )
+    },
   ];
 
   // Table actions
   const actions = (row) => (
-    <Box>
+    <Box sx={{ display: 'flex', gap: 0.5, justifyContent: 'center' }}>
       {canCRUD() && (
         <Tooltip title="Edit">
-          <IconButton onClick={() => handleOpenForm(row)} size="small">
+          <IconButton 
+            onClick={() => handleOpenForm(row)} 
+            size="small"
+            sx={{ 
+              color: 'primary.main',
+              '&:hover': { backgroundColor: 'primary.light', color: 'white' }
+            }}
+          >
             <EditIcon fontSize="small" />
           </IconButton>
         </Tooltip>
       )}
       {canDeleteLokasiKategori() && (
         <Tooltip title="Hapus">
-          <IconButton onClick={() => handleDeleteConfirm(row)} size="small" color="error">
+          <IconButton 
+            onClick={() => handleDeleteConfirm(row)} 
+            size="small" 
+            sx={{ 
+              color: 'error.main',
+              '&:hover': { backgroundColor: 'error.light', color: 'white' }
+            }}
+          >
             <DeleteIcon fontSize="small" />
           </IconButton>
         </Tooltip>
@@ -204,6 +330,7 @@ const Kategori = () => {
           initialValues={{
             nama: currentKategori?.nama || '',
             deskripsi: currentKategori?.deskripsi || '',
+            tipe: currentKategori?.tipe || 'alat',
           }}
           validationSchema={KategoriSchema}
           onSubmit={handleSubmit}
@@ -233,6 +360,20 @@ const Kategori = () => {
                   error={touched.deskripsi && Boolean(errors.deskripsi)}
                   helperText={touched.deskripsi && errors.deskripsi}
                 />
+                <Field
+                  as={TextField}
+                  select
+                  fullWidth
+                  margin="normal"
+                  id="tipe"
+                  name="tipe"
+                  label="Tipe Kategori"
+                  error={touched.tipe && Boolean(errors.tipe)}
+                  helperText={touched.tipe && errors.tipe}
+                >
+                  <MenuItem value="alat">Alat</MenuItem>
+                  <MenuItem value="bahan">Bahan</MenuItem>
+                </Field>
               </DialogContent>
               <DialogActions>
                 <Button onClick={handleCloseForm}>Batal</Button>
