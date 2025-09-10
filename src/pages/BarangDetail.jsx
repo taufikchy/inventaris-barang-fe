@@ -85,7 +85,7 @@ const BarangDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
-  const { canCRUD, canDeleteBarang, isKepalaLab } = useAuth();
+  const { canCRUD, canDeleteBarang, isKepalaLab, isAdmin, isToolman, isSarana, user } = useAuth();
   const isNewBarang = id === 'new';
   const isEditMode = location.state?.edit || isNewBarang;
   
@@ -195,6 +195,15 @@ const BarangDetail = () => {
     fetchBarang();
     fetchKategoriAndLokasi();
   }, [id]);
+
+  // Check if sarana role is trying to access edit mode or create new barang
+  useEffect(() => {
+    if (user && user.peran === 'sarana' && (isEditMode || isNewBarang)) {
+      toast.error('Anda tidak memiliki akses untuk mengedit atau menambah barang.');
+      navigate('/barang');
+      return;
+    }
+  }, [user, isEditMode, isNewBarang, navigate]);
 
   // Handle image change
   const handleImageChange = (event) => {
@@ -466,6 +475,8 @@ const BarangDetail = () => {
         return 'primary';
       case 'Perbaikan':
         return 'warning';
+      case 'Habis':
+        return 'error';
       default:
         return 'default';
     }
@@ -816,6 +827,7 @@ const BarangDetail = () => {
                           <MenuItem value="Tersedia">Tersedia</MenuItem>
                           <MenuItem value="Dipinjam">Dipinjam</MenuItem>
                           <MenuItem value="Perbaikan">Perbaikan</MenuItem>
+                          <MenuItem value="Habis">Habis</MenuItem>
                         </Field>
                       </Grid>
                       <Grid item xs={12} sm={6}>
@@ -854,7 +866,7 @@ const BarangDetail = () => {
                           }}
                         />
                       </Grid>
-                      {isKepalaLab() && (
+                      {(isKepalaLab() || isAdmin() || isToolman()) && (
                         <Grid item xs={12} sm={6}>
                           <SumberDanaDropdown
                             value={values.id_sumber_dana}
@@ -1114,7 +1126,7 @@ const BarangDetail = () => {
                               }}
                               onClick={() => handleUnitImageClick(barang)}
                             />
-                            {canCRUD() && (
+                            {canCRUD() && !isSarana() && (
                               <>
                                 <input
                                   type="file"
@@ -1172,7 +1184,7 @@ const BarangDetail = () => {
                         </TableCell>
                         <TableCell>{barang.lokasi ? (typeof barang.lokasi === 'object' ? barang.lokasi.nama : barang.lokasi) : '-'}</TableCell>
                         <TableCell align="right">
-                          {canCRUD() && (
+                          {canCRUD() && !isSarana() && (
                             <Tooltip title="Edit Unit">
                               <IconButton 
                                 onClick={() => navigate(`/barang/${barang.id}`, { 
@@ -1216,7 +1228,7 @@ const BarangDetail = () => {
                                 }}
                                 onClick={() => handleUnitImageClick(unit)}
                               />
-                              {canCRUD() && (
+                              {canCRUD() && !isSarana() && (
                                 <>
                                   <input
                                     type="file"
@@ -1280,7 +1292,7 @@ const BarangDetail = () => {
                                   <VisibilityIcon fontSize="small" />
                                 </IconButton>
                               </Tooltip>
-                              {canCRUD() && (
+                              {canCRUD() && !isSarana() && (
                                 <Tooltip title="Edit Unit">
                                   <IconButton 
                                     onClick={() => navigate(`/barang/${unit.id}`, { 

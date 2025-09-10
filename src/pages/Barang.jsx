@@ -42,7 +42,7 @@ import ConfirmDialog from '../components/ConfirmDialog';
 const Barang = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const { canCRUD, canDeleteBarang } = useAuth();
+  const { canCRUD, canDeleteBarang, isSarana } = useAuth();
   const [loading, setLoading] = useState(true);
   const [barangs, setBarangs] = useState([]);
   const [kategoris, setKategoris] = useState([]);
@@ -311,6 +311,8 @@ const Barang = () => {
         return 'primary';
       case 'Perbaikan':
         return 'warning';
+      case 'Habis':
+        return 'error';
       default:
         return 'default';
     }
@@ -732,6 +734,7 @@ const Barang = () => {
                 <MenuItem value="Tersedia">Tersedia</MenuItem>
                 <MenuItem value="Dipinjam">Dipinjam</MenuItem>
                 <MenuItem value="Perbaikan">Perbaikan</MenuItem>
+                <MenuItem value="Habis">Habis</MenuItem>
               </TextField>
             </Grid>
             <Grid item xs={12} sm={6} md={3}>
@@ -884,6 +887,7 @@ const Barang = () => {
                       <MenuItem value="Tersedia">Tersedia</MenuItem>
                       <MenuItem value="Dipinjam">Dipinjam</MenuItem>
                       <MenuItem value="Perbaikan">Perbaikan</MenuItem>
+                      <MenuItem value="Habis">Habis</MenuItem>
                     </TextField>
                   </Grid>
                   <Grid item xs={12} sm={3}>
@@ -998,7 +1002,7 @@ const Barang = () => {
                               <VisibilityIcon sx={{ fontSize: { xs: '1rem', sm: '1.25rem' } }} />
                             </IconButton>
                           </Tooltip>
-                          {canCRUD && (
+                          {canCRUD && !isSarana() && (
                             <Tooltip title="Edit Barang">
                               <IconButton onClick={() => {
                                 handleCloseUnitDialog();

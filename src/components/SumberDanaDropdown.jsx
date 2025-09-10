@@ -37,6 +37,14 @@ const SumberDanaDropdown = ({ value, onChange, error, helperText, disabled = fal
     return currentUser?.peran === 'kepala_lab';
   };
 
+  const canViewSumberDana = () => {
+    return currentUser?.peran === 'kepala_lab' || currentUser?.peran === 'admin' || currentUser?.peran === 'toolman';
+  };
+
+  const canManageSumberDana = () => {
+    return currentUser?.peran === 'kepala_lab';
+  };
+
   useEffect(() => {
     fetchSumberDana();
   }, []);
@@ -188,7 +196,7 @@ const SumberDanaDropdown = ({ value, onChange, error, helperText, disabled = fal
         </Box>
         
         {/* Tombol toggle untuk menampilkan area kelola */}
-        {isKepalaLab() && !disabled && sumberDanaList.length > 0 && (
+        {canManageSumberDana() && !disabled && sumberDanaList.length > 0 && (
           <Box sx={{ mt: 1 }}>
             <Button
               size="medium"
@@ -217,7 +225,7 @@ const SumberDanaDropdown = ({ value, onChange, error, helperText, disabled = fal
         )}
         
         {/* Area untuk mengelola sumber dana yang sudah ada */}
-        {isKepalaLab() && !disabled && sumberDanaList.length > 0 && showManageArea && (
+        {canManageSumberDana() && !disabled && sumberDanaList.length > 0 && showManageArea && (
           <Box sx={{ 
             mt: 2, 
             p: 2, 
