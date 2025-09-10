@@ -46,6 +46,7 @@ import { generatePlaceholderDataUrl } from '../components/ImagePlaceholder';
 import PageHeader from '../components/PageHeader';
 import ConfirmDialog from '../components/ConfirmDialog';
 import SumberDanaDropdown from '../components/SumberDanaDropdown';
+import ImageModal from '../components/ImageModal';
 
 // Validation schema for barang form
 const BarangSchema = Yup.object().shape({
@@ -114,6 +115,8 @@ const BarangDetail = () => {
   ];
   const [imagePreview, setImagePreview] = useState(null);
   const [imageFile, setImageFile] = useState(null);
+  const [isImageModalOpen, setIsImageModalOpen] = useState(false);
+  const [modalImageUrl, setModalImageUrl] = useState('');
 
   // Fetch barang data
   const fetchBarang = async () => {
@@ -196,6 +199,14 @@ const BarangDetail = () => {
   const handleImageChange = (event) => {
     const file = event.target.files[0];
     if (file) {
+      // Validasi ukuran file (maksimal 5MB)
+      const maxSize = 5 * 1024 * 1024; // 5MB dalam bytes
+      if (file.size > maxSize) {
+        toast.error('Ukuran file gambar terlalu besar. Maksimal 5MB.');
+        event.target.value = ''; // Reset input file
+        return;
+      }
+      
       setImageFile(file);
       const reader = new FileReader();
       reader.onloadend = () => {
@@ -203,6 +214,19 @@ const BarangDetail = () => {
       };
       reader.readAsDataURL(file);
     }
+  };
+
+  // Handle image modal
+  const handleImageClick = (imageUrl) => {
+    if (imageUrl && !imageUrl.includes('data:image/svg+xml')) {
+      setModalImageUrl(imageUrl);
+      setIsImageModalOpen(true);
+    }
+  };
+
+  const handleCloseImageModal = () => {
+    setIsImageModalOpen(false);
+    setModalImageUrl('');
   };
 
   // Handle form submission
@@ -259,6 +283,10 @@ const BarangDetail = () => {
           toast.success(isNewBarang ? 'Barang berhasil ditambahkan' : 'Barang berhasil diperbarui');
         }
         
+        // Reset image state after successful submit
+        setImageFile(null);
+        setImagePreview(null);
+        
         // Check if we need to return to edit mode of another barang
         if (location.state?.returnToEdit && location.state?.returnToId) {
           // Return to the original barang in edit mode with Unit tab active
@@ -285,8 +313,18 @@ const BarangDetail = () => {
       }
     } catch (error) {
       console.error('Error saving barang:', error);
-      toast.error(isNewBarang ? 'Gagal menambahkan barang: ' : 'Gagal memperbarui barang: ' + 
-        (error.response?.data?.pesan || error.message));
+      
+      // Handle specific error types
+      let errorMessage = '';
+      if (error.code === 'LIMIT_FILE_SIZE' || error.message?.includes('File too large')) {
+        errorMessage = 'Ukuran file gambar terlalu besar. Maksimal 5MB.';
+      } else if (error.response?.data?.pesan) {
+        errorMessage = error.response.data.pesan;
+      } else {
+        errorMessage = error.message || 'Terjadi kesalahan yang tidak diketahui';
+      }
+      
+      toast.error((isNewBarang ? 'Gagal menambahkan barang: ' : 'Gagal memperbarui barang: ') + errorMessage);
     } finally {
       setSaving(false);
       setSubmitting(false);
@@ -473,7 +511,16 @@ const BarangDetail = () => {
                           height="250"
                           image={imagePreview || (barang.gambar ? barang.gambar : generatePlaceholderDataUrl(400, 300, 'No Image'))}
                           alt={values.nama}
-                          sx={{ objectFit: 'contain', bgcolor: 'grey.100', p: 2 }}
+                          sx={{ 
+                            objectFit: 'contain', 
+                            bgcolor: 'grey.100', 
+                            p: 2,
+                            cursor: (imagePreview || barang.gambar) && !(imagePreview || barang.gambar).includes('data:image/svg+xml') ? 'pointer' : 'default',
+                            '&:hover': {
+                              opacity: (imagePreview || barang.gambar) && !(imagePreview || barang.gambar).includes('data:image/svg+xml') ? 0.8 : 1
+                            }
+                          }}
+                          onClick={() => handleImageClick(imagePreview || barang.gambar)}
                         />
                         <CardContent sx={{ p: 1, '&:last-child': { pb: 1 } }}>
                           <Box sx={{ display: 'flex', justifyContent: 'center' }}>
@@ -862,7 +909,16 @@ const BarangDetail = () => {
                         height="250"
                         image={barang?.gambar ? barang?.gambar : generatePlaceholderDataUrl(400, 300, 'No Image')}
                         alt={barang?.nama || 'Barang'}
-                        sx={{ objectFit: 'contain', bgcolor: 'grey.100', p: 2 }}
+                        sx={{ 
+                          objectFit: 'contain', 
+                          bgcolor: 'grey.100', 
+                          p: 2,
+                          cursor: barang?.gambar && !barang?.gambar.includes('data:image/svg+xml') ? 'pointer' : 'default',
+                          '&:hover': {
+                            opacity: barang?.gambar && !barang?.gambar.includes('data:image/svg+xml') ? 0.8 : 1
+                          }
+                        }}
+                        onClick={() => handleImageClick(barang?.gambar)}
                       />
                     </Card>
                   </Grid>
@@ -1118,6 +1174,14 @@ const BarangDetail = () => {
         onConfirm={handleDelete}
         onCancel={() => setConfirmDelete(false)}
         loading={deleteLoading}
+      />
+      
+      {/* Image Modal */}
+      <ImageModal
+        open={isImageModalOpen}
+        onClose={handleCloseImageModal}
+        imageUrl={modalImageUrl}
+        altText={barang?.nama || 'Preview Gambar Barang'}
       />
     </>
   );

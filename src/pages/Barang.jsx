@@ -418,21 +418,21 @@ const Barang = () => {
       sortable: true,
       align: 'center',
       format: (value, row) => (
-        <Chip 
-          label={row.units?.[0]?.sumber_dana?.nama || '-'} 
-          size="small" 
-          variant="filled"
-          color="info"
-          sx={{ 
-            fontWeight: 600,
-            fontSize: '0.75rem',
-            '& .MuiChip-label': {
-              px: 1.5,
-              py: 0.5,
-              color: 'white'
-            }
-          }}
-        />
+        <Box sx={{ maxWidth: '120px', textAlign: 'center' }}>
+          <Typography 
+            variant="body2" 
+            sx={{ 
+              fontWeight: 500,
+              fontSize: '0.75rem',
+              lineHeight: 1.2,
+              wordBreak: 'break-word',
+              whiteSpace: 'normal',
+              color: 'text.primary'
+            }}
+          >
+            {row.units?.[0]?.sumber_dana?.nama || '-'}
+          </Typography>
+        </Box>
       )
     },
     {
@@ -912,8 +912,18 @@ const Barang = () => {
                       <TableCell sx={{ display: { xs: 'none', sm: 'table-cell' }, fontSize: { xs: '0.75rem', sm: '0.875rem' } }}>
                         {unit.lokasi ? (typeof unit.lokasi === 'object' ? unit.lokasi.nama : unit.lokasi) : '-'}
                       </TableCell>
-                      <TableCell sx={{ display: { xs: 'none', md: 'table-cell' }, fontSize: { xs: '0.75rem', sm: '0.875rem' } }}>
-                        {unit.sumber_dana ? unit.sumber_dana.nama : '-'}
+                      <TableCell sx={{ display: { xs: 'none', md: 'table-cell' }, fontSize: { xs: '0.75rem', sm: '0.875rem' }, maxWidth: '120px' }}>
+                        <Typography 
+                          variant="body2" 
+                          sx={{ 
+                            fontSize: { xs: '0.75rem', sm: '0.875rem' },
+                            lineHeight: 1.2,
+                            wordBreak: 'break-word',
+                            whiteSpace: 'normal'
+                          }}
+                        >
+                          {unit.sumber_dana ? unit.sumber_dana.nama : '-'}
+                        </Typography>
                       </TableCell>
                       <TableCell align="right">
                         <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: { xs: 0.5, sm: 1 } }}>
