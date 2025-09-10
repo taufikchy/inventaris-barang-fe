@@ -47,6 +47,7 @@ const Barang = () => {
   const [barangs, setBarangs] = useState([]);
   const [kategoris, setKategoris] = useState([]);
   const [lokasis, setLokasis] = useState([]);
+  const [sumberDanas, setSumberDanas] = useState([]);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [currentBarang, setCurrentBarang] = useState(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
@@ -55,6 +56,7 @@ const Barang = () => {
     lokasi: '',
     status: '',
     kondisi: '',
+    sumberDana: '',
   });
   const [showFilters, setShowFilters] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
@@ -79,6 +81,15 @@ const Barang = () => {
         toast.error('Gagal memuat data lokasi: ' + lokasiResponse.data.pesan);
         setLokasis([]);
       }
+      
+      // Fetch sumber dana data
+      const sumberDanaResponse = await axios.get('/api/sumber-dana/dropdown');
+      if (sumberDanaResponse.data.sukses) {
+        setSumberDanas(sumberDanaResponse.data.data);
+      } else {
+        toast.error('Gagal memuat data sumber dana: ' + sumberDanaResponse.data.pesan);
+        setSumberDanas([]);
+      }
     } catch (error) {
       console.error('Error fetching dropdown data:', error);
       toast.error('Gagal memuat data dropdown: ' + (error.response?.data?.pesan || error.message));
@@ -97,6 +108,7 @@ const Barang = () => {
       if (apiFilters.lokasi) params.append('lokasi', apiFilters.lokasi);
       if (apiFilters.status) params.append('status', apiFilters.status);
       if (apiFilters.kondisi) params.append('kondisi', apiFilters.kondisi);
+      if (apiFilters.sumberDana) params.append('sumberDana', apiFilters.sumberDana);
       
       // Tambahkan parameter batas untuk menampilkan lebih banyak data
       params.append('batas', 100);
@@ -138,6 +150,7 @@ const Barang = () => {
     const lokasiParam = searchParams.get('lokasi') || '';
     const status = searchParams.get('status') || '';
     const kondisi = searchParams.get('kondisi') || '';
+    const sumberDana = searchParams.get('sumberDana') || '';
     
     // If lokasi parameter is a name (from dashboard), find the corresponding ID
     let lokasiValue = lokasiParam;
@@ -160,7 +173,8 @@ const Barang = () => {
       kategori,
       lokasi: lokasiValue,
       status,
-      kondisi: kondisiValue
+      kondisi: kondisiValue,
+      sumberDana
     });
     
     setIsInitialized(true);
@@ -268,7 +282,8 @@ const Barang = () => {
       (filters.kategori === '' || barang.id_kategori === parseInt(filters.kategori)) &&
       (filters.lokasi === '' || barang.id_lokasi === parseInt(filters.lokasi)) &&
       (filters.status === '' || barang.status === filters.status) &&
-      (filters.kondisi === '' || barang.kondisi === filters.kondisi)
+      (filters.kondisi === '' || barang.kondisi === filters.kondisi) &&
+      (filters.sumberDana === '' || barang.id_sumber_dana === parseInt(filters.sumberDana))
     );
   });
 
@@ -577,7 +592,8 @@ const Barang = () => {
   const [unitFilters, setUnitFilters] = useState({
     kondisi: '',
     status: '',
-    search: ''
+    search: '',
+    sumberDana: ''
   });
 
   // Handle buka dialog detail unit
@@ -593,7 +609,8 @@ const Barang = () => {
     setUnitFilters({
       kondisi: '',
       status: '',
-      search: ''
+      search: '',
+      sumberDana: ''
     });
   };
 
@@ -615,8 +632,10 @@ const Barang = () => {
       const matchesStatus = unitFilters.status === '' || unit.status === unitFilters.status;
       const matchesSearch = unitFilters.search === '' || 
         unit.kode.toLowerCase().includes(unitFilters.search.toLowerCase());
+      const matchesSumberDana = unitFilters.sumberDana === '' || 
+        selectedBarang.id_sumber_dana === parseInt(unitFilters.sumberDana);
       
-      return matchesKondisi && matchesStatus && matchesSearch;
+      return matchesKondisi && matchesStatus && matchesSearch && matchesSumberDana;
     });
   };
 
@@ -735,6 +754,28 @@ const Barang = () => {
                 <MenuItem value="Rusak Berat">Rusak Berat</MenuItem>
               </TextField>
             </Grid>
+            <Grid item xs={12} sm={6} md={3}>
+              <TextField
+                select
+                fullWidth
+                label="Sumber Dana"
+                name="sumberDana"
+                value={filters.sumberDana}
+                onChange={handleFilterChange}
+                size="small"
+                sx={{
+                  '& .MuiInputLabel-root': { fontSize: { xs: '0.875rem', sm: '1rem' } },
+                  '& .MuiInputBase-input': { fontSize: { xs: '0.875rem', sm: '1rem' } }
+                }}
+              >
+                <MenuItem value="">Semua Sumber Dana</MenuItem>
+                {sumberDanas.map((sumberDana) => (
+                  <MenuItem key={sumberDana.id} value={sumberDana.id}>
+                    {sumberDana.nama}
+                  </MenuItem>
+                ))}
+              </TextField>
+            </Grid>
           </Grid>
         </CardContent>
       </Card>
@@ -790,7 +831,7 @@ const Barang = () => {
                   Filter & Pencarian Unit
                 </Typography>
                 <Grid container spacing={{ xs: 2, sm: 2 }}>
-                  <Grid item xs={12} sm={4}>
+                  <Grid item xs={12} sm={3}>
                     <TextField
                       fullWidth
                       label="Pencarian Kode Unit"
@@ -805,7 +846,7 @@ const Barang = () => {
                       }}
                     />
                   </Grid>
-                  <Grid item xs={12} sm={4}>
+                  <Grid item xs={12} sm={3}>
                     <TextField
                       select
                       fullWidth
@@ -825,7 +866,7 @@ const Barang = () => {
                       <MenuItem value="Rusak Berat">Rusak Berat</MenuItem>
                     </TextField>
                   </Grid>
-                  <Grid item xs={12} sm={4}>
+                  <Grid item xs={12} sm={3}>
                     <TextField
                       select
                       fullWidth
@@ -843,6 +884,28 @@ const Barang = () => {
                       <MenuItem value="Tersedia">Tersedia</MenuItem>
                       <MenuItem value="Dipinjam">Dipinjam</MenuItem>
                       <MenuItem value="Perbaikan">Perbaikan</MenuItem>
+                    </TextField>
+                  </Grid>
+                  <Grid item xs={12} sm={3}>
+                    <TextField
+                      select
+                      fullWidth
+                      label="Sumber Dana"
+                      name="sumberDana"
+                      value={unitFilters.sumberDana}
+                      onChange={handleUnitFilterChange}
+                      size="small"
+                      sx={{
+                        '& .MuiInputLabel-root': { fontSize: { xs: '0.875rem', sm: '1rem' } },
+                        '& .MuiInputBase-input': { fontSize: { xs: '0.875rem', sm: '1rem' } }
+                      }}
+                    >
+                      <MenuItem value="">Semua Sumber Dana</MenuItem>
+                      {sumberDanas.map((sumberDana) => (
+                        <MenuItem key={sumberDana.id} value={sumberDana.id}>
+                          {sumberDana.nama}
+                        </MenuItem>
+                      ))}
                     </TextField>
                   </Grid>
                 </Grid>
