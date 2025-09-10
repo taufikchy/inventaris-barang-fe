@@ -883,7 +883,7 @@ const PeminjamanDetail = () => {
                     variant="outlined"
                     startIcon={<AddIcon sx={{ fontSize: { xs: '1rem', sm: '1.25rem' } }} />}
                     onClick={() => openBarangDialog()}
-                    size={{ xs: 'small', sm: 'medium' }}
+                    size="small"
                     sx={{
                       fontSize: { xs: '0.75rem', sm: '0.875rem' },
                       padding: { xs: '4px 8px', sm: '6px 16px' }
@@ -1091,7 +1091,7 @@ const PeminjamanDetail = () => {
                     color="secondary"
                     onClick={() => isNewPeminjaman ? navigate('/peminjaman') : navigate(`/peminjaman/${id}`)}
                     startIcon={<CancelIcon sx={{ fontSize: { xs: '1rem', sm: '1.25rem' } }} />}
-                    size={{ xs: 'small', sm: 'medium' }}
+                    size="small"
                     sx={{
                       fontSize: { xs: '0.75rem', sm: '0.875rem' },
                       padding: { xs: '6px 12px', sm: '8px 16px' }
@@ -1110,7 +1110,7 @@ const PeminjamanDetail = () => {
                         color="error"
                         onClick={() => setConfirmDelete(true)}
                         startIcon={<DeleteIcon sx={{ fontSize: { xs: '1rem', sm: '1.25rem' } }} />}
-                        size={{ xs: 'small', sm: 'medium' }}
+                        size="small"
                         sx={{ 
                           mr: { xs: 0, sm: 1 },
                           fontSize: { xs: '0.75rem', sm: '0.875rem' },

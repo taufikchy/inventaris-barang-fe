@@ -426,7 +426,8 @@ const Dashboard = () => {
                 color="warning"
                 onClick={() => navigate('/barang?kategori_tipe=bahan')}
                 endIcon={<ArrowForwardIcon />}
-                size={{ xs: 'small', sm: 'medium' }}
+                size="small"
+                sx={{ padding: { xs: '4px 8px', sm: '6px 16px' } }}
               >
                 Lihat Semua Bahan
               </Button>

@@ -459,9 +459,12 @@ const BarangDetail = () => {
                                 variant="outlined"
                                 component="span"
                                 startIcon={<PhotoCameraIcon sx={{ fontSize: { xs: '1rem', sm: '1.25rem' } }} />}
-                                size={{ xs: 'small', sm: 'medium' }}
+                                size="small"
                                 fullWidth
-                                sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}
+                                sx={{ 
+                                  fontSize: { xs: '0.75rem', sm: '0.875rem' },
+                                  padding: { xs: '4px 8px', sm: '6px 16px' }
+                                }}
                               >
                                 Ubah Gambar
                               </Button>
