@@ -38,6 +38,7 @@ import {
   Cancel as CancelIcon,
   Delete as DeleteIcon,
   PhotoCamera as PhotoCameraIcon,
+  CameraAlt as CameraAltIcon,
   Info as InfoIcon,
   Devices as DevicesIcon,
   Visibility as VisibilityIcon,
@@ -227,6 +228,59 @@ const BarangDetail = () => {
   const handleCloseImageModal = () => {
     setIsImageModalOpen(false);
     setModalImageUrl('');
+  };
+
+  const handleUnitImageClick = (unit) => {
+    const imageUrl = unit.gambar 
+      ? `http://localhost:5000${unit.gambar}`
+      : '/placeholder-image.png';
+    if (imageUrl && !imageUrl.includes('data:image/svg+xml')) {
+      setModalImageUrl(imageUrl);
+      setIsImageModalOpen(true);
+    }
+  };
+
+  // Handle unit image upload
+  const handleUnitImageUpload = async (event, unitId) => {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('Ukuran file terlalu besar. Maksimal 5MB.');
+      return;
+    }
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      toast.error('File harus berupa gambar.');
+      return;
+    }
+
+    try {
+      const formData = new FormData();
+      formData.append('gambar', file);
+
+      const response = await axios.put(`/api/barang/${unitId}/gambar`, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      });
+
+      if (response.data.sukses) {
+        toast.success('Gambar unit berhasil diupload!');
+        // Refresh data to show updated image
+        fetchBarang();
+      } else {
+        toast.error('Gagal mengupload gambar: ' + response.data.pesan);
+      }
+    } catch (error) {
+      console.error('Error uploading unit image:', error);
+      toast.error('Terjadi kesalahan saat mengupload gambar.');
+    }
+
+    // Reset input
+    event.target.value = '';
   };
 
   // Handle form submission
@@ -1031,6 +1085,7 @@ const BarangDetail = () => {
                   <Table>
                     <TableHead>
                       <TableRow>
+                        <TableCell>Gambar</TableCell>
                         <TableCell>Kode Unit</TableCell>
                         <TableCell>Kondisi</TableCell>
                         <TableCell>Status</TableCell>
@@ -1041,6 +1096,57 @@ const BarangDetail = () => {
                     <TableBody>
                       {/* Current unit */}
                       <TableRow>
+                        <TableCell>
+                          <Box sx={{ position: 'relative', display: 'inline-block' }}>
+                            <Box
+                              component="img"
+                              src={barang.gambar ? `http://localhost:5000${barang.gambar}` : '/placeholder-image.png'}
+                              alt={barang.nama}
+                              sx={{
+                                width: 60,
+                                height: 60,
+                                objectFit: 'cover',
+                                borderRadius: 1,
+                                cursor: barang.gambar ? 'pointer' : 'default',
+                                '&:hover': {
+                                  opacity: barang.gambar ? 0.8 : 1
+                                }
+                              }}
+                              onClick={() => handleUnitImageClick(barang)}
+                            />
+                            {canCRUD() && (
+                              <>
+                                <input
+                                  type="file"
+                                  accept="image/*"
+                                  style={{ display: 'none' }}
+                                  id={`upload-current-unit-${barang.id}`}
+                                  onChange={(e) => handleUnitImageUpload(e, barang.id)}
+                                />
+                                <Tooltip title="Upload Gambar">
+                                  <IconButton
+                                    size="small"
+                                    sx={{
+                                      position: 'absolute',
+                                      top: -8,
+                                      right: -8,
+                                      backgroundColor: 'primary.main',
+                                      color: 'white',
+                                      width: 24,
+                                      height: 24,
+                                      '&:hover': {
+                                        backgroundColor: 'primary.dark'
+                                      }
+                                    }}
+                                    onClick={() => document.getElementById(`upload-current-unit-${barang.id}`).click()}
+                                  >
+                                    <CameraAltIcon sx={{ fontSize: 14 }} />
+                                  </IconButton>
+                                </Tooltip>
+                              </>
+                            )}
+                          </Box>
+                        </TableCell>
                         <TableCell>{barang.kode}</TableCell>
                         <TableCell>
                           <Chip
@@ -1092,6 +1198,57 @@ const BarangDetail = () => {
                       {/* Related units */}
                       {barang.related_units && barang.related_units.map((unit) => (
                         <TableRow key={unit.id}>
+                          <TableCell>
+                            <Box sx={{ position: 'relative', display: 'inline-block' }}>
+                              <Box
+                                component="img"
+                                src={unit.gambar ? `http://localhost:5000${unit.gambar}` : '/placeholder-image.png'}
+                                alt={unit.nama || 'Unit'}
+                                sx={{
+                                  width: 60,
+                                  height: 60,
+                                  objectFit: 'cover',
+                                  borderRadius: 1,
+                                  cursor: unit.gambar ? 'pointer' : 'default',
+                                  '&:hover': {
+                                    opacity: unit.gambar ? 0.8 : 1
+                                  }
+                                }}
+                                onClick={() => handleUnitImageClick(unit)}
+                              />
+                              {canCRUD() && (
+                                <>
+                                  <input
+                                    type="file"
+                                    accept="image/*"
+                                    style={{ display: 'none' }}
+                                    id={`upload-unit-${unit.id}`}
+                                    onChange={(e) => handleUnitImageUpload(e, unit.id)}
+                                  />
+                                  <Tooltip title="Upload Gambar">
+                                    <IconButton
+                                      size="small"
+                                      sx={{
+                                        position: 'absolute',
+                                        top: -8,
+                                        right: -8,
+                                        backgroundColor: 'primary.main',
+                                        color: 'white',
+                                        width: 24,
+                                        height: 24,
+                                        '&:hover': {
+                                          backgroundColor: 'primary.dark'
+                                        }
+                                      }}
+                                      onClick={() => document.getElementById(`upload-unit-${unit.id}`).click()}
+                                    >
+                                      <CameraAltIcon sx={{ fontSize: 14 }} />
+                                    </IconButton>
+                                  </Tooltip>
+                                </>
+                              )}
+                            </Box>
+                          </TableCell>
                           <TableCell>{unit.kode}</TableCell>
                           <TableCell>
                             <Chip
@@ -1148,7 +1305,7 @@ const BarangDetail = () => {
 
                       {(!barang.related_units || barang.related_units.length === 0) && (
                         <TableRow>
-                          <TableCell colSpan={5} align="center">
+                          <TableCell colSpan={6} align="center">
                             <Typography variant="body2" color="text.secondary">
                               Tidak ada unit terkait lainnya.
                             </Typography>
