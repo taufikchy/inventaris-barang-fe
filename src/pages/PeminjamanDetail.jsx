@@ -844,7 +844,7 @@ const PeminjamanDetail = () => {
                       label="Keterangan"
                       fullWidth
                       multiline
-                      rows={{ xs: 2, sm: 2 }}
+                      rows={2}
                       size="small"
                       margin="normal"
                       error={touched.keterangan && Boolean(errors.keterangan)}

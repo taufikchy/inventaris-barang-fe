@@ -105,8 +105,8 @@ const Barang = () => {
       const response = await axios.get(`/api/barang?${params.toString()}`);
       
       if (response.data.sukses) {
-        // Tambahkan satuan default jika tidak ada
-        const barangsWithSatuan = response.data.data.map(barang => ({
+          // Tambahkan satuan default jika tidak ada
+          const barangsWithSatuan = response.data.data.map(barang => ({
           ...barang,
           satuan: barang.satuan || 'unit' // Default satuan jika tidak ada dari backend
         }));
@@ -410,6 +410,29 @@ const Barang = () => {
         <Typography variant="body2" sx={{ fontWeight: 500 }}>
           {value ? formatDate(value) : '-'}
         </Typography>
+      )
+    },
+    {
+      id: 'id_sumber_dana',
+      label: 'Sumber Dana',
+      sortable: true,
+      align: 'center',
+      format: (value, row) => (
+        <Chip 
+          label={row.units?.[0]?.sumber_dana?.nama || '-'} 
+          size="small" 
+          variant="filled"
+          color="info"
+          sx={{ 
+            fontWeight: 600,
+            fontSize: '0.75rem',
+            '& .MuiChip-label': {
+              px: 1.5,
+              py: 0.5,
+              color: 'white'
+            }
+          }}
+        />
       )
     },
     {
@@ -833,13 +856,14 @@ const Barang = () => {
                       <TableCell sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}>Kondisi</TableCell>
                       <TableCell sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}>Status</TableCell>
                       <TableCell sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' }, display: { xs: 'none', sm: 'table-cell' } }}>Lokasi</TableCell>
+                      <TableCell sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' }, display: { xs: 'none', md: 'table-cell' } }}>Sumber Dana</TableCell>
                       <TableCell align="right" sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}>Aksi</TableCell>
                     </TableRow>
                   </TableHead>
                   <TableBody>
                     {getFilteredUnits().length === 0 ? (
                       <TableRow>
-                        <TableCell colSpan={{ xs: 4, sm: 5 }} align="center">
+                        <TableCell colSpan={{ xs: 4, sm: 5, md: 6 }} align="center">
                           <Typography variant="body2" color="text.secondary" sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}>
                             {selectedBarang.units?.length === 0 ? 'Tidak ada unit untuk barang ini' : 'Tidak ada unit yang sesuai dengan filter'}
                           </Typography>
@@ -887,6 +911,9 @@ const Barang = () => {
                       </TableCell>
                       <TableCell sx={{ display: { xs: 'none', sm: 'table-cell' }, fontSize: { xs: '0.75rem', sm: '0.875rem' } }}>
                         {unit.lokasi ? (typeof unit.lokasi === 'object' ? unit.lokasi.nama : unit.lokasi) : '-'}
+                      </TableCell>
+                      <TableCell sx={{ display: { xs: 'none', md: 'table-cell' }, fontSize: { xs: '0.75rem', sm: '0.875rem' } }}>
+                        {unit.sumber_dana ? unit.sumber_dana.nama : '-'}
                       </TableCell>
                       <TableCell align="right">
                         <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: { xs: 0.5, sm: 1 } }}>

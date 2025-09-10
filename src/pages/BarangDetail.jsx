@@ -45,6 +45,7 @@ import {
 import { generatePlaceholderDataUrl } from '../components/ImagePlaceholder';
 import PageHeader from '../components/PageHeader';
 import ConfirmDialog from '../components/ConfirmDialog';
+import SumberDanaDropdown from '../components/SumberDanaDropdown';
 
 // Validation schema for barang form
 const BarangSchema = Yup.object().shape({
@@ -75,13 +76,14 @@ const BarangSchema = Yup.object().shape({
   id_kategori: Yup.number().required('Kategori wajib dipilih'),
   id_lokasi: Yup.number().required('Lokasi wajib dipilih'),
   status: Yup.string().required('Status barang wajib diisi'),
+  id_sumber_dana: Yup.number().nullable(),
 });
 
 const BarangDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
-  const { canCRUD, canDeleteBarang } = useAuth();
+  const { canCRUD, canDeleteBarang, isKepalaLab } = useAuth();
   const isNewBarang = id === 'new';
   const isEditMode = location.state?.edit || isNewBarang;
   
@@ -93,10 +95,17 @@ const BarangDetail = () => {
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState(false);
   // Tab state
-  const [activeTab, setActiveTab] = useState(0);
+  const [activeTab, setActiveTab] = useState(location.state?.activeTab || 0);
   const handleTabChange = (event, newValue) => {
     setActiveTab(newValue);
   };
+
+  // Update active tab when location state changes
+  useEffect(() => {
+    if (location.state?.activeTab !== undefined) {
+      setActiveTab(location.state.activeTab);
+    }
+  }, [location.state?.activeTab]);
 
   // Tab labels
   const tabs = [
@@ -120,10 +129,11 @@ const BarangDetail = () => {
         kondisi: 'Baik',
         tanggal_perolehan: new Date().toISOString().split('T')[0],
         tahun_pengadaan: new Date().getFullYear(),
-        id_kategori: '',
-        id_lokasi: '',
+        id_kategori: null,
+        id_lokasi: null,
         status: 'Tersedia',
         gambar: '',
+        id_sumber_dana: null,
       });
       setLoading(false);
       return;
@@ -249,8 +259,27 @@ const BarangDetail = () => {
           toast.success(isNewBarang ? 'Barang berhasil ditambahkan' : 'Barang berhasil diperbarui');
         }
         
-        // Redirect to barang list after successful save
-        navigate('/barang');
+        // Check if we need to return to edit mode of another barang
+        if (location.state?.returnToEdit && location.state?.returnToId) {
+          // Return to the original barang in edit mode with Unit tab active
+          navigate(`/barang/${location.state.returnToId}`, { 
+            state: { 
+              edit: true, 
+              activeTab: location.state.activeTab || 1 
+            },
+            replace: true 
+          });
+        } else {
+          // Refresh data barang setelah update
+          await fetchBarang();
+          // Stay in current barang detail page with Unit tab active after save
+          navigate(`/barang/${id}`, { 
+            state: { 
+              activeTab: 1 
+            },
+            replace: true 
+          });
+        }
       } else {
         toast.error(response.data.pesan || (isNewBarang ? 'Gagal menambahkan barang' : 'Gagal memperbarui barang'));
       }
@@ -427,11 +456,12 @@ const BarangDetail = () => {
             id_kategori: barang?.id_kategori || '',
             id_lokasi: barang?.id_lokasi || '',
             status: barang?.status || 'Tersedia',
+            id_sumber_dana: barang?.id_sumber_dana || null,
           }}
           validationSchema={BarangSchema}
           onSubmit={handleSubmit}
         >
-          {({ errors, touched, isSubmitting, values, handleChange }) => (
+          {({ errors, touched, isSubmitting, values, handleChange, setFieldValue }) => (
             <Form>
               <Paper sx={{ p: { xs: 2, sm: 3 }, mb: { xs: 2, sm: 3 } }}>
                 <Grid container spacing={{ xs: 2, sm: 3 }}>
@@ -441,7 +471,7 @@ const BarangDetail = () => {
                         <CardMedia
                           component="img"
                           height="250"
-                          image={imagePreview || (barang.gambar ? `http://localhost:5000${barang.gambar}` : generatePlaceholderDataUrl(400, 300, 'No Image'))}
+                          image={imagePreview || (barang.gambar ? barang.gambar : generatePlaceholderDataUrl(400, 300, 'No Image'))}
                           alt={values.nama}
                           sx={{ objectFit: 'contain', bgcolor: 'grey.100', p: 2 }}
                         />
@@ -519,7 +549,7 @@ const BarangDetail = () => {
                           label="Deskripsi"
                           fullWidth
                           multiline
-                          rows={{ xs: 2, sm: 3 }}
+                          rows={3}
                           error={touched.deskripsi && Boolean(errors.deskripsi)}
                           helperText={touched.deskripsi && errors.deskripsi}
                           sx={{
@@ -537,7 +567,7 @@ const BarangDetail = () => {
                           label="Kategori"
                           fullWidth
                           required
-                          value={values.id_kategori}
+                          value={values.id_kategori || ''}
                           onChange={handleChange}
                           error={touched.id_kategori && Boolean(errors.id_kategori)}
                           helperText={touched.id_kategori && errors.id_kategori}
@@ -583,7 +613,7 @@ const BarangDetail = () => {
                           label="Lokasi"
                           fullWidth
                           required
-                          value={values.id_lokasi}
+                          value={values.id_lokasi || ''}
                           onChange={handleChange}
                           error={touched.id_lokasi && Boolean(errors.id_lokasi)}
                           helperText={touched.id_lokasi && errors.id_lokasi}
@@ -723,6 +753,17 @@ const BarangDetail = () => {
                           }}
                         />
                       </Grid>
+                      {isKepalaLab() && (
+                        <Grid item xs={12} sm={6}>
+                          <SumberDanaDropdown
+                            value={values.id_sumber_dana}
+                            onChange={(value) => setFieldValue('id_sumber_dana', value)}
+                            error={touched.id_sumber_dana && Boolean(errors.id_sumber_dana)}
+                            helperText={touched.id_sumber_dana && errors.id_sumber_dana}
+                            disabled={false}
+                          />
+                        </Grid>
+                      )}
                     </Grid>
                   </Grid>
                 </Grid>
@@ -737,7 +778,22 @@ const BarangDetail = () => {
                   <Button
                     variant="outlined"
                     color="secondary"
-                    onClick={() => isNewBarang ? navigate('/barang') : navigate(`/barang/${id}`, { replace: true })}
+                    onClick={() => {
+                      if (location.state?.returnToEdit && location.state?.returnToId) {
+                        // Return to the original barang in edit mode with Unit tab active
+                        navigate(`/barang/${location.state.returnToId}`, { 
+                          state: { 
+                            edit: true, 
+                            activeTab: location.state.activeTab || 1 
+                          },
+                          replace: true 
+                        });
+                      } else if (isNewBarang) {
+                        navigate('/barang');
+                      } else {
+                        navigate(`/barang/${id}`, { replace: true });
+                      }
+                    }}
                     startIcon={<CancelIcon sx={{ fontSize: { xs: '1rem', sm: '1.25rem' } }} />}
                     size="small"
                     sx={{ fontSize: { xs: '0.875rem', sm: '1rem' } }}
@@ -804,7 +860,7 @@ const BarangDetail = () => {
                       <CardMedia
                         component="img"
                         height="250"
-                        image={barang?.gambar ? `http://localhost:5000${barang?.gambar}` : generatePlaceholderDataUrl(400, 300, 'No Image')}
+                        image={barang?.gambar ? barang?.gambar : generatePlaceholderDataUrl(400, 300, 'No Image')}
                         alt={barang?.nama || 'Barang'}
                         sx={{ objectFit: 'contain', bgcolor: 'grey.100', p: 2 }}
                       />
@@ -891,6 +947,14 @@ const BarangDetail = () => {
                           {barang?.tahun_pengadaan || '-'}
                         </Typography>
                       </Grid>
+                      <Grid item xs={12} sm={6}>
+                        <Typography variant="body2" color="text.secondary">
+                          Sumber Dana
+                        </Typography>
+                        <Typography variant="body1" gutterBottom>
+                          {barang?.sumber_dana ? barang.sumber_dana.nama : '-'}
+                        </Typography>
+                      </Grid>
 
                     </Grid>
                   </Grid>
@@ -946,7 +1010,24 @@ const BarangDetail = () => {
                         </TableCell>
                         <TableCell>{barang.lokasi ? (typeof barang.lokasi === 'object' ? barang.lokasi.nama : barang.lokasi) : '-'}</TableCell>
                         <TableCell align="right">
-                          <Typography variant="body2" color="primary">
+                          {canCRUD() && (
+                            <Tooltip title="Edit Unit">
+                              <IconButton 
+                                onClick={() => navigate(`/barang/${barang.id}`, { 
+                                  state: { 
+                                    edit: true, 
+                                    returnToEdit: true,
+                                    activeTab: 1 
+                                  } 
+                                })} 
+                                size="small"
+                                color="primary"
+                              >
+                                <EditIcon fontSize="small" />
+                              </IconButton>
+                            </Tooltip>
+                          )}
+                          <Typography variant="body2" color="primary" sx={{ mt: 0.5 }}>
                             Unit Saat Ini
                           </Typography>
                         </TableCell>
@@ -980,11 +1061,31 @@ const BarangDetail = () => {
                           </TableCell>
                           <TableCell>{unit.lokasi ? (typeof unit.lokasi === 'object' ? unit.lokasi.nama : unit.lokasi) : '-'}</TableCell>
                           <TableCell align="right">
-                            <Tooltip title="Lihat Detail">
-                              <IconButton onClick={() => navigate(`/barang/${unit.id}`)} size="small">
-                                <VisibilityIcon fontSize="small" />
-                              </IconButton>
-                            </Tooltip>
+                            <Box sx={{ display: 'flex', gap: 0.5 }}>
+                              <Tooltip title="Lihat Detail">
+                                <IconButton onClick={() => navigate(`/barang/${unit.id}`)} size="small">
+                                  <VisibilityIcon fontSize="small" />
+                                </IconButton>
+                              </Tooltip>
+                              {canCRUD() && (
+                                <Tooltip title="Edit Unit">
+                                  <IconButton 
+                                    onClick={() => navigate(`/barang/${unit.id}`, { 
+                                      state: { 
+                                        edit: true, 
+                                        returnToEdit: true,
+                                        returnToId: barang.id,
+                                        activeTab: 1 
+                                      } 
+                                    })} 
+                                    size="small"
+                                    color="primary"
+                                  >
+                                    <EditIcon fontSize="small" />
+                                  </IconButton>
+                                </Tooltip>
+                              )}
+                            </Box>
                           </TableCell>
                         </TableRow>
                       ))}

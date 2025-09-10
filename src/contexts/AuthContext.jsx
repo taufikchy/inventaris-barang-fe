@@ -260,6 +260,7 @@ export const AuthProvider = ({ children }) => {
 
   const value = {
     user,
+    currentUser: user, // Add alias for backward compatibility
     token,
     loading,
     login,

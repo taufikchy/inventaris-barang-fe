@@ -277,6 +277,7 @@ const Sidebar = ({ open, setOpen }) => {
           onClose={handleDrawerToggle}
           ModalProps={{
             keepMounted: true, // Better open performance on mobile
+            disablePortal: true, // Fix aria-hidden accessibility issue
           }}
           sx={{
             display: { xs: 'block', md: 'none' },
