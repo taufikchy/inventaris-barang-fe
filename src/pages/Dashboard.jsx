@@ -208,13 +208,32 @@ const Dashboard = () => {
     });
   };
 
-  // Prepare chart data
+  // Prepare chart data with proper color mapping and sorting
+  const getKondisiColor = (nama) => {
+    switch (nama) {
+      case 'Baik':
+        return '#22c55e'; // hijau
+      case 'Rusak Ringan':
+        return '#f59e0b'; // kuning
+      case 'Rusak Berat':
+        return '#ef4444'; // merah
+      default:
+        return '#6b7280'; // abu-abu
+    }
+  };
+
+  // Urutkan distribusi kondisi: Baik, Rusak Ringan, Rusak Berat
+  const sortedDistribusiPerKondisi = [...distribusiPerKondisi].sort((a, b) => {
+    const order = { 'Baik': 1, 'Rusak Ringan': 2, 'Rusak Berat': 3 };
+    return (order[a.nama] || 999) - (order[b.nama] || 999);
+  });
+
   const pieChartData = {
-    labels: distribusiPerKondisi.map(item => item.nama),
+    labels: sortedDistribusiPerKondisi.map(item => item.nama),
     datasets: [
       {
-        data: distribusiPerKondisi.map(item => item.jumlah),
-        backgroundColor: ['#22c55e', '#f59e0b', '#ef4444'],
+        data: sortedDistribusiPerKondisi.map(item => item.jumlah),
+        backgroundColor: sortedDistribusiPerKondisi.map(item => getKondisiColor(item.nama)),
         borderColor: '#ffffff',
         borderWidth: 2,
       },
