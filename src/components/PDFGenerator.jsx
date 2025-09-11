@@ -634,10 +634,12 @@ class PDFGenerator {
     y += 5;
 
     // Calculate statistics for summary (fallback if summary not provided)
-    const totalBarang = summary?.total_barang || data.length;
-    const kondisiBaik = summary?.jumlah_per_kondisi?.['Baik'] || data.filter(item => item.kondisi === 'Baik').length;
-    const kondisiRusakRingan = summary?.jumlah_per_kondisi?.['Rusak Ringan'] || data.filter(item => item.kondisi === 'Rusak Ringan').length;
-    const kondisiRusakBerat = summary?.jumlah_per_kondisi?.['Rusak Berat'] || data.filter(item => item.kondisi === 'Rusak Berat').length;
+    // Hanya hitung barang dengan stok > 0 untuk konsistensi dengan backend
+    const dataWithStock = data.filter(item => item.jumlah > 0);
+    const totalBarang = summary?.total_barang || dataWithStock.length;
+    const kondisiBaik = summary?.jumlah_per_kondisi?.['Baik'] || dataWithStock.filter(item => item.kondisi === 'Baik').length;
+    const kondisiRusakRingan = summary?.jumlah_per_kondisi?.['Rusak Ringan'] || dataWithStock.filter(item => item.kondisi === 'Rusak Ringan').length;
+    const kondisiRusakBerat = summary?.jumlah_per_kondisi?.['Rusak Berat'] || dataWithStock.filter(item => item.kondisi === 'Rusak Berat').length;
 
     // Add summary after title
     this.doc.setFont(this.fontFamily, "normal");
@@ -782,6 +784,13 @@ class PDFGenerator {
       this.doc.text("Barang dipinjam", this.margins.left, y);
       this.doc.text(":", colonX, y);
       this.doc.text(`${barangDipinjam} unit`, colonX + 5, y);
+      y += 8;
+      
+      // Stok Habis (stok 0)
+      const barangHabisStok = data.filter(item => item.jumlah === 0).length;
+      this.doc.text("Stok Habis", this.margins.left, y);
+      this.doc.text(":", colonX, y);
+      this.doc.text(`${barangHabisStok} unit`, colonX + 5, y);
       y += 8;
       
       // Total Barang
