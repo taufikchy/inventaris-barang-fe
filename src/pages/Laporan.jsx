@@ -37,6 +37,8 @@ import {
   SwapHoriz as SwapHorizIcon,
   Assessment as AssessmentIcon,
   Visibility as VisibilityIcon,
+  ExpandMore as ExpandMoreIcon,
+  ExpandLess as ExpandLessIcon,
 } from '@mui/icons-material';
 import dayjs from 'dayjs';
 import PageHeader from '../components/PageHeader';
@@ -72,6 +74,8 @@ const Laporan = () => {
   const [lokasiFilter, setLokasiFilter] = useState('');
   const [kondisiFilter, setKondisiFilter] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
+  const [sumberDanaFilter, setSumberDanaFilter] = useState('');
+  const [showFilters, setShowFilters] = useState(true);
   
   // Data states
   const [inventoryData, setInventoryData] = useState([]);
@@ -84,6 +88,7 @@ const Laporan = () => {
   const [locations, setLocations] = useState([]);
   const [conditions, setConditions] = useState([]);
   const [statuses, setStatuses] = useState([]);
+  const [sumberDanaList, setSumberDanaList] = useState([]);
 
   // Handle tab change
   const handleTabChange = (event, newValue) => {
@@ -120,6 +125,13 @@ const Laporan = () => {
       }
       if (kondisiFilter) {
         filters.kondisi = kondisiFilter;
+      }
+      if (statusFilter) {
+        filters.status = statusFilter;
+      }
+      if (sumberDanaFilter) {
+        const selectedSumberDana = sumberDanaList.find(sd => sd.nama === sumberDanaFilter);
+        filters.sumber_dana = selectedSumberDana?.nama || sumberDanaFilter;
       }
       if (startDate && endDate) {
         filters.startDate = startDate.format('YYYY-MM-DD');
@@ -204,11 +216,11 @@ const Laporan = () => {
   // Fetch conditions for filter dropdown
   const fetchConditions = async () => {
     try {
-      // Set static conditions based on backend enum values
+      // Set static conditions using frontend formatted values for client-side filtering
       setConditions([
-        { value: 'baik', label: 'Baik' },
-        { value: 'rusak_ringan', label: 'Rusak Ringan' },
-        { value: 'rusak_berat', label: 'Rusak Berat' }
+        { value: 'Baik', label: 'Baik' },
+        { value: 'Rusak Ringan', label: 'Rusak Ringan' },
+        { value: 'Rusak Berat', label: 'Rusak Berat' }
       ]);
     } catch (error) {
       console.error('Error setting conditions:', error);
@@ -218,15 +230,31 @@ const Laporan = () => {
   // Fetch statuses for filter dropdown
   const fetchStatuses = async () => {
     try {
-      // Set static statuses based on backend enum values
+      // Set static statuses using frontend formatted values for client-side filtering
       setStatuses([
-        { value: 'tersedia', label: 'Tersedia' },
-        { value: 'dipinjam', label: 'Dipinjam' },
-        { value: 'perbaikan', label: 'Perbaikan' },
-        { value: 'habis', label: 'Habis' }
+        { value: 'Tersedia', label: 'Tersedia' },
+        { value: 'Dipinjam', label: 'Dipinjam' },
+        { value: 'Perbaikan', label: 'Perbaikan' },
+        { value: 'Habis', label: 'Habis' }
       ]);
     } catch (error) {
       console.error('Error setting statuses:', error);
+    }
+  };
+
+  // Fetch sumber dana for filter dropdown
+  const fetchSumberDana = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get('/api/sumber-dana/dropdown', {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      if (response.data.sukses) {
+        setSumberDanaList(response.data.data);
+      }
+    } catch (error) {
+      console.error('Error fetching sumber dana:', error);
     }
   };
 
@@ -237,7 +265,37 @@ const Laporan = () => {
     try {
       setLoading(true);
       const token = localStorage.getItem('token');
-      const response = await axios.get('/api/laporan/inventaris', {
+      
+      // Build query parameters based on filters
+      const params = new URLSearchParams();
+      if (kategoriFilter) {
+        const selectedCategory = categories.find(cat => cat.id === kategoriFilter);
+        if (selectedCategory) {
+          params.append('kategori', selectedCategory.id);
+        }
+      }
+      if (lokasiFilter) {
+        const selectedLocation = locations.find(loc => loc.id === lokasiFilter);
+        if (selectedLocation) {
+          params.append('lokasi', selectedLocation.id);
+        }
+      }
+      if (kondisiFilter) {
+        params.append('kondisi', kondisiFilter);
+      }
+      if (statusFilter) {
+        params.append('status', statusFilter);
+      }
+      if (sumberDanaFilter) {
+        params.append('sumber_dana', sumberDanaFilter);
+      }
+      if (startDate && endDate) {
+        params.append('tanggal_mulai', startDate.format('YYYY-MM-DD'));
+        params.append('tanggal_akhir', endDate.format('YYYY-MM-DD'));
+      }
+      
+      const url = params.toString() ? `/api/laporan/inventaris?${params.toString()}` : '/api/laporan/inventaris';
+      const response = await axios.get(url, {
         headers: { Authorization: `Bearer ${token}` }
       });
       
@@ -308,6 +366,7 @@ const Laporan = () => {
     fetchLocations();
     fetchConditions();
     fetchStatuses();
+    fetchSumberDana();
   }, []);
 
   // Load data when tab changes
@@ -321,8 +380,12 @@ const Laporan = () => {
     }
   }, [activeTab]);
 
-  // Note: Removed auto-refetch on filter change to prevent data flickering
-  // Filters are now applied client-side for better performance
+  // Refetch data when filters change for inventory tab
+  useEffect(() => {
+    if (activeTab === 0 && categories.length > 0 && locations.length > 0) {
+      fetchInventoryData();
+    }
+  }, [kategoriFilter, lokasiFilter, kondisiFilter, statusFilter, sumberDanaFilter, startDate, endDate, categories, locations]);
 
   // Apply filters
   const filteredInventoryData = inventoryData.filter(item => {
@@ -333,8 +396,9 @@ const Laporan = () => {
     const lokasiMatch = !lokasiFilter || (item.lokasi?.nama || item.lokasi) === lokasiFilter;
     const kondisiMatch = !kondisiFilter || item.kondisi === kondisiFilter;
     const statusMatch = !statusFilter || item.status === statusFilter;
+    const sumberDanaMatch = !sumberDanaFilter || (item.sumber_dana?.nama || item.sumber_dana) === sumberDanaFilter;
     
-    return dateMatch && tahunMatch && kategoriMatch && lokasiMatch && kondisiMatch && statusMatch;
+    return dateMatch && tahunMatch && kategoriMatch && lokasiMatch && kondisiMatch && statusMatch && sumberDanaMatch;
   });
 
   const filteredLoanData = loanData.filter(item => {
@@ -389,6 +453,9 @@ const Laporan = () => {
         month: 'long',
         year: 'numeric'
       });
+    }},
+    { id: 'sumber_dana', label: 'Sumber Dana', sortable: true, format: (value) => {
+      return value?.nama || value || '-';
     }},
     { id: 'status', label: 'Status', sortable: true, format: (value) => {
       const statusLabels = {
@@ -514,10 +581,21 @@ const Laporan = () => {
       {/* Filter Section */}
       <Card sx={{ mb: 3 }}>
         <CardContent>
-          <Typography variant="h6" sx={{ mb: 2 }}>
-            Filter Laporan
-          </Typography>
-          <Grid container spacing={2}>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+            <Typography variant="h6">
+              Filter Laporan
+            </Typography>
+            <Button
+              variant="outlined"
+              size="small"
+              startIcon={showFilters ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+              onClick={() => setShowFilters(!showFilters)}
+            >
+              {showFilters ? 'Sembunyikan Filter' : 'Tampilkan Filter'}
+            </Button>
+          </Box>
+          {showFilters && (
+            <Grid container spacing={2}>
             <Grid item xs={12} md={6} lg={3}>
               <Autocomplete
                 freeSolo
@@ -635,6 +713,23 @@ const Laporan = () => {
                 </Select>
               </FormControl>
             </Grid>
+            <Grid item xs={12} md={6} lg={3}>
+              <FormControl fullWidth size="small">
+                <InputLabel>Sumber Dana</InputLabel>
+                <Select
+                  value={sumberDanaFilter}
+                  label="Sumber Dana"
+                  onChange={(e) => setSumberDanaFilter(e.target.value)}
+                >
+                  <MenuItem value="">Semua</MenuItem>
+                  {sumberDanaList.map((sumberDana) => (
+                    <MenuItem key={sumberDana.id} value={sumberDana.nama}>
+                      {sumberDana.nama}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </Grid>
 
             <Grid item xs={12} md={6} lg={3}>
               <Button 
@@ -648,12 +743,14 @@ const Laporan = () => {
                   setLokasiFilter('');
                   setKondisiFilter('');
                   setStatusFilter('');
+                  setSumberDanaFilter('');
                 }}
               >
                 Reset Filter
               </Button>
             </Grid>
-          </Grid>
+            </Grid>
+          )}
         </CardContent>
       </Card>
 

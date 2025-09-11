@@ -647,49 +647,114 @@ class PDFGenerator {
     const bulletX = this.margins.left + 5;
     const colonX = this.margins.left + 35; // Fixed position for colons
     
-    // Tahun section (moved to top)
-    if (filters.tahun) {
+    // Filter Information Section
+    const hasFilters = filters.tahun || filters.lokasi || filters.kategori || filters.kondisi || filters.status || filters.sumber_dana || (filters.startDate && filters.endDate);
+    
+    if (hasFilters) {
       this.doc.setFont(this.fontFamily, "bold");
-      this.doc.text("Tahun", this.margins.left, y);
-      this.doc.text(":", colonX, y);
-      this.doc.text(`${filters.tahun}`, colonX + 5, y);
+      this.doc.setFontSize(12);
+      this.doc.text("Filter Laporan:", this.margins.left, y);
       this.doc.setFont(this.fontFamily, "normal");
+      y += 8;
+      
+      // Tahun filter
+      if (filters.tahun) {
+        this.doc.setFont(this.fontFamily, "bold");
+        this.doc.text("Tahun", this.margins.left, y);
+        this.doc.text(":", colonX, y);
+        this.doc.text(`${filters.tahun}`, colonX + 5, y);
+        this.doc.setFont(this.fontFamily, "normal");
+        y += 6;
+      }
+      
+      // Lokasi filter
+      if (filters.lokasi) {
+        this.doc.setFont(this.fontFamily, "bold");
+        this.doc.text("Lokasi", this.margins.left, y);
+        this.doc.text(":", colonX, y);
+        this.doc.text(`${filters.lokasi}`, colonX + 5, y);
+        this.doc.setFont(this.fontFamily, "normal");
+        y += 6;
+      }
+      
+      // Kategori filter
+      if (filters.kategori) {
+        this.doc.setFont(this.fontFamily, "bold");
+        this.doc.text("Kategori", this.margins.left, y);
+        this.doc.text(":", colonX, y);
+        this.doc.text(`${filters.kategori}`, colonX + 5, y);
+        this.doc.setFont(this.fontFamily, "normal");
+        y += 6;
+      }
+      
+      // Kondisi filter
+      if (filters.kondisi) {
+        this.doc.setFont(this.fontFamily, "bold");
+        this.doc.text("Kondisi", this.margins.left, y);
+        this.doc.text(":", colonX, y);
+        this.doc.text(`${filters.kondisi}`, colonX + 5, y);
+        this.doc.setFont(this.fontFamily, "normal");
+        y += 6;
+      }
+      
+      // Status filter
+      if (filters.status) {
+        this.doc.setFont(this.fontFamily, "bold");
+        this.doc.text("Status", this.margins.left, y);
+        this.doc.text(":", colonX, y);
+        this.doc.text(`${filters.status}`, colonX + 5, y);
+        this.doc.setFont(this.fontFamily, "normal");
+        y += 6;
+      }
+      
+      // Sumber Dana filter
+      if (filters.sumber_dana) {
+        this.doc.setFont(this.fontFamily, "bold");
+        this.doc.text("Sumber Dana", this.margins.left, y);
+        this.doc.text(":", colonX, y);
+        this.doc.text(`${filters.sumber_dana}`, colonX + 5, y);
+        this.doc.setFont(this.fontFamily, "normal");
+        y += 6;
+      }
+      
+      // Periode filter
+      if (filters.startDate && filters.endDate) {
+        this.doc.setFont(this.fontFamily, "bold");
+        this.doc.text("Periode", this.margins.left, y);
+        this.doc.text(":", colonX, y);
+        this.doc.text(`${this.formatDate(filters.startDate)} - ${this.formatDate(filters.endDate)}`, colonX + 5, y);
+        this.doc.setFont(this.fontFamily, "normal");
+        y += 6;
+      }
+      
+      y += 5; // Extra spacing after filters
+    }
+    
+    // Kondisi Barang section - hanya tampilkan jika tidak ada filter aktif
+    if (!hasFilters) {
+      this.doc.setFont(this.fontFamily, "bold");
+      this.doc.text("Kondisi Barang", this.margins.left, y);
+      this.doc.setFont(this.fontFamily, "normal");
+      y += 6;
+      
+      this.doc.text("• Baik", bulletX, y);
+      this.doc.text(":", colonX, y);
+      this.doc.text(`${kondisiBaik} unit`, colonX + 5, y);
+      y += 5;
+      
+      this.doc.text("• Rusak Ringan", bulletX, y);
+      this.doc.text(":", colonX, y);
+      this.doc.text(`${kondisiRusakRingan} unit`, colonX + 5, y);
+      y += 5;
+      
+      this.doc.text("• Rusak Berat", bulletX, y);
+      this.doc.text(":", colonX, y);
+      this.doc.text(`${kondisiRusakBerat} unit`, colonX + 5, y);
       y += 8;
     }
     
-    // Lokasi section (moved to top)
-    if (filters.lokasi) {
-      this.doc.setFont(this.fontFamily, "bold");
-      this.doc.text("Lokasi", this.margins.left, y);
-      this.doc.text(":", colonX, y);
-      this.doc.text(`${filters.lokasi}`, colonX + 5, y);
-      this.doc.setFont(this.fontFamily, "normal");
-      y += 8;
-    }
-    
-    // Kondisi Barang section (without colon)
-    this.doc.setFont(this.fontFamily, "bold");
-    this.doc.text("Kondisi Barang", this.margins.left, y);
-    this.doc.setFont(this.fontFamily, "normal");
-    y += 6;
-    
-    this.doc.text("• Baik", bulletX, y);
-    this.doc.text(":", colonX, y);
-    this.doc.text(`${kondisiBaik} unit`, colonX + 5, y);
-    y += 5;
-    
-    this.doc.text("• Rusak Ringan", bulletX, y);
-    this.doc.text(":", colonX, y);
-    this.doc.text(`${kondisiRusakRingan} unit`, colonX + 5, y);
-    y += 5;
-    
-    this.doc.text("• Rusak Berat", bulletX, y);
-    this.doc.text(":", colonX, y);
-    this.doc.text(`${kondisiRusakBerat} unit`, colonX + 5, y);
-    y += 8;
-    
-    // Distribusi per Lokasi section
-    if (summary?.jumlah_per_lokasi && Object.keys(summary.jumlah_per_lokasi).length > 0) {
+    // Distribusi per Lokasi section - hanya tampilkan jika tidak ada filter aktif
+    if (!hasFilters && summary?.jumlah_per_lokasi && Object.keys(summary.jumlah_per_lokasi).length > 0) {
       this.doc.setFont(this.fontFamily, "bold");
       this.doc.text("Distribusi per Lokasi", this.margins.left, y);
       this.doc.setFont(this.fontFamily, "normal");
@@ -708,24 +773,64 @@ class PDFGenerator {
       y += 6;
     }
 
-    // Total Barang
-    this.doc.setFont(this.fontFamily, "bold");
-    this.doc.setFontSize(12);
-    this.doc.text("Total Barang", this.margins.left, y);
-    this.doc.text(":", colonX, y);
-    this.doc.text(`${totalBarang} unit`, colonX + 5, y);
-    y += 8;
-    
-    y += 8;
-
-    // Add filter info (excluding tahun and lokasi as they're moved to top)
-    if (filters.kategori) {
-      this.doc.setFont(this.fontFamily, "normal");
-      this.doc.setFontSize(10);
-      this.doc.text(`Kategori: ${filters.kategori}`, this.margins.left, y);
-      y += 6;
+    // Statistik barang - hanya tampilkan jika tidak ada filter aktif
+    if (!hasFilters) {
+      // Barang dipinjam
+      const barangDipinjam = summary?.barang_dipinjam || 0;
+      this.doc.setFont(this.fontFamily, "bold");
+      this.doc.setFontSize(12);
+      this.doc.text("Barang dipinjam", this.margins.left, y);
+      this.doc.text(":", colonX, y);
+      this.doc.text(`${barangDipinjam} unit`, colonX + 5, y);
+      y += 8;
+      
+      // Total Barang
+      this.doc.text("Total Barang", this.margins.left, y);
+      this.doc.text(":", colonX, y);
+      this.doc.text(`${totalBarang} unit`, colonX + 5, y);
+      y += 8;
+      
+      // Barang Tersedia (Total - Dipinjam)
+      const barangTersedia = totalBarang - barangDipinjam;
+      this.doc.setFont(this.fontFamily, "bold");
+      this.doc.text("Barang Tersedia", this.margins.left, y);
+      this.doc.text(":", colonX, y);
+      this.doc.text(`${barangTersedia} unit`, colonX + 5, y);
+      y += 8;
+      
+      y += 8;
     }
+
+    // Spacing before table
     y += 5;
+
+    // Helper function to format jumlah
+    const formatJumlah = (item) => {
+      if (item.satuan === 'set' && item.unit_per_set) {
+        const totalUnit = item.jumlah * item.unit_per_set;
+        return `${item.jumlah} set (${totalUnit} unit)`;
+      }
+      return `${item.jumlah} ${item.satuan || 'unit'}`;
+    };
+
+    // Helper function to format stok tersisa
+    const formatStokTersisa = (item) => {
+      // Hanya tampilkan untuk kategori bahan
+      if (item.kategori?.tipe === 'bahan') {
+        const stok = item.stok || 0;
+        if (item.satuan === 'set' && item.unit_per_set) {
+          const unitTersisaDalamSet = item.unit_tersisa || 0;
+          const totalUnitTersisa = (stok * item.unit_per_set) + unitTersisaDalamSet;
+          if (unitTersisaDalamSet > 0) {
+            return `${stok} set + ${unitTersisaDalamSet} unit (${totalUnitTersisa} unit)`;
+          } else {
+            return `${stok} set (${totalUnitTersisa} unit)`;
+          }
+        }
+        return `${stok} ${item.satuan || 'unit'}`;
+      }
+      return '-';
+    };
 
     // Table data
     const tableData = data.map((item, index) => [
@@ -735,39 +840,52 @@ class PDFGenerator {
       item.kategori?.nama || item.kategori || '-',
       item.lokasi?.nama || item.lokasi || '-',
       this.getKondisiLabel(item.kondisi),
+      formatJumlah(item),
+      formatStokTersisa(item),
       item.tahun_pengadaan || '-',
-      this.formatDate(item.tanggal_perolehan) || '-'
+      this.formatDate(item.tanggal_perolehan) || '-',
+      item.sumber_dana?.nama || item.sumber_dana || '-',
+      this.getStatusLabel(item.status)
     ]);
 
     autoTable(this.doc, {
       startY: y,
-      head: [['No.', 'Kode', 'Nama Barang', 'Kategori', 'Lokasi', 'Kondisi', 'Tahun Pengadaan', 'Tanggal Pencatatan Barang']],
+      head: [['No.', 'Kode', 'Nama Barang', 'Kategori', 'Lokasi', 'Kondisi', 'Jumlah', 'Stok Tersisa', 'Tahun Pengadaan', 'Tanggal Perolehan', 'Sumber Dana', 'Status']],
       body: tableData,
       styles: {
         font: this.fontFamily,
-        fontSize: 8,
+        fontSize: 6,
         lineWidth: 0.2,
         textColor: [0, 0, 0],
-        cellPadding: 2,
-        valign: 'middle'
+        cellPadding: { top: 1.5, right: 1, bottom: 1.5, left: 1 },
+        valign: 'middle',
+        overflow: 'linebreak',
+        cellWidth: 'wrap',
+        minCellHeight: 8
       },
       headStyles: {
         fillColor: [220, 220, 220],
         fontStyle: "bold",
         halign: "center",
         valign: 'middle',
-        fontSize: 8,
-        textColor: [0, 0, 0]
+        fontSize: 6,
+        textColor: [0, 0, 0],
+        cellPadding: { top: 2, right: 1, bottom: 2, left: 1 },
+        minCellHeight: 10
       },
       columnStyles: {
-        0: { cellWidth: 'auto', halign: "center", minCellWidth: 8 },
-        1: { cellWidth: 'auto', halign: "center", minCellWidth: 15 },
-        2: { cellWidth: 'auto', halign: "left", minCellWidth: 35 },
-        3: { cellWidth: 'auto', halign: "center", minCellWidth: 20 },
-        4: { cellWidth: 'auto', halign: "center", minCellWidth: 20 },
-        5: { cellWidth: 'auto', halign: "center", minCellWidth: 15 },
+        0: { cellWidth: 'auto', halign: "center", minCellWidth: 4 },
+        1: { cellWidth: 'auto', halign: "center", minCellWidth: 8 },
+        2: { cellWidth: 'auto', halign: "left", minCellWidth: 15, cellPadding: { top: 1, right: 1, bottom: 1, left: 1 } },
+        3: { cellWidth: 'auto', halign: "center", minCellWidth: 10 },
+        4: { cellWidth: 'auto', halign: "center", minCellWidth: 10 },
+        5: { cellWidth: 'auto', halign: "center", minCellWidth: 8 },
         6: { cellWidth: 'auto', halign: "center", minCellWidth: 12 },
-        7: { cellWidth: 'auto', halign: "left", minCellWidth: 25 }
+        7: { cellWidth: 'auto', halign: "center", minCellWidth: 12 },
+        8: { cellWidth: 'auto', halign: "center", minCellWidth: 7 },
+        9: { cellWidth: 'auto', halign: "center", minCellWidth: 10 },
+        10: { cellWidth: 'auto', halign: "center", minCellWidth: 10 },
+        11: { cellWidth: 'auto', halign: "center", minCellWidth: 8 }
       },
       margin: { left: this.margins.left, right: this.margins.right },
       tableWidth: 'auto',
