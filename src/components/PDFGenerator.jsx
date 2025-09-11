@@ -635,9 +635,9 @@ class PDFGenerator {
 
     // Calculate statistics for summary (fallback if summary not provided)
     const totalBarang = summary?.total_barang || data.length;
-    const kondisiBaik = summary?.jumlah_per_kondisi?.baik || data.filter(item => item.kondisi === 'baik').length;
-    const kondisiRusakRingan = summary?.jumlah_per_kondisi?.rusak_ringan || data.filter(item => item.kondisi === 'rusak_ringan').length;
-    const kondisiRusakBerat = summary?.jumlah_per_kondisi?.rusak_berat || data.filter(item => item.kondisi === 'rusak_berat').length;
+    const kondisiBaik = summary?.jumlah_per_kondisi?.['Baik'] || data.filter(item => item.kondisi === 'Baik').length;
+    const kondisiRusakRingan = summary?.jumlah_per_kondisi?.['Rusak Ringan'] || data.filter(item => item.kondisi === 'Rusak Ringan').length;
+    const kondisiRusakBerat = summary?.jumlah_per_kondisi?.['Rusak Berat'] || data.filter(item => item.kondisi === 'Rusak Berat').length;
 
     // Add summary after title
     this.doc.setFont(this.fontFamily, "normal");
@@ -935,7 +935,7 @@ class PDFGenerator {
 
     autoTable(this.doc, {
       startY: y,
-      head: [['No.', 'Kode', 'Peminjam', 'Kelas', 'Tgl Pinjam', 'Tgl Kembali', 'Status', 'Catatan']],
+      head: [['No.', 'Kode', 'Peminjam', 'Instansi', 'Tgl Pinjam', 'Tgl Kembali', 'Status', 'Catatan']],
       body: tableData,
       styles: {
         font: this.fontFamily,
@@ -984,9 +984,9 @@ class PDFGenerator {
 
     // Calculate statistics for summary (fallback if summary not provided)
     const totalBarang = summary?.total_barang || data.length;
-    const kondisiBaik = summary?.jumlah_per_kondisi?.baik || data.filter(item => item.kondisi === 'baik').length;
-    const kondisiRusakRingan = summary?.jumlah_per_kondisi?.rusak_ringan || data.filter(item => item.kondisi === 'rusak_ringan').length;
-    const kondisiRusakBerat = summary?.jumlah_per_kondisi?.rusak_berat || data.filter(item => item.kondisi === 'rusak_berat').length;
+    const kondisiBaik = summary?.jumlah_per_kondisi?.['Baik'] || data.filter(item => item.kondisi === 'Baik').length;
+    const kondisiRusakRingan = summary?.jumlah_per_kondisi?.['Rusak Ringan'] || data.filter(item => item.kondisi === 'Rusak Ringan').length;
+    const kondisiRusakBerat = summary?.jumlah_per_kondisi?.['Rusak Berat'] || data.filter(item => item.kondisi === 'Rusak Berat').length;
 
     // Add summary after title
     this.doc.setFont(this.fontFamily, "normal");
@@ -994,118 +994,196 @@ class PDFGenerator {
     
     // Use fixed positioning for alignment
     const bulletX = this.margins.left + 5;
-    const colonX = this.margins.left + 40; // Fixed position for colons
+    const colonX = this.margins.left + 35; // Fixed position for colons
     
-    // Tahun section (moved to top)
-    if (filters.tahun) {
+    // Filter Information Section
+    const hasFilters = filters.tahun || filters.lokasi || filters.kategori || filters.kondisi || filters.status || filters.sumber_dana || (filters.startDate && filters.endDate);
+    
+    if (hasFilters) {
       this.doc.setFont(this.fontFamily, "bold");
-      this.doc.text("Tahun", this.margins.left, y);
-      this.doc.text(":", colonX, y);
-      this.doc.text(`${filters.tahun}`, colonX + 5, y);
+      this.doc.setFontSize(12);
+      this.doc.text("Filter Laporan:", this.margins.left, y);
       this.doc.setFont(this.fontFamily, "normal");
-      y += 10;
+      y += 8;
+      
+      // Tahun filter
+      if (filters.tahun) {
+        this.doc.setFont(this.fontFamily, "bold");
+        this.doc.text("Tahun", this.margins.left, y);
+        this.doc.text(":", colonX, y);
+        this.doc.text(`${filters.tahun}`, colonX + 5, y);
+        this.doc.setFont(this.fontFamily, "normal");
+        y += 6;
+      }
+      
+      // Lokasi filter
+      if (filters.lokasi) {
+        this.doc.setFont(this.fontFamily, "bold");
+        this.doc.text("Lokasi", this.margins.left, y);
+        this.doc.text(":", colonX, y);
+        this.doc.text(`${filters.lokasi}`, colonX + 5, y);
+        this.doc.setFont(this.fontFamily, "normal");
+        y += 6;
+      }
+      
+      // Kategori filter
+      if (filters.kategori) {
+        this.doc.setFont(this.fontFamily, "bold");
+        this.doc.text("Kategori", this.margins.left, y);
+        this.doc.text(":", colonX, y);
+        this.doc.text(`${filters.kategori}`, colonX + 5, y);
+        this.doc.setFont(this.fontFamily, "normal");
+        y += 6;
+      }
+      
+      // Kondisi filter
+      if (filters.kondisi) {
+        this.doc.setFont(this.fontFamily, "bold");
+        this.doc.text("Kondisi", this.margins.left, y);
+        this.doc.text(":", colonX, y);
+        this.doc.text(`${filters.kondisi}`, colonX + 5, y);
+        this.doc.setFont(this.fontFamily, "normal");
+        y += 6;
+      }
+      
+      // Status filter
+      if (filters.status) {
+        this.doc.setFont(this.fontFamily, "bold");
+        this.doc.text("Status", this.margins.left, y);
+        this.doc.text(":", colonX, y);
+        this.doc.text(`${filters.status}`, colonX + 5, y);
+        this.doc.setFont(this.fontFamily, "normal");
+        y += 6;
+      }
+      
+      // Sumber Dana filter
+      if (filters.sumber_dana) {
+        this.doc.setFont(this.fontFamily, "bold");
+        this.doc.text("Sumber Dana", this.margins.left, y);
+        this.doc.text(":", colonX, y);
+        this.doc.text(`${filters.sumber_dana}`, colonX + 5, y);
+        this.doc.setFont(this.fontFamily, "normal");
+        y += 6;
+      }
+      
+      // Periode filter
+      if (filters.startDate && filters.endDate) {
+        this.doc.setFont(this.fontFamily, "bold");
+        this.doc.text("Periode", this.margins.left, y);
+        this.doc.text(":", colonX, y);
+        this.doc.text(`${this.formatDate(filters.startDate)} - ${this.formatDate(filters.endDate)}`, colonX + 5, y);
+        this.doc.setFont(this.fontFamily, "normal");
+        y += 6;
+      }
+      
+      y += 5; // Extra spacing after filters
     }
     
-    // Kondisi filter section
-    if (filters.kondisi) {
+    // Only show kondisi breakdown if no filters are applied
+    if (!hasFilters) {
+      // Add spacing before kondisi section
+      y += 5;
+      
+      // Kondisi Barang section (without colon)
       this.doc.setFont(this.fontFamily, "bold");
-      this.doc.text("Filter Kondisi", this.margins.left, y);
-      this.doc.text(":", colonX, y);
-      this.doc.text(`${this.getKondisiLabel(filters.kondisi)}`, colonX + 5, y);
-      this.doc.setFont(this.fontFamily, "normal");
-      y += 10;
-    }
-    
-    // Add spacing before kondisi section
-    y += 5;
-    
-    // Kondisi Barang section (without colon)
-    this.doc.setFont(this.fontFamily, "bold");
-    this.doc.setFontSize(12);
-    this.doc.text("Kondisi Barang", this.margins.left, y);
-    this.doc.setFont(this.fontFamily, "normal");
-    y += 8;
-    
-    this.doc.text("• Baik", bulletX, y);
-    this.doc.text(":", colonX, y);
-    this.doc.text(`${kondisiBaik} unit`, colonX + 5, y);
-    y += 6;
-    
-    // Rusak Ringan dengan detail
-    this.doc.text("• Rusak Ringan", bulletX, y);
-    this.doc.text(":", colonX, y);
-    this.doc.text(`${kondisiRusakRingan} unit`, colonX + 5, y);
-    y += 6;
-    
-    // Detail barang rusak ringan
-    const barangRusakRingan = data.filter(item => item.kondisi === 'rusak_ringan');
-    if (barangRusakRingan.length > 0) {
-      this.doc.setFontSize(9);
-      this.doc.setFont(this.fontFamily, "normal");
-      
-      barangRusakRingan.forEach((item, index) => {
-        const noText = `${index + 1}.`;
-        const kodeText = item.kode || '-';
-        const namaText = item.nama || '-';
-        
-        // Positioning yang rapi dengan alignment - nomor di bawah huruf 'R'
-        const detailStartX = bulletX + 2; // Tepat di bawah huruf 'R' pada 'Rusak'
-        const kodeStartX = detailStartX + 6; // 3 spasi setelah nomor
-        const namaStartX = kodeStartX + 20;
-        
-        this.doc.text(noText, detailStartX, y);
-        this.doc.text(kodeText, kodeStartX, y);
-        this.doc.text(`- ${namaText}`, namaStartX, y);
-        y += 4;
-      });
-      
       this.doc.setFontSize(12);
+      this.doc.text("Kondisi Barang", this.margins.left, y);
       this.doc.setFont(this.fontFamily, "normal");
-      y += 3;
-    }
-    
-    // Rusak Berat dengan detail
-    this.doc.text("• Rusak Berat", bulletX, y);
-    this.doc.text(":", colonX, y);
-    this.doc.text(`${kondisiRusakBerat} unit`, colonX + 5, y);
-    y += 6;
-    
-    // Detail barang rusak berat
-    const barangRusakBerat = data.filter(item => item.kondisi === 'rusak_berat');
-    if (barangRusakBerat.length > 0) {
-      this.doc.setFontSize(9);
-      this.doc.setFont(this.fontFamily, "normal");
+      y += 8;
       
-      barangRusakBerat.forEach((item, index) => {
-        const noText = `${index + 1}.`;
-        const kodeText = item.kode || '-';
-        const namaText = item.nama || '-';
-        
-        // Positioning yang rapi dengan alignment - nomor di bawah huruf 'R'
-        const detailStartX = bulletX + 2; // Tepat di bawah huruf 'R' pada 'Rusak'
-        const kodeStartX = detailStartX + 6; // 3 spasi setelah nomor
-        const namaStartX = kodeStartX + 20;
-        
-        this.doc.text(noText, detailStartX, y);
-        this.doc.text(kodeText, kodeStartX, y);
-        this.doc.text(`- ${namaText}`, namaStartX, y);
-        y += 4;
-      });
+      // Hanya tampilkan kondisi yang memiliki data (> 0)
+      if (kondisiBaik > 0) {
+        this.doc.text("• Baik", bulletX, y);
+        this.doc.text(":", colonX, y);
+        this.doc.text(`${kondisiBaik} unit`, colonX + 5, y);
+        y += 6;
+      }
       
-      this.doc.setFontSize(12);
-      this.doc.setFont(this.fontFamily, "normal");
-      y += 3;
+      // Rusak Ringan dengan detail - hanya jika ada data
+      if (kondisiRusakRingan > 0) {
+        this.doc.text("• Rusak Ringan", bulletX, y);
+        this.doc.text(":", colonX, y);
+        this.doc.text(`${kondisiRusakRingan} unit`, colonX + 5, y);
+        y += 6;
+        
+        // Detail barang rusak ringan
+        const barangRusakRingan = data.filter(item => item.kondisi === 'Rusak Ringan');
+        if (barangRusakRingan.length > 0) {
+          this.doc.setFontSize(9);
+          this.doc.setFont(this.fontFamily, "normal");
+          
+          barangRusakRingan.forEach((item, index) => {
+            const noText = `${index + 1}.`;
+            const kodeText = item.kode || '-';
+            const namaText = item.nama || '-';
+            
+            // Positioning yang rapi dengan alignment - nomor di bawah huruf 'R'
+            const detailStartX = bulletX + 2; // Tepat di bawah huruf 'R' pada 'Rusak'
+            const kodeStartX = detailStartX + 6; // 3 spasi setelah nomor
+            const namaStartX = kodeStartX + 20;
+            
+            this.doc.text(noText, detailStartX, y);
+            this.doc.text(kodeText, kodeStartX, y);
+            this.doc.text(`- ${namaText}`, namaStartX, y);
+            y += 4;
+          });
+          
+          this.doc.setFontSize(12);
+          this.doc.setFont(this.fontFamily, "normal");
+          y += 3;
+        }
+      }
+      
+      // Rusak Berat dengan detail - hanya jika ada data
+      if (kondisiRusakBerat > 0) {
+        this.doc.text("• Rusak Berat", bulletX, y);
+        this.doc.text(":", colonX, y);
+        this.doc.text(`${kondisiRusakBerat} unit`, colonX + 5, y);
+        y += 6;
+        
+        // Detail barang rusak berat
+        const barangRusakBerat = data.filter(item => item.kondisi === 'Rusak Berat');
+        if (barangRusakBerat.length > 0) {
+          this.doc.setFontSize(9);
+          this.doc.setFont(this.fontFamily, "normal");
+          
+          barangRusakBerat.forEach((item, index) => {
+            const noText = `${index + 1}.`;
+            const kodeText = item.kode || '-';
+            const namaText = item.nama || '-';
+            
+            // Positioning yang rapi dengan alignment - nomor di bawah huruf 'R'
+            const detailStartX = bulletX + 2; // Tepat di bawah huruf 'R' pada 'Rusak'
+            const kodeStartX = detailStartX + 6; // 3 spasi setelah nomor
+            const namaStartX = kodeStartX + 20;
+            
+            this.doc.text(noText, detailStartX, y);
+            this.doc.text(kodeText, kodeStartX, y);
+            this.doc.text(`- ${namaText}`, namaStartX, y);
+            y += 4;
+          });
+          
+          this.doc.setFontSize(12);
+          this.doc.setFont(this.fontFamily, "normal");
+          y += 3;
+        }
+      }
+      
+      y += 8;
+    } else {
+      // Add minimal spacing when filters are applied
+      y += 5;
     }
-    
-    y += 8;
 
-    // Total Barang
-    this.doc.setFont(this.fontFamily, "bold");
-    this.doc.setFontSize(12);
-    this.doc.text("Total Barang", this.margins.left, y);
-    this.doc.text(":", colonX, y);
-    this.doc.text(`${totalBarang} unit`, colonX + 5, y);
-    y += 15;
+    // Total Barang - hanya tampil jika tidak ada filter
+    if (!hasFilters) {
+      this.doc.setFont(this.fontFamily, "bold");
+      this.doc.setFontSize(12);
+      this.doc.text("Total Barang", this.margins.left, y);
+      this.doc.text(":", colonX, y);
+      this.doc.text(`${totalBarang} unit`, colonX + 5, y);
+      y += 15;
+    }
 
     // Table data
     const tableData = data.map((item, index) => [

@@ -354,7 +354,34 @@ const Laporan = () => {
     try {
       setLoading(true);
       const token = localStorage.getItem('token');
-      const response = await axios.get('/api/laporan/kondisi', {
+      
+      // Build query parameters based on filters
+      const params = new URLSearchParams();
+      if (kategoriFilter) {
+        const selectedCategory = categories.find(cat => cat.id === kategoriFilter);
+        if (selectedCategory) {
+          params.append('kategori', selectedCategory.id);
+        }
+      }
+      if (lokasiFilter) {
+        const selectedLocation = locations.find(loc => loc.id === lokasiFilter);
+        if (selectedLocation) {
+          params.append('lokasi', selectedLocation.id);
+        }
+      }
+      if (kondisiFilter) {
+        params.append('kondisi', kondisiFilter);
+      }
+      if (sumberDanaFilter) {
+        params.append('sumber_dana', sumberDanaFilter);
+      }
+      if (startDate && endDate) {
+        params.append('tanggal_mulai', startDate.format('YYYY-MM-DD'));
+        params.append('tanggal_akhir', endDate.format('YYYY-MM-DD'));
+      }
+      
+      const url = params.toString() ? `/api/laporan/kondisi?${params.toString()}` : '/api/laporan/kondisi';
+      const response = await axios.get(url, {
         headers: { Authorization: `Bearer ${token}` }
       });
       
@@ -401,6 +428,13 @@ const Laporan = () => {
     }
   }, [kategoriFilter, lokasiFilter, kondisiFilter, statusFilter, sumberDanaFilter, startDate, endDate, categories, locations]);
 
+  // Refetch data when filters change for condition tab
+  useEffect(() => {
+    if (activeTab === 2 && categories.length > 0 && locations.length > 0) {
+      fetchConditionData();
+    }
+  }, [kategoriFilter, lokasiFilter, kondisiFilter, sumberDanaFilter, startDate, endDate, categories, locations]);
+
   // Apply filters
   const filteredInventoryData = inventoryData.filter(item => {
     const itemDate = dayjs(item.tanggal_perolehan);
@@ -426,13 +460,15 @@ const Laporan = () => {
 
   const filteredConditionData = conditionData.filter(item => {
     const itemDate = dayjs(item.tanggal_perolehan);
+    const dateMatch = (!startDate || !endDate) ? true : itemDate.isBetween(startDate, endDate, 'day', '[]');
     const tahunMatch = !tahunFilter || (item.tahun_pengadaan && item.tahun_pengadaan.toString() === tahunFilter.toString()) || (itemDate.year() === parseInt(tahunFilter));
     const kategoriMatch = !kategoriFilter || (item.kategori?.nama || item.kategori) === kategoriFilter;
     const lokasiMatch = !lokasiFilter || (item.lokasi?.nama || item.lokasi) === lokasiFilter;
     const kondisiMatch = !kondisiFilter || item.kondisi === kondisiFilter;
+    const sumberDanaMatch = !sumberDanaFilter || (item.sumber_dana?.nama || item.sumber_dana) === sumberDanaFilter;
     
-    return tahunMatch && kategoriMatch && lokasiMatch && kondisiMatch;
-  });
+    return dateMatch && tahunMatch && kategoriMatch && lokasiMatch && kondisiMatch && sumberDanaMatch;
+   });
 
 
 
