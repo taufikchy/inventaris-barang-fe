@@ -81,6 +81,7 @@ const Laporan = () => {
   const [inventoryData, setInventoryData] = useState([]);
   const [inventorySummary, setInventorySummary] = useState(null);
   const [loanData, setLoanData] = useState([]);
+  const [loanSummary, setLoanSummary] = useState(null);
   const [conditionData, setConditionData] = useState([]);
   
   // Filter dropdown data states
@@ -318,12 +319,25 @@ const Laporan = () => {
     try {
       setLoading(true);
       const token = localStorage.getItem('token');
-      const response = await axios.get('/api/laporan/peminjaman', {
+      
+      // Build query parameters
+      const params = new URLSearchParams();
+      if (statusFilter) {
+        params.append('status', statusFilter);
+      }
+      if (startDate && endDate) {
+        params.append('tanggal_mulai', startDate.format('YYYY-MM-DD'));
+        params.append('tanggal_akhir', endDate.format('YYYY-MM-DD'));
+      }
+      
+      const url = params.toString() ? `/api/laporan/peminjaman?${params.toString()}` : '/api/laporan/peminjaman';
+      const response = await axios.get(url, {
         headers: { Authorization: `Bearer ${token}` }
       });
       
       if (response.data.sukses) {
         setLoanData(response.data.data.peminjaman);
+        setLoanSummary(response.data.data.ringkasan);
       } else {
         toast.error(response.data.pesan || 'Gagal memuat data peminjaman');
       }
@@ -522,10 +536,6 @@ const Laporan = () => {
       label: 'Keterangan', 
       sortable: true,
       format: (value, row) => {
-        if (row.detail_peminjaman && row.detail_peminjaman.length > 0) {
-          const catatan = row.detail_peminjaman.map(detail => detail.catatan).filter(c => c).join(', ');
-          return catatan || '-';
-        }
         return row.catatan || '-';
       }
     },
