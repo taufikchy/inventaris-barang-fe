@@ -166,14 +166,18 @@ const PeminjamanDetail = () => {
       }
       
       // Initialize new peminjaman
+      const today = new Date();
+      const tomorrow = new Date(today);
+      tomorrow.setDate(today.getDate() + 1);
+      
       setPeminjaman({
         kode: 'PJM-NEW', // Temporary code for new peminjaman
         peminjam: '',
         kontak: '',
         kelas: '',
         jabatan: '',
-        tanggal_pinjam: new Date().toISOString().split('T')[0],
-        tanggal_kembali_harapan: new Date().toISOString().split('T')[0],
+        tanggal_pinjam: today.toISOString().split('T')[0],
+        tanggal_kembali_harapan: tomorrow.toISOString().split('T')[0],
         keterangan: '',
         detail_peminjaman: [],
       });

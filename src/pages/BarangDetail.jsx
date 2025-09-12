@@ -241,7 +241,7 @@ const BarangDetail = () => {
 
   const handleUnitImageClick = (unit) => {
     const imageUrl = unit.gambar 
-      ? `http://localhost:5000${unit.gambar}`
+      ? unit.gambar
       : '/placeholder-image.png';
     if (imageUrl && !imageUrl.includes('data:image/svg+xml')) {
       setModalImageUrl(imageUrl);
@@ -585,7 +585,7 @@ const BarangDetail = () => {
                               opacity: (imagePreview || barang.gambar) && !(imagePreview || barang.gambar).includes('data:image/svg+xml') ? 0.8 : 1
                             }
                           }}
-                          onClick={() => handleImageClick(imagePreview || barang.gambar)}
+                          onClick={() => handleImageClick(imagePreview || (barang.gambar ? barang.gambar : null))}
                         />
                         <CardContent sx={{ p: 1, '&:last-child': { pb: 1 } }}>
                           <Box sx={{ display: 'flex', justifyContent: 'center' }}>
@@ -973,7 +973,7 @@ const BarangDetail = () => {
                       <CardMedia
                         component="img"
                         height="250"
-                        image={barang?.gambar ? barang?.gambar : generatePlaceholderDataUrl(400, 300, 'No Image')}
+                        image={barang?.gambar ? barang.gambar : generatePlaceholderDataUrl(400, 300, 'No Image')}
                         alt={barang?.nama || 'Barang'}
                         sx={{ 
                           objectFit: 'contain', 
@@ -984,7 +984,7 @@ const BarangDetail = () => {
                             opacity: barang?.gambar && !barang?.gambar.includes('data:image/svg+xml') ? 0.8 : 1
                           }
                         }}
-                        onClick={() => handleImageClick(barang?.gambar)}
+                        onClick={() => handleImageClick(barang?.gambar ? barang.gambar : null)}
                       />
                     </Card>
                   </Grid>
@@ -1112,7 +1112,7 @@ const BarangDetail = () => {
                           <Box sx={{ position: 'relative', display: 'inline-block' }}>
                             <Box
                               component="img"
-                              src={barang.gambar ? `http://localhost:5000${barang.gambar}` : '/placeholder-image.png'}
+                              src={barang.gambar ? barang.gambar : '/placeholder-image.png'}
                               alt={barang.nama}
                               sx={{
                                 width: 60,
@@ -1214,7 +1214,7 @@ const BarangDetail = () => {
                             <Box sx={{ position: 'relative', display: 'inline-block' }}>
                               <Box
                                 component="img"
-                                src={unit.gambar ? `http://localhost:5000${unit.gambar}` : '/placeholder-image.png'}
+                                src={unit.gambar ? unit.gambar : '/placeholder-image.png'}
                                 alt={unit.nama || 'Unit'}
                                 sx={{
                                   width: 60,

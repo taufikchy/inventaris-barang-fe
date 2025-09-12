@@ -301,7 +301,9 @@ const Laporan = () => {
       });
       
       if (response.data.sukses) {
-        setInventoryData(response.data.data.inventaris);
+        const inventarisData = response.data.data.inventaris;
+        
+        setInventoryData(inventarisData);
         setInventorySummary(response.data.data.ringkasan);
       } else {
         toast.error(response.data.pesan || 'Gagal memuat data inventaris');

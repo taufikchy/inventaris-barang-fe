@@ -126,6 +126,7 @@ const Dashboard = () => {
             tanggal_pinjam: item.tanggal_pinjam,
             tanggal_kembali_harapan: item.tanggal_kembali_harapan,
             status: item.status,
+            total_barang_dipinjam: item.total_barang_dipinjam || 0,
           }));
           
           setRecentPeminjaman(formattedPeminjaman);
@@ -597,6 +598,7 @@ const Dashboard = () => {
                       <TableRow>
                         <TableCell sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}>Peminjam</TableCell>
                         <TableCell sx={{ display: { xs: 'none', md: 'table-cell' }, fontSize: { xs: '0.75rem', sm: '0.875rem' } }}>Tanggal Pinjam</TableCell>
+                        <TableCell sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}>Total Barang</TableCell>
                         <TableCell sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}>Status</TableCell>
                         <TableCell align="right" sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}>Aksi</TableCell>
                       </TableRow>
@@ -604,7 +606,7 @@ const Dashboard = () => {
                     <TableBody>
                       {recentPeminjaman.length === 0 ? (
                         <TableRow>
-                          <TableCell colSpan={4} align="center">
+                          <TableCell colSpan={5} align="center">
                             <Typography variant="body2" color="text.secondary" sx={{ py: 3, fontSize: { xs: '0.75rem', sm: '0.875rem' } }}>
                               Tidak ada peminjaman aktif
                             </Typography>
@@ -621,6 +623,11 @@ const Dashboard = () => {
                             <TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}>
                               <Typography variant="body2" sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}>
                                 {formatDate(row.tanggal_pinjam)}
+                              </Typography>
+                            </TableCell>
+                            <TableCell>
+                              <Typography variant="body2" sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}>
+                                {row.total_barang_dipinjam || 0} unit
                               </Typography>
                             </TableCell>
                             <TableCell>
