@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import axios from '../utils/axios';
 import { toast } from 'react-toastify';
@@ -30,6 +30,13 @@ import {
   TableRow,
   TableCell,
   Tooltip,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  List,
+  ListItem,
+  ListItemText,
 } from '@mui/material';
 import {
   ArrowBack as ArrowBackIcon,
@@ -41,6 +48,8 @@ import {
   Info as InfoIcon,
   Devices as DevicesIcon,
   Visibility as VisibilityIcon,
+  Add as AddIcon,
+  Inventory as InventoryIcon,
 } from '@mui/icons-material';
 import { generatePlaceholderDataUrl } from '../components/ImagePlaceholder';
 import PageHeader from '../components/PageHeader';
@@ -105,6 +114,52 @@ const BarangDetail = () => {
   ];
   const [imagePreview, setImagePreview] = useState(null);
   const [imageFile, setImageFile] = useState(null);
+
+  // Duplicate check dialog state
+  const [duplicateDialogOpen, setDuplicateDialogOpen] = useState(false);
+  const [duplicateItems, setDuplicateItems] = useState([]);
+  const [pendingFormData, setPendingFormData] = useState(null);
+  const [skipDuplicateCheck, setSkipDuplicateCheck] = useState(false);
+
+  // Function to check for duplicate items by name
+  const checkDuplicateItems = async (nama) => {
+    if (!nama || nama.length < 3) return; // Only check if name is at least 3 characters
+
+    try {
+      const response = await axios.get(`/api/barang/search-by-name?nama=${encodeURIComponent(nama)}`);
+      if (response.data.sukes && response.data.data && response.data.data.length > 0) {
+        setDuplicateItems(response.data.data);
+        setDuplicateDialogOpen(true);
+      }
+    } catch (error) {
+      console.error('Error checking duplicates:', error);
+    }
+  };
+
+  // Handle dialog actions
+  const handleDuplicateRestock = () => {
+    if (duplicateItems.length > 0) {
+      // Navigate to the first (most relevant) duplicate item for restock
+      navigate(`/barang/${duplicateItems[0].id}`);
+    }
+    setDuplicateDialogOpen(false);
+  };
+
+  const handleDuplicateCreateNew = () => {
+    // Continue with creating new item - set flag to skip duplicate check
+    setSkipDuplicateCheck(true);
+    setDuplicateDialogOpen(false);
+    // Re-submit the form with the pending data
+    if (pendingFormData) {
+      // Trigger form submission again - we need to call handleSubmit
+      // Since we can't directly call Formik's handleSubmit from here,
+      // we'll use a workaround by resetting the form values and triggering submit
+      const form = document.querySelector('form');
+      if (form) {
+        form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+      }
+    }
+  };
 
   // Fetch barang data
   const fetchBarang = async () => {
@@ -199,6 +254,25 @@ const BarangDetail = () => {
   const handleSubmit = async (values, { setSubmitting, setFieldValue }) => {
     try {
       setSaving(true);
+
+      // For new barang, check for duplicates first
+      if (isNewBarang && !skipDuplicateCheck) {
+        try {
+          const dupResponse = await axios.get(`/api/barang/search-by-name?nama=${encodeURIComponent(values.nama)}`);
+          if (dupResponse.data.sukses && dupResponse.data.data && dupResponse.data.data.length > 0) {
+            // Found duplicates - show dialog
+            setDuplicateItems(dupResponse.data.data);
+            setPendingFormData(values);
+            setDuplicateDialogOpen(true);
+            setSaving(false);
+            setSubmitting(false);
+            return; // Wait for user decision
+          }
+        } catch (dupError) {
+          console.error('Error checking duplicates:', dupError);
+          // Continue with submission even if duplicate check fails
+        }
+      }
       
       // Create FormData object for file upload
       const formData = new FormData();
@@ -220,7 +294,7 @@ const BarangDetail = () => {
       
       let response;
       
-      if (isNewBarang) {
+      if (isNewBarang && !skipDuplicateCheck) {
         // Create new barang
         response = await axios.post('/api/barang', formData, {
           headers: {
@@ -1039,6 +1113,76 @@ const BarangDetail = () => {
         onCancel={() => setConfirmDelete(false)}
         loading={deleteLoading}
       />
+
+      {/* Duplicate Items Dialog */}
+      <Dialog
+        open={duplicateDialogOpen}
+        onClose={() => setDuplicateDialogOpen(false)}
+        maxWidth="sm"
+        fullWidth
+      >
+        <DialogTitle sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          <InventoryIcon color="warning" />
+          Barang Dengan Nama Serupa Sudah Ada
+        </DialogTitle>
+        <DialogContent>
+          <Typography variant="body1" sx={{ mb: 2 }}>
+            Barang dengan nama "{pendingFormData?.nama}" sudah ada. Apakah Anda ingin:
+          </Typography>
+          <List>
+            {duplicateItems.map((item, index) => (
+              <React.Fragment key={item.id}>
+                {index > 0 && <Divider />}
+                <ListItem sx={{ py: 1.5 }}>
+                  <ListItemText
+                    primary={
+                      <Typography variant="subtitle1" fontWeight="bold">
+                        {item.nama}
+                      </Typography>
+                    }
+                    secondary={
+                      <Box component="span">
+                        <Typography variant="body2" component="span" display="block">
+                          Kode: {item.kode} | Stok: {item.jumlah} {item.satuan}
+                        </Typography>
+                        <Typography variant="body2" component="span" display="block">
+                          Kategori: {item.kategori?.nama || '-'} | Lokasi: {item.lokasi?.nama || '-'}
+                        </Typography>
+                      </Box>
+                    }
+                  />
+                </ListItem>
+              </React.Fragment>
+            ))}
+          </List>
+          <Divider sx={{ my: 2 }} />
+          <Typography variant="body2" color="text.secondary">
+            <strong>Restock:</strong> Tambah jumlah ke barang yang sudah ada<br/>
+            <strong>Buat Unit Baru:</strong> Buat entri barang baru dengan kode berbeda
+          </Typography>
+        </DialogContent>
+        <DialogActions sx={{ px: 3, pb: 2 }}>
+          <Button onClick={() => setDuplicateDialogOpen(false)} color="inherit">
+            Batal
+          </Button>
+          <Button
+            onClick={handleDuplicateRestock}
+            variant="contained"
+            color="primary"
+            startIcon={<InventoryIcon />}
+          >
+            Restock Barang Existing
+          </Button>
+          <Button
+            onClick={handleDuplicateCreateNew}
+            variant="outlined"
+            color="primary"
+            startIcon={<AddIcon />}
+          >
+            Buat Unit Baru
+          </Button>
+        </DialogActions>
+      </Dialog>
     </>
   );
 };
