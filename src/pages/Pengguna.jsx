@@ -44,7 +44,7 @@ const UserSchema = Yup.object().shape({
     .min(4, 'Username minimal 4 karakter')
     .matches(/^[a-zA-Z0-9_]+$/, 'Username hanya boleh berisi huruf, angka, dan underscore')
     .required('Username harus diisi'),
-  password: Yup.string()
+  kata_sandi: Yup.string()
     .when('$isEditing', {
       is: false,
       then: (schema) => schema.required('Password harus diisi'),
@@ -459,7 +459,7 @@ onActionClick={isKepalaLab() ? () => handleOpenForm() : undefined}
           initialValues={{
             nama: currentUser?.nama || '',
             nama_pengguna: currentUser?.nama_pengguna || '',
-            password: '',
+            kata_sandi: '',
             peran: currentUser?.peran || 'sarana',
           }}
           validationSchema={UserSchema}
@@ -550,15 +550,15 @@ onActionClick={isKepalaLab() ? () => handleOpenForm() : undefined}
                 <TextField
                   fullWidth
                   margin="normal"
-                  id="password"
-                  name="password"
+                  id="kata_sandi"
+                  name="kata_sandi"
                   label={currentUser ? 'Password (Kosongkan jika tidak diubah)' : 'Password'}
                   type={showPassword ? 'text' : 'password'}
-                  value={values.password}
+                  value={values.kata_sandi}
                   onChange={handleChange}
                   onBlur={handleBlur}
-                  error={touched.password && Boolean(errors.password)}
-                  helperText={touched.password && errors.password}
+                  error={touched.kata_sandi && Boolean(errors.kata_sandi)}
+                  helperText={touched.kata_sandi && errors.kata_sandi}
                   disabled={currentUser && !isKepalaLab() && !isAdmin() && user.peran !== 'toolman' && user.peran !== 'sarana'}
                   InputProps={{
                     endAdornment: (

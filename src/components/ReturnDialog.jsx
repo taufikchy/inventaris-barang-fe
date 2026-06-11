@@ -348,7 +348,6 @@ const ReturnDialog = ({
                       color="primary" 
                       variant="outlined"
                       sx={{ 
-                        color: 'white',
                         fontSize: {
                           xs: '0.7rem',
                           sm: '0.8rem',
@@ -370,7 +369,6 @@ const ReturnDialog = ({
                       color={getKondisiColor(detail.kondisi_saat_pinjam)}
                       variant="outlined"
                       sx={{ 
-                        color: 'white',
                         fontSize: {
                           xs: '0.7rem',
                           sm: '0.8rem',
