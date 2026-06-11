@@ -336,6 +336,25 @@ const BarangDetail = () => {
     return date.toLocaleDateString('id-ID', options);
   };
 
+  // Get display status based on stock and database status
+  const getDisplayStatus = (barang) => {
+    // For 'bahan' category or items with satuan 'set', check the actual available units
+    let availableStock = barang?.jumlah || 0;
+
+    if (barang?.satuan === 'set' && barang?.unit_per_set && barang?.unit_per_set > 0) {
+      const totalUnits = barang.jumlah * barang.unit_per_set;
+      availableStock = totalUnits - (barang.unit_used || 0);
+    }
+
+    // If stock is 0 or less, show "Habis"
+    if (availableStock <= 0) {
+      return 'Habis';
+    }
+
+    // Otherwise, return the database status
+    return barang?.status || 'Tersedia';
+  };
+
   // Get status chip color
   const getStatusColor = (status) => {
     switch (status) {
@@ -345,6 +364,8 @@ const BarangDetail = () => {
         return 'primary';
       case 'Perbaikan':
         return 'warning';
+      case 'Habis':
+        return 'error';
       default:
         return 'default';
     }
@@ -820,9 +841,9 @@ const BarangDetail = () => {
                     
                     <Box sx={{ display: 'flex', gap: 1, mb: 2 }}>
                       <Chip
-                        label={barang?.status || 'Tersedia'}
+                        label={getDisplayStatus(barang)}
                         size="small"
-                        color={getStatusColor(barang?.status || 'Tersedia')}
+                        color={getStatusColor(getDisplayStatus(barang))}
                         sx={{
                           color: 'white',
                           fontWeight: 'bold'
@@ -935,9 +956,9 @@ const BarangDetail = () => {
                         </TableCell>
                         <TableCell>
                           <Chip
-                            label={barang.status}
+                            label={getDisplayStatus(barang)}
                             size="small"
-                            color={getStatusColor(barang.status)}
+                            color={getStatusColor(getDisplayStatus(barang))}
                             sx={{
                               color: 'white',
                               fontWeight: 'bold'
@@ -969,9 +990,9 @@ const BarangDetail = () => {
                           </TableCell>
                           <TableCell>
                             <Chip
-                              label={unit.status}
+                              label={getDisplayStatus(unit)}
                               size="small"
-                              color={getStatusColor(unit.status)}
+                              color={getStatusColor(getDisplayStatus(unit))}
                               sx={{
                                 color: 'white',
                                 fontWeight: 'bold'

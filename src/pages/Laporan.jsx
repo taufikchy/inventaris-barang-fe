@@ -222,7 +222,8 @@ const Laporan = () => {
       setStatuses([
         { value: 'tersedia', label: 'Tersedia' },
         { value: 'dipinjam', label: 'Dipinjam' },
-        { value: 'perbaikan', label: 'Perbaikan' }
+        { value: 'perbaikan', label: 'Perbaikan' },
+        { value: 'habis', label: 'Habis' }
       ]);
     } catch (error) {
       console.error('Error setting statuses:', error);
@@ -323,6 +324,16 @@ const Laporan = () => {
   // Note: Removed auto-refetch on filter change to prevent data flickering
   // Filters are now applied client-side for better performance
 
+  // Helper function to check if item is "Habis" (stock = 0)
+  const isItemHabis = (item) => {
+    let availableStock = item?.jumlah || 0;
+    if (item?.satuan === 'set' && item?.unit_per_set && item?.unit_per_set > 0) {
+      const totalUnits = item.jumlah * item.unit_per_set;
+      availableStock = totalUnits - (item.unit_used || 0);
+    }
+    return availableStock <= 0;
+  };
+
   // Apply filters
   const filteredInventoryData = inventoryData.filter(item => {
     const itemDate = dayjs(item.tanggal_perolehan);
@@ -331,7 +342,8 @@ const Laporan = () => {
     const kategoriMatch = !kategoriFilter || (item.kategori?.nama || item.kategori) === kategoriFilter;
     const lokasiMatch = !lokasiFilter || (item.lokasi?.nama || item.lokasi) === lokasiFilter;
     const kondisiMatch = !kondisiFilter || item.kondisi === kondisiFilter;
-    const statusMatch = !statusFilter || item.status === statusFilter;
+    const statusMatch = !statusFilter || 
+      (statusFilter === 'habis' ? isItemHabis(item) : item.status === statusFilter);
     
     return dateMatch && tahunMatch && kategoriMatch && lokasiMatch && kondisiMatch && statusMatch;
   });
@@ -389,7 +401,18 @@ const Laporan = () => {
         year: 'numeric'
       });
     }},
-    { id: 'status', label: 'Status', sortable: true, format: (value) => {
+    { id: 'status', label: 'Status', sortable: true, format: (value, row) => {
+      // Check if stock is 0 or less (for bahan category items)
+      let availableStock = row?.jumlah || 0;
+      if (row?.satuan === 'set' && row?.unit_per_set && row?.unit_per_set > 0) {
+        const totalUnits = row.jumlah * row.unit_per_set;
+        availableStock = totalUnits - (row.unit_used || 0);
+      }
+
+      if (availableStock <= 0) {
+        return 'Habis';
+      }
+
       const statusLabels = {
         'tersedia': 'Tersedia',
         'dipinjam': 'Dipinjam',
